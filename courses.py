@@ -206,13 +206,72 @@ def summarize(rows, centers):
     return summ
 
 
+PARK_CENTERS = {"올림픽수영장", "올림픽스포츠센터"}
+
+
+def parking_profile():
+    """올림픽공원 입출차 정보(15138735, 2024년 7월)로 시각별 주차 차량 수를 세고, 가장 많은 시각을 100으로 둔 지수.
+    같은 행 반복은 실제 중복인지 알 수 없어 한 번만 센다 (빼고 세도 모양은 같음)."""
+    import gzip, io, datetime as dt
+    path = os.path.join(RAW, "15138735.csv.gz")
+    if not os.path.exists(path):
+        return None
+    with gzip.open(path, "rt", encoding="utf-8", newline="") as f:
+        rows = set(tuple(r) for r in list(csv.reader(f))[1:])
+    fmt = "%Y-%m-%d %H:%M"
+    occ = collections.Counter()
+    for r in rows:
+        try:
+            ti, to = dt.datetime.strptime(r[1][:16], fmt), dt.datetime.strptime(r[2][:16], fmt)
+        except (ValueError, IndexError):
+            continue
+        if to <= ti:
+            continue
+        t = ti.replace(minute=30)
+        if t < ti:
+            t += dt.timedelta(hours=1)
+        while t < to and (t - ti).days < 2:
+            occ[(t.date(), t.hour)] += 1
+            t += dt.timedelta(hours=1)
+    month = collections.Counter(r[0][:7] for r in rows).most_common(1)[0][0]  # 파일이 담은 달 (2024-07)
+    days = sorted({d for d, _ in occ if f"{d:%Y-%m}" == month})
+    hours = list(range(6, 23))
+    prof = {}
+    for k, wk in (("weekday", True), ("weekend", False)):
+        sel = [d for d in days if (d.weekday() < 5) == wk]
+        prof[k] = [sum(occ[(d, h)] for d in sel) / len(sel) for h in hours]
+    top = max(max(prof["weekday"]), max(prof["weekend"]))
+    return {"hours": hours, "month": month, "n_days": {"weekday": sum(d.weekday() < 5 for d in days), "weekend": sum(d.weekday() >= 5 for d in days)},
+            "weekday": [round(v / top * 100) for v in prof["weekday"]], "weekend": [round(v / top * 100) for v in prof["weekend"]]}
+
+
+def scenarios(rows):
+    """기획서에 쓰는 사용 장면. 모두 최근 1년 안에 바뀐 기록이 있는 강좌만 센다."""
+    fr = [r for r in rows if r["fr"] == "최근"]
+    wk = lambda r: any(d in "월화수목금" for d in r["d"])
+    sc = {
+        "직장인_올림픽공원_19시이후": sum(1 for r in fr if r["c"] in PARK_CENTERS and wk(r) and r["t0"] is not None and r["t0"] >= 19 * 60),
+        "직장인_4곳_19시이후": sum(1 for r in fr if wk(r) and r["t0"] is not None and r["t0"] >= 19 * 60),
+        "직장인_4곳_19시이후_수영": sum(1 for r in fr if r["s"] == "수영" and wk(r) and r["t0"] is not None and r["t0"] >= 19 * 60),
+        "어린이_4곳": sum(1 for r in fr if "어린이" in r["g"]),
+        "어린이_수영_4곳": sum(1 for r in fr if "어린이" in r["g"] and "수영" in r["s"]),
+        "실버_4곳": sum(1 for r in fr if "실버" in r["g"]),
+        "청소년_4곳": sum(1 for r in fr if "청소년" in r["g"]),
+        "주말_4곳": sum(1 for r in fr if any(d in "토일" for d in r["d"])),
+        "최근": len(fr),
+    }
+    return sc
+
+
 def run():
     rows, centers, notes = build()
     summ = summarize(rows, centers)
-    payload = {"centers": centers, "rows": rows, "summary": summ, "notes": dict(notes)}
+    summ["scenarios"] = scenarios(rows)
+    park = parking_profile()
+    payload = {"centers": centers, "rows": rows, "summary": summ, "notes": dict(notes), "parking": park}
     os.makedirs(os.path.join(ROOT, "out"), exist_ok=True)
     with open(os.path.join(ROOT, "out", "courses_summary.json"), "w", encoding="utf-8") as f:
-        json.dump({"centers": centers, "summary": summ, "notes": dict(notes)}, f, ensure_ascii=False, indent=1)
+        json.dump({"centers": centers, "summary": summ, "notes": dict(notes), "parking": park}, f, ensure_ascii=False, indent=1)
     with open(os.path.join(ROOT, "site", "courses.js"), "w", encoding="utf-8") as f:
         f.write("window.COURSES=" + json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + ";\n")
     return payload

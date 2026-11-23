@@ -172,3 +172,13 @@ class Courses(unittest.TestCase):
         body = [["1", "2026-01-01", "수영", "월", "2026-01-01~9999-12-31", "2026-01-01"]] * 3
         fs = C.check_courses("x", hdr, body)
         self.assertTrue(any(f["rule"] == "열값형식" and "종료일" in f["msg"] for f in fs))
+
+
+class Parking(unittest.TestCase):
+    def test_profile(self):
+        p = CO.parking_profile()
+        if p is None:
+            self.skipTest("입출차 원본 없음")
+        self.assertEqual(len(p["weekday"]), len(p["hours"]))
+        self.assertEqual(max(p["weekday"] + p["weekend"]), 100)
+        self.assertEqual(p["n_days"]["weekday"] + p["n_days"]["weekend"], 31)  # 2024년 7월

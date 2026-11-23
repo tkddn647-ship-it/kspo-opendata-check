@@ -21,6 +21,18 @@ nav.top{display:flex;gap:4px;margin-bottom:24px}
 nav.top a{font-size:15px;font-weight:600;color:var(--ink2);text-decoration:none;padding:6px 12px;border-radius:var(--r)}
 nav.top a[aria-current]{background:var(--ink);color:#fff}
 nav.top a:hover:not([aria-current]){background:#E4EBE8}
+nav.top .big{margin-left:auto;font:inherit;font-size:15px;font-weight:700;border:2px solid var(--ink);background:var(--sheet);color:var(--ink);border-radius:var(--r);padding:4px 12px;cursor:pointer}
+nav.top .big[aria-pressed="true"]{background:var(--ink);color:#fff}
+body.bigtext .wrap{zoom:1.2}
+.share{font:inherit;font-size:14px;font-weight:700;border:1px solid var(--ok);background:var(--sheet);color:var(--ok);border-radius:var(--r);padding:4px 10px;cursor:pointer}
+.tag.park{border-color:#C9D4D0;background:#F4F7F6}
+.chart{background:var(--sheet);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px 10px;position:relative}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart .tt{position:absolute;pointer-events:none;background:var(--ink);color:#fff;font-size:13px;line-height:1.45;padding:6px 10px;border-radius:4px;display:none;white-space:nowrap}
+.legend{display:flex;gap:18px;font-size:14px;color:var(--ink2);margin-bottom:6px}
+.legend i{display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+details.tv{margin-top:8px;font-size:14px;color:var(--ink2)}
+details.tv table{margin-top:8px}
 header{border-bottom:2px solid var(--ink);padding-bottom:20px}
 h1{font-size:clamp(28px,4.2vw,44px);line-height:1.15;letter-spacing:-.02em;margin:0;font-weight:800}
 h1 small{display:block;font-size:.42em;font-weight:600;color:var(--ink2);letter-spacing:0;margin-bottom:10px}
@@ -96,7 +108,7 @@ footer{margin-top:56px;font-size:13px;color:var(--muted);border-top:1px solid va
 </head>
 <body>
 <div class="wrap">
-<nav class="top" aria-label="화면 바꾸기"><a href="index.html" aria-current="page">강좌 찾기</a><a href="check.html">데이터 건강검진</a></nav>
+<nav class="top" aria-label="화면 바꾸기"><a href="index.html" aria-current="page">강좌 찾기</a><a href="check.html">데이터 건강검진</a><button class="big" id="bigBtn" aria-pressed="false">글자 크게</button></nav>
 <header>
   <h1><small>한국체육산업개발 스포츠센터 4곳</small>내 시간에 맞는 공공스포츠 강좌 찾기</h1>
   <p class="lede" id="lede"></p>
@@ -118,6 +130,7 @@ footer{margin-top:56px;font-size:13px;color:var(--muted);border-top:1px solid va
   <div style="grid-column:1/-1;display:flex;flex-wrap:wrap;gap:10px 24px;align-items:center">
     <label class="chk"><input type="checkbox" id="fFresh" checked> 1년 넘게 바뀐 기록이 없는 강좌는 숨기기 <span style="color:var(--muted)">(운영 여부를 자료로 확인할 수 없음)</span></label>
     <button class="reset" id="reset">조건 모두 지우기</button>
+    <button class="share" id="share">이 조건으로 링크 복사</button><span id="shareMsg" role="status" style="font-size:14px;color:var(--ok)"></span>
   </div>
 </div>
 
@@ -130,6 +143,13 @@ footer{margin-top:56px;font-size:13px;color:var(--muted);border-top:1px solid va
   <p class="sub">같은 자료로 센터마다 퇴근 후·주말·어린이·실버 강좌가 얼마나 있는지 셌습니다. ‘운영 중’은 공개 파일에서 종료일이 9999-12-31로 적힌 강좌입니다.</p>
   <div class="scroll"><table id="ctab"></table></div>
   <p class="sub" id="cnote" style="margin-top:10px;font-size:14px"></p>
+</section>
+
+<section>
+  <h2>올림픽공원 주차장, 언제 붐비나</h2>
+  <p class="sub" id="parkSub"></p>
+  <div class="chart" id="chart"><div class="legend"><span><i style="background:#237A4B"></i>평일</span><span><i style="background:#7A4FA8"></i>주말</span></div><div class="tt" id="tt" role="tooltip"></div></div>
+  <details class="tv"><summary>표로 보기</summary><div class="scroll"><table id="ptab"></table></div></details>
 </section>
 
 <section>
@@ -213,6 +233,15 @@ fD.addEventListener("click", e=>{const b=e.target.closest("button"); if(!b) retu
 document.getElementById("fFresh").addEventListener("change",e=>{st.fresh=e.target.checked; render(true);});
 document.getElementById("reset").addEventListener("click",()=>{st.c=new Set();st.s="";st.d=new Set();st.t="";st.w="";st.sort="time";st.fresh=true;st.preset="";sync();render(true);});
 
+const PK = C.parking, PARKC = new Set(["올림픽수영장","올림픽스포츠센터"]);
+function parkLevel(r){
+  if (!PK || !PARKC.has(r.c) || r.t0==null) return null;
+  const wd = [...r.d].some(d=>"월화수목금".includes(d)) || !r.d;
+  const h = Math.min(22, Math.max(6, Math.floor(r.t0/60)));
+  const v = PK[wd?"weekday":"weekend"][h-6];
+  return {wd, v, lv: v>=70?"붐빔":v>=40?"보통":"한산"};
+}
+function park(r){ const p=parkLevel(r); return p?`<span class="tag park">주차 ${p.wd?"평일":"주말"} 이 시각 ${p.lv} · 지수 ${p.v}</span>`:""; }
 const week = r => `<span class="wk" aria-label="요일 ${esc(r.d||"정보 없음")}${r.o?", 괄호 표기 "+esc(r.o):""}">${[...W].map(d=>`<i class="${r.d.includes(d)?"on":r.o.includes(d)?"opt":""}">${d}</i>`).join("")}</span>`;
 function item(r){
   const fr = r.fr==="최근" ? `<span class="fr fr-ok">최근 변경 ${esc(r.last.slice(0,4))}.${+r.last.slice(5,7)}</span>`
@@ -223,7 +252,7 @@ function item(r){
     <div class="tm">${r.t0!=null?hm(r.t0):"—"}<span>${r.t1!=null?(long?"~"+hm(r.t1)+" 이용":"~"+hm(r.t1)):esc(r.tt)}</span></div>
     <div><div class="nm">${esc(r.n)}</div>
       <div class="meta">${week(r)}${esc(r.c)} · ${esc(r.s)}${r.tg?` · ${esc(r.tg)}`:""}${r.cap?` · 정원 ${r.cap}명`:""}</div>
-      <div class="tags">${fr}${r.nd?`<span class="tag">강좌명에는 ${esc(r.nd)} · 강습 요일은 센터 확인</span>`:""}${r.o?`<span class="tag">괄호 요일(${esc(r.o)})은 자료에 뜻이 적혀 있지 않음</span>`:""}</div></div>
+      <div class="tags">${fr}${park(r)}${r.nd?`<span class="tag">강좌명에는 ${esc(r.nd)} · 강습 요일은 센터 확인</span>`:""}${r.o?`<span class="tag">괄호 요일(${esc(r.o)})은 자료에 뜻이 적혀 있지 않음</span>`:""}</div></div>
     <div class="pr"><b>${won(r.fee)}</b>${r.per?`<span>1회 약 ${won(r.per)} (추정)</span>`:""}<a href="${esc(r.link)}" target="_blank" rel="noopener">센터 안내 보기</a></div>
   </li>`;
 }
@@ -243,7 +272,70 @@ function render(reset){
   more.textContent = `더 보기 (${(all.length-page*PER).toLocaleString()}개 남음)`;
 }
 more.addEventListener("click",()=>{page++; render(false);});
+
+// 조건을 주소(#)에 담아 공유
+function toHash(){
+  const q = new URLSearchParams();
+  if (st.c.size) q.set("c",[...st.c].join(",")); if (st.s) q.set("s",st.s); if (st.d.size) q.set("d",[...st.d].join(""));
+  if (st.t) q.set("t",st.t); if (st.w) q.set("w",st.w); if (st.sort!=="time") q.set("o",st.sort); if (!st.fresh) q.set("all","1"); if (st.preset) q.set("p",st.preset);
+  return q.toString();
+}
+function fromHash(){
+  const q = new URLSearchParams(location.hash.slice(1));
+  st.c = new Set((q.get("c")||"").split(",").filter(x=>centers.includes(x))); st.s = q.get("s")||"";
+  st.d = new Set([...(q.get("d")||"")].filter(x=>W.includes(x))); st.t = q.get("t")||""; st.w = q.get("w")||"";
+  st.sort = q.get("o")==="per"?"per":"time"; st.fresh = q.get("all")!=="1"; st.preset = q.get("p")||"";
+}
+const _render = render;
+render = function(reset){ _render(reset); const h=toHash(); try{ history.replaceState(null,"", h?"#"+h:location.pathname); }catch(e){} };
+document.getElementById("share").addEventListener("click", async ()=>{
+  const url = location.href, msg = document.getElementById("shareMsg");
+  try { await navigator.clipboard.writeText(url); msg.textContent = "링크를 복사했습니다. 가족·친구에게 보내면 같은 조건으로 열립니다."; }
+  catch(e){ msg.textContent = url; }
+});
+const bigBtn = document.getElementById("bigBtn");
+function setBig(on){ document.body.classList.toggle("bigtext",on); bigBtn.setAttribute("aria-pressed",String(on)); try{ localStorage.setItem("bigtext", on?"1":""); }catch(e){} }
+bigBtn.addEventListener("click",()=>setBig(!document.body.classList.contains("bigtext")));
+try{ if (localStorage.getItem("bigtext")) setBig(true); }catch(e){}
+
+if (location.hash.length>1) fromHash();
 sync(); render(true);
+
+// 주차 그래프
+if (PK){
+  document.getElementById("parkSub").textContent = `한국체육산업개발이 개방한 올림픽공원 입출차 정보(동2문·남2문·북2문 주차구역, ${PK.month.slice(0,4)}년 ${+PK.month.slice(5,7)}월, 평일 ${PK.n_days.weekday}일·주말 ${PK.n_days.weekend}일)로 매시 30분에 주차장에 있던 차량 수를 세어, 가장 많았던 때를 100으로 둔 지수입니다. 올림픽수영장·올림픽스포츠센터 강좌에는 같은 지수로 ‘한산(40 미만)·보통·붐빔(70 이상)’을 붙였습니다. 한 달치 기록이라 방학·공연이 있는 달은 다를 수 있습니다.`;
+  const H = PK.hours, Wd = 760, Ht = 270, L = 36, Rm = 16, T = 22, B = 28;
+  const x = i => L + i*(Wd-L-Rm)/(H.length-1), y = v => T + (100-v)*(Ht-T-B)/100;
+  const line = arr => arr.map((v,i)=>`${i?"L":"M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join("");
+  const grid = [0,40,70,100].map(v=>`<line x1="${L}" x2="${Wd-Rm}" y1="${y(v)}" y2="${y(v)}" stroke="#E3E9E7" stroke-width="1"/><text x="${L-8}" y="${y(v)+4}" font-size="11" fill="#6F7D79" text-anchor="end">${v}</text>`).join("");
+  const xt = H.map((h,i)=> h%3===0?`<text x="${x(i)}" y="${Ht-8}" font-size="11" fill="#6F7D79" text-anchor="middle">${h}시</text>`:"").join("");
+  const lab = (arr,txt)=>{ const i = arr.indexOf(Math.max(...arr)); return `<text x="${x(i)}" y="${y(arr[i])-10}" font-size="12" font-weight="700" fill="#1B2623" text-anchor="middle">${txt} 최고 ${H[i]}시</text>`; };
+  const svg = `<svg viewBox="0 0 ${Wd} ${Ht}" role="img" aria-label="올림픽공원 주차장 시각별 차량 지수, 평일과 주말">
+    <rect x="${x(H.indexOf(19))}" y="${T}" width="${x(H.length-1)-x(H.indexOf(19))}" height="${Ht-T-B}" fill="#F2F6F4"/>
+    ${grid}${xt}
+    <text x="${x(H.indexOf(19))+4}" y="${T+12}" font-size="11" fill="#4A5A56">퇴근 후 강좌 시간대</text>
+    <path d="${line(PK.weekday)}" fill="none" stroke="#237A4B" stroke-width="2" stroke-linejoin="round"/>
+    <path d="${line(PK.weekend)}" fill="none" stroke="#7A4FA8" stroke-width="2" stroke-linejoin="round"/>
+    ${lab(PK.weekday,"평일")}${lab(PK.weekend,"주말")}
+    <line id="cx" x1="0" x2="0" y1="${T}" y2="${Ht-B}" stroke="#1B2623" stroke-width="1" visibility="hidden"/>
+    <circle id="d1" r="4" fill="#237A4B" stroke="#fff" stroke-width="2" visibility="hidden"/><circle id="d2" r="4" fill="#7A4FA8" stroke="#fff" stroke-width="2" visibility="hidden"/>
+    <rect x="${L}" y="${T}" width="${Wd-L-Rm}" height="${Ht-T-B}" fill="transparent" id="hit"/>
+  </svg>`;
+  const box = document.getElementById("chart"); box.insertAdjacentHTML("beforeend", svg);
+  const sv = box.querySelector("svg"), tt = document.getElementById("tt");
+  const show = i => {
+    const cx=x(i); ["cx"].forEach(id=>{const e=sv.getElementById(id); e.setAttribute("x1",cx); e.setAttribute("x2",cx); e.setAttribute("visibility","visible");});
+    [["d1","weekday"],["d2","weekend"]].forEach(([id,k])=>{const e=sv.getElementById(id); e.setAttribute("cx",cx); e.setAttribute("cy",y(PK[k][i])); e.setAttribute("visibility","visible");});
+    tt.innerHTML = `<b>${H[i]}시 30분</b><br>평일 ${PK.weekday[i]} · 주말 ${PK.weekend[i]}`;
+    const r = sv.getBoundingClientRect(), bx = box.getBoundingClientRect(), px = r.left - bx.left + cx * r.width / Wd;
+    tt.style.display="block"; tt.style.left = Math.min(px+12, bx.width-tt.offsetWidth-6)+"px"; tt.style.top = "40px";
+  };
+  const hide = () => { tt.style.display="none"; ["cx","d1","d2"].forEach(id=>sv.getElementById(id).setAttribute("visibility","hidden")); };
+  const idx = e => { const r=sv.getBoundingClientRect(); const vx=(e.clientX-r.left)*Wd/r.width; return Math.max(0,Math.min(H.length-1,Math.round((vx-L)/((Wd-L-Rm)/(H.length-1))))); };
+  sv.getElementById("hit").addEventListener("pointermove", e=>show(idx(e)));
+  sv.getElementById("hit").addEventListener("pointerleave", hide);
+  document.getElementById("ptab").innerHTML = `<thead><tr><th>시각</th>${H.map(h=>`<th>${h}시</th>`).join("")}</tr></thead><tbody><tr><td>평일</td>${PK.weekday.map(v=>`<td>${v}</td>`).join("")}</tr><tr><td>주말</td>${PK.weekend.map(v=>`<td>${v}</td>`).join("")}</tr></tbody>`;
+}
 
 // 센터 표
 const cs = S.centers;
