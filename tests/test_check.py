@@ -196,3 +196,13 @@ class Refresh(unittest.TestCase):
         self.assertEqual(info["cycle"], "반기")
         self.assertEqual(info["mod"], "2026-09-21")
         self.assertEqual(info["uddi"], "uddi:abc-1")
+
+
+class Export(unittest.TestCase):
+    def test_csv_matches_rows(self):
+        import csv as _csv
+        p = CO.run()
+        with open(Path(CO.ROOT) / "site" / "courses.csv", encoding="utf-8-sig", newline="") as f:
+            rows = list(_csv.reader(f))
+        self.assertEqual(len(rows) - 1, len(p["rows"]))
+        self.assertEqual(rows[0][0], "센터")

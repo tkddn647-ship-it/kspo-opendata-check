@@ -112,6 +112,17 @@ td.warn{color:var(--warn);font-weight:700}
 .facts p{margin:0;font-size:15px;color:var(--ink2)}
 footer{margin-top:56px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
 
+.grid{margin:22px 0 0}
+.grid>summary{cursor:pointer;font-weight:700;font-size:16px}
+.grid>summary span{font-weight:500;color:var(--ink2);font-size:14px;margin-left:8px}
+.hm{display:grid;grid-template-columns:34px repeat(16,1fr);gap:2px;margin-top:10px;font-size:12px}
+.hm .hh,.hm .dd{color:var(--muted);display:flex;align-items:center;justify-content:center}
+.hm button{font:inherit;font-size:12px;border:0;border-radius:3px;height:30px;cursor:pointer;color:var(--ink);padding:0}
+.hm button.dark{color:#fff}
+.hm button.z{background:var(--soft);color:#A3B0AC;cursor:default}
+.hm button[aria-pressed="true"]{outline:3px solid var(--ink);outline-offset:1px}
+.hmnote{font-size:13px;color:var(--muted);margin:6px 0 0}
+@media (max-width:720px){.hm{font-size:10px;grid-template-columns:22px repeat(16,1fr);gap:1px}.hm button{font-size:10px;height:26px}}
 .live{margin:20px 0 0;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;background:var(--sheet);border:1px solid var(--line);border-left:4px solid var(--ok);border-radius:var(--r);padding:10px 14px;font-size:15px}
 .live[hidden]{display:none}
 .live b{font-size:20px}
@@ -164,6 +175,11 @@ footer{margin-top:56px;font-size:13px;color:var(--muted);border-top:1px solid va
   </div>
 </div>
 
+<details class="grid" id="gridBox"><summary>시간표로 고르기<span>요일 × 시작 시각, 칸의 숫자는 강좌 수. 칸을 누르면 그 시간 강좌만 봅니다</span></summary>
+  <div class="hm" id="hm" role="group" aria-label="요일과 시작 시각별 강좌 수"></div>
+  <p class="hmnote">센터·종목·대상·검색 조건이 반영됩니다. 6시~21시 시작 강좌.</p>
+</details>
+
 <div class="resbar" aria-live="polite"><span><b id="n">0</b>개 강좌</span><span class="hid" id="hid"></span></div>
 <ul class="list" id="list"></ul>
 <button class="more" id="more" hidden>더 보기</button>
@@ -208,7 +224,7 @@ document.getElementById("lede").textContent =
   `올림픽수영장·올림픽스포츠센터·일산·분당 올림픽스포츠센터의 운영 중 강좌 ${R.length.toLocaleString()}개를 한곳에 모았습니다. 이 가운데 최근 1년 안에 바뀐 기록이 있는 강좌는 ${fresh.toLocaleString()}개입니다. 자료는 공공데이터포털의 공개 파일이고, 신청은 각 센터 홈페이지에서 합니다.`;
 
 // 상태
-const st = {c:new Set(), s:"", d:new Set(), t:"", w:"", sort:"time", fresh:true, preset:"", q:""};
+const st = {c:new Set(), s:"", d:new Set(), t:"", w:"", sort:"time", fresh:true, preset:"", q:"", h:""};
 const norm = x => String(x||"").replace(/\s+/g,"").toLowerCase();
 const PRESETS = [
   {k:"eve", label:"퇴근 후", sub:"평일 19시부터", set:()=>{st.d=new Set("월화수목금"); st.t="1140-1440";}},
@@ -233,11 +249,32 @@ function match(r, ignorePresetFresh){
   if (st.s && r.s!==st.s) return false;
   if (st.q && !norm(r.n+r.s).includes(norm(st.q))) return false;
   if (st.d.size && ![...r.d].some(d=>st.d.has(d))) return false;
+  if (st.h!=="" && (r.t0==null || Math.floor(r.t0/60)!==+st.h)) return false;
   if (st.t){ const [a,b]=st.t.split("-").map(Number); if (r.t0==null || r.t0<a || r.t0>=b) return false; }
   if (st.w && !r.g.includes(st.w)) return false;
   if (st.fresh && r.fr!=="최근") return false;
   return true;
 }
+
+// 시간표(요일 × 시작 시각) — 한 색의 옅음→짙음으로 강좌 수 표시
+const hmEl = document.getElementById("hm"), HRS = Array.from({length:16},(_,i)=>i+6);
+function drawGrid(){
+  const o = {d:st.d, t:st.t, h:st.h}; st.d=new Set(); st.t=""; st.h="";
+  const base = R.filter(r=>match(r)); st.d=o.d; st.t=o.t; st.h=o.h;
+  const cnt = {}; let mx = 0;
+  base.forEach(r=>{ if(r.t0==null) return; const h=Math.floor(r.t0/60); if(h<6||h>21) return; [...r.d].forEach(d=>{ const k=d+h; cnt[k]=(cnt[k]||0)+1; if(cnt[k]>mx) mx=cnt[k]; }); });
+  const col = v => { const t = Math.sqrt(v/mx); const L = 94 - t*60; return [`hsl(152 38% ${L}%)`, L < 58]; };
+  let h = `<span></span>` + HRS.map(x=>`<span class="hh">${x}</span>`).join("");
+  [...W].forEach(d=>{ h += `<span class="dd">${d}</span>` + HRS.map(x=>{ const v = cnt[d+x]||0; if(!v) return `<button class="z" disabled aria-label="${d}요일 ${x}시 강좌 없음">·</button>`;
+    const [bg,dk] = col(v), on = st.h!=="" && +st.h===x && st.d.size===1 && st.d.has(d);
+    return `<button style="background:${bg}" class="${dk?"dark":""}" aria-pressed="${on}" data-d="${d}" data-h="${x}" aria-label="${d}요일 ${x}시 시작 강좌 ${v}개">${v}</button>`; }).join(""); });
+  hmEl.innerHTML = h;
+}
+hmEl.addEventListener("click", e=>{ const b=e.target.closest("button[data-d]"); if(!b) return;
+  const on = b.getAttribute("aria-pressed")==="true"; st.preset=""; st.t="";
+  if (on){ st.d=new Set(); st.h=""; } else { st.d=new Set([b.dataset.d]); st.h=b.dataset.h; }
+  sync(); render(true); });
+if (matchMedia("(min-width:721px)").matches) document.getElementById("gridBox").open = true;
 
 const presetEl = document.getElementById("presets");
 function drawPresets(){
@@ -247,7 +284,7 @@ presetEl.addEventListener("click", e=>{
   const b=e.target.closest("button"); if(!b) return;
   const p=PRESETS.find(x=>x.k===b.dataset.k);
   const off = st.preset===p.k;
-  st.d=new Set(); st.t=""; st.w=""; st.preset="";
+  st.d=new Set(); st.t=""; st.w=""; st.preset=""; st.h="";
   if(!off){ p.set(); st.preset=p.k; }
   sync(); render(true);
 });
@@ -260,11 +297,11 @@ function sync(){
   document.getElementById("fFresh").checked=st.fresh;
 }
 fC.addEventListener("click", e=>{const b=e.target.closest("button"); if(!b) return; st.c.has(b.dataset.v)?st.c.delete(b.dataset.v):st.c.add(b.dataset.v); sync(); render(true);});
-fD.addEventListener("click", e=>{const b=e.target.closest("button"); if(!b) return; st.preset=""; st.d.has(b.dataset.v)?st.d.delete(b.dataset.v):st.d.add(b.dataset.v); sync(); render(true);});
-[["fSport","s"],["fTime","t"],["fWho","w"],["fSort","sort"]].forEach(([id,k])=>document.getElementById(id).addEventListener("change",e=>{st[k]=e.target.value; if(k!=="s"&&k!=="sort") st.preset=""; render(true);}));
+fD.addEventListener("click", e=>{const b=e.target.closest("button"); if(!b) return; st.preset=""; st.h=""; st.d.has(b.dataset.v)?st.d.delete(b.dataset.v):st.d.add(b.dataset.v); sync(); render(true);});
+[["fSport","s"],["fTime","t"],["fWho","w"],["fSort","sort"]].forEach(([id,k])=>document.getElementById(id).addEventListener("change",e=>{st[k]=e.target.value; if(k==="t") st.h=""; if(k!=="s"&&k!=="sort") st.preset=""; render(true);}));
 document.getElementById("fFresh").addEventListener("change",e=>{st.fresh=e.target.checked; render(true);});
 document.getElementById("fQ").addEventListener("input",e=>{st.q=e.target.value.trim(); render(true);});
-document.getElementById("reset").addEventListener("click",()=>{st.q="";document.getElementById("fQ").value="";st.c=new Set();st.s="";st.d=new Set();st.t="";st.w="";st.sort="time";st.fresh=true;st.preset="";sync();render(true);});
+document.getElementById("reset").addEventListener("click",()=>{st.h="";st.q="";document.getElementById("fQ").value="";st.c=new Set();st.s="";st.d=new Set();st.t="";st.w="";st.sort="time";st.fresh=true;st.preset="";sync();render(true);});
 
 const PK = C.parking, PARKC = new Set(["올림픽수영장","올림픽스포츠센터"]);
 function parkLevel(r){
@@ -294,7 +331,7 @@ let page = 1, cur = []; const PER = 40;
 const list = document.getElementById("list"), more = document.getElementById("more");
 function render(reset){
   if (reset) page = 1;
-  drawPresets();
+  drawPresets(); drawGrid();
   const all = R.filter(r=>match(r));
   const hidden = st.fresh ? R.filter(r=>{st.fresh=false; const m=match(r); st.fresh=true; return m && r.fr!=="최근";}).length : 0;
   all.sort(st.sort==="per" ? (a,b)=>(a.per??1e9)-(b.per??1e9) || (a.t0??1e4)-(b.t0??1e4) : (a,b)=>(a.t0??1e4)-(b.t0??1e4) || a.c.localeCompare(b.c,"ko"));
@@ -311,14 +348,14 @@ more.addEventListener("click",()=>{page++; render(false);});
 function toHash(){
   const q = new URLSearchParams();
   if (st.c.size) q.set("c",[...st.c].join(",")); if (st.s) q.set("s",st.s); if (st.d.size) q.set("d",[...st.d].join(""));
-  if (st.t) q.set("t",st.t); if (st.w) q.set("w",st.w); if (st.sort!=="time") q.set("o",st.sort); if (!st.fresh) q.set("all","1"); if (st.preset) q.set("p",st.preset); if (st.q) q.set("q",st.q);
+  if (st.t) q.set("t",st.t); if (st.w) q.set("w",st.w); if (st.sort!=="time") q.set("o",st.sort); if (!st.fresh) q.set("all","1"); if (st.preset) q.set("p",st.preset); if (st.q) q.set("q",st.q); if (st.h!=="") q.set("h",st.h);
   return q.toString();
 }
 function fromHash(){
   const q = new URLSearchParams(location.hash.slice(1));
   st.c = new Set((q.get("c")||"").split(",").filter(x=>centers.includes(x))); st.s = q.get("s")||"";
   st.d = new Set([...(q.get("d")||"")].filter(x=>W.includes(x))); st.t = q.get("t")||""; st.w = q.get("w")||"";
-  st.sort = q.get("o")==="per"?"per":"time"; st.fresh = q.get("all")!=="1"; st.preset = q.get("p")||""; st.q = q.get("q")||""; document.getElementById("fQ").value = st.q;
+  st.sort = q.get("o")==="per"?"per":"time"; st.fresh = q.get("all")!=="1"; st.preset = q.get("p")||""; st.h = /^\d{1,2}$/.test(q.get("h")||"") ? q.get("h") : ""; st.q = q.get("q")||""; document.getElementById("fQ").value = st.q;
 }
 const _render = render;
 render = function(reset){ _render(reset); const h=toHash(); try{ history.replaceState(null,"", h?"#"+h:location.pathname); }catch(e){} };
@@ -449,7 +486,7 @@ document.getElementById("ctab").innerHTML = `<thead><tr><th>센터</th><th>운�
 const tot = R.length;
 document.getElementById("cnote").textContent = `실버는 강좌명·대상에 ‘실버·어르신·효도·55세 이상 등’이 적힌 강좌만 셌습니다. 전체 ${tot.toLocaleString()}개 중 ${S.senior}개입니다. 성인 강좌에 어르신이 참여할 수 있으므로 ‘어르신 강좌가 이만큼뿐’이라는 뜻은 아니고, 자료로 찾을 수 있는 것이 이만큼이라는 뜻입니다. 학교 단체 생존수영처럼 일반 신청이 아닌 강좌는 뺐습니다.`;
 
-document.getElementById("foot").innerHTML = `자료: 공공데이터포털 한국체육산업개발 강좌정보 파일 4종(${C.centers.map(c=>`<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.name)}</a>`).join(", ")})과 스포츠센터 강좌 설명(링크), ${esc(C.checked)} 확인 (매주 자동 확인, 포털 수정일이 바뀌면 새로 받음). 각 파일의 포털 수정일: ${C.centers.map(c=>`${esc(c.name)} ${esc(c.mod||"—")}`).join(", ")}. 신청·환불·할인은 각 센터 안내를 따릅니다. 코드: <a href="https://github.com/tkddn647-ship-it/kspo-opendata-check">github.com/tkddn647-ship-it/kspo-opendata-check</a>`;
+document.getElementById("foot").innerHTML = `자료: 공공데이터포털 한국체육산업개발 강좌정보 파일 4종(${C.centers.map(c=>`<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.name)}</a>`).join(", ")})과 스포츠센터 강좌 설명(링크), ${esc(C.checked)} 확인 (매주 자동 확인, 포털 수정일이 바뀌면 새로 받음). 각 파일의 포털 수정일: ${C.centers.map(c=>`${esc(c.name)} ${esc(c.mod||"—")}`).join(", ")}. 신청·환불·할인은 각 센터 안내를 따릅니다. 센터 4곳 강좌를 한 형식으로 정리한 자료: <a href="courses.csv" download>CSV 내려받기</a> (누구나 다시 쓸 수 있음). 코드: <a href="https://github.com/tkddn647-ship-it/kspo-opendata-check">github.com/tkddn647-ship-it/kspo-opendata-check</a>`;
 })();
 </script>
 </body>

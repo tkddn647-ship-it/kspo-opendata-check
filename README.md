@@ -17,6 +17,8 @@
 - **지금 올림픽공원 주차**: 한국체육산업개발이 공개한 실시간 주차 API(`parkingorsApi.do`, 기관 누리집에 공개된 키)를 화면에서 직접 부름
 - 주차 기록: `.github/workflows/parking-log.yml` 이 30분마다 같은 API를 불러 `parking-log` 브랜치에 쌓고, 화면은 같은 요일 종류·시각 기록이 5회 넘게 모이면 '평소보다 많음/비슷/적음'을 보여 줌
 - 자료 자동 갱신: `.github/workflows/refresh.yml` 이 매주 월요일 06:17(한국 시각) 포털의 강좌 파일 5종 수정일을 보고, 바뀌었으면 받아서 다시 만들고 배포 (`tools/refresh_courses.py`, 포털 내려받기 제한이 뜨면 멈추고 기존 자료 유지)
+- **시간표로 고르기**: 요일 × 시작 시각 표의 칸(강좌 수)을 눌러 그 시간 강좌만 보기
+- 정리된 강좌 자료 재공개: `site/courses.csv` (센터 4곳을 한 형식으로, 누구나 다시 사용)
 - 조건을 주소에 담아 링크로 공유, 글자 크게, 오프라인에서도 마지막 목록 열림(서비스 워커)
 - 점검일: 2026-11-23 (공공데이터포털에서 수집)
 
@@ -68,7 +70,7 @@
 python tools/unpack.py ~/Downloads/kspo_opendata.json.gz   # raw/ 에 풀기
 python check.py                                            # out/findings.json, out/summary.csv, site/data.js
 python courses.py                                          # site/courses.js, out/courses_summary.json
-python -m unittest discover -s tests                       # 규칙 테스트 21개
+python -m unittest discover -s tests                       # 규칙 테스트 23개
 ```
 
 외부 라이브러리 없이 Python 3.10+ 표준 라이브러리만 씁니다.

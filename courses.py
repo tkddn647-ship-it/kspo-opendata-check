@@ -263,10 +263,24 @@ def scenarios(rows):
     return sc
 
 
+def export_csv(rows):
+    """센터 4곳 강좌를 한 형식으로 맞춘 결과를 누구나 다시 쓸 수 있게 CSV로 내놓는다 (엑셀에서 열리게 BOM 포함)."""
+    hm = lambda m: "" if m is None else f"{m // 60:02d}:{m % 60:02d}"
+    with open(os.path.join(ROOT, "site", "courses.csv"), "w", encoding="utf-8-sig", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["센터", "종목", "강좌명", "요일", "괄호표기요일", "시작", "종료", "대상(원문)", "대상분류", "월강습비", "1회환산강습비(추정)", "정원", "최근변경월", "자료상태", "안내링크"])
+        for r in rows:
+            w.writerow([r["c"], r["s"], r["n"], r["d"], r["o"], hm(r["t0"]), hm(r["t1"]), r["tg"], "·".join(r["g"]), r["fee"] or "", r["per"] or "",
+                        r["cap"] or "", r["last"], r["fr"], r["link"]])
+
+
 def run():
     rows, centers, notes = build()
     summ = summarize(rows, centers)
     summ["scenarios"] = scenarios(rows)
+    faq = read("15089962") if os.path.exists(os.path.join(RAW, "15089962.csv")) else []
+    summ["faq"] = {"total": len(faq), "parking": sum("주차" in " ".join(x.values()) for x in faq)}
+    export_csv(rows)
     park = parking_profile()
     chk = os.path.join(RAW, "_courses_checked.txt")
     meta = json.load(open(os.path.join(RAW, "_meta.json"), encoding="utf-8"))
