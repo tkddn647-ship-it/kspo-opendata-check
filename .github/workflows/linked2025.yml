@@ -1,0 +1,27 @@
+# 올림픽공원 2025 입출차·공연·날씨 연계 데이터를 받아 raw/linked2025.csv 로 저장 (수동 실행).
+# 인증키는 저장소 Settings → Secrets and variables → Actions 의 KCISA_KEY 에만 둔다.
+name: 2025 연계 데이터 받기
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: 받기
+        env:
+          KCISA_KEY: ${{ secrets.KCISA_KEY }}
+        run: python tools/fetch_linked2025.py
+      - name: 올리기
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add raw/linked2025.csv
+          git diff --cached --quiet && exit 0
+          git commit -qm "2025 연계 데이터 받음 ($(wc -l < raw/linked2025.csv)행)"
+          git push -q
