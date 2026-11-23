@@ -1,0 +1,16 @@
+{
+  "name": "공공스포츠 강좌 찾기 — 올림픽공원·일산·분당",
+  "short_name": "강좌 찾기",
+  "description": "한국체육산업개발 스포츠센터 4곳의 강좌를 내 시간·대상으로 찾고, 올림픽공원 주차를 실시간으로 확인합니다.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "lang": "ko",
+  "background_color": "#F6F8F7",
+  "theme_color": "#1B2623",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

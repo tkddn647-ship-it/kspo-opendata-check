@@ -110,7 +110,7 @@ def month_key(s):
 
 def build():
     meta = json.load(open(os.path.join(RAW, "_meta.json"), encoding="utf-8"))
-    files = meta.get("files", {})
+    files = {m["id"]: m for m in meta.get("meta", [])}
     desc = collections.defaultdict(dict)
     for x in read("15147992"):
         c = DESC_CENTER.get(x["스포츠센터"])
@@ -268,10 +268,13 @@ def run():
     summ = summarize(rows, centers)
     summ["scenarios"] = scenarios(rows)
     park = parking_profile()
-    payload = {"centers": centers, "rows": rows, "summary": summ, "notes": dict(notes), "parking": park}
+    chk = os.path.join(RAW, "_courses_checked.txt")
+    meta = json.load(open(os.path.join(RAW, "_meta.json"), encoding="utf-8"))
+    checked = open(chk, encoding="utf-8").read().strip() if os.path.exists(chk) else meta["fetched_at"][:10]
+    payload = {"centers": centers, "rows": rows, "summary": summ, "notes": dict(notes), "parking": park, "checked": checked}
     os.makedirs(os.path.join(ROOT, "out"), exist_ok=True)
     with open(os.path.join(ROOT, "out", "courses_summary.json"), "w", encoding="utf-8") as f:
-        json.dump({"centers": centers, "summary": summ, "notes": dict(notes), "parking": park}, f, ensure_ascii=False, indent=1)
+        json.dump({"centers": centers, "summary": summ, "notes": dict(notes), "parking": park, "checked": checked}, f, ensure_ascii=False, indent=1)
     with open(os.path.join(ROOT, "site", "courses.js"), "w", encoding="utf-8") as f:
         f.write("window.COURSES=" + json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + ";\n")
     return payload

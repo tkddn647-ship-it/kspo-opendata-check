@@ -1,0 +1,43 @@
+# 올림픽공원 실시간 주차 API(한국체육산업개발이 공개한 키)를 30분마다 불러 parking-log 브랜치에 쌓는다.
+# 강좌 찾기 화면은 이 기록으로 '평소 이 시각보다 많음/비슷/적음'을 보여 준다.
+name: 주차 기록
+on:
+  schedule:
+    - cron: "7,37 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: parking-log
+  cancel-in-progress: false
+jobs:
+  log:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: 기록 브랜치 가져오기
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir log && cd log && git init -q
+          git remote add origin "https://x-access-token:${TOKEN}@github.com/${{ github.repository }}.git"
+          if git fetch -q --depth 1 origin parking-log 2>/dev/null; then
+            git checkout -q FETCH_HEAD -- parking_log.csv
+          else
+            echo "time_kst,unix,parking_sum" > parking_log.csv
+          fi
+      - name: 실시간 주차 API 호출
+        run: |
+          cd log
+          body=$(curl -fsS --retry 2 --max-time 20 "https://www.ksponco.or.kr/online/main/parkingorsApi.do?apiKey=PARKING21803504") \
+            || { echo "::warning::주차 API 호출 실패 (이번 회차 건너뜀)"; exit 0; }
+          n=$(printf '%s' "$body" | python3 -c 'import sys,json; print(int(json.load(sys.stdin)[0]["parking_sum"]))') \
+            || { echo "::warning::응답 형식이 다름: $body"; exit 0; }
+          echo "$(TZ=Asia/Seoul date +%Y-%m-%dT%H:%M:%S+09:00),$(date +%s),$n" >> parking_log.csv
+          tail -n +2 parking_log.csv | tail -n 20000 > body.csv && { echo "time_kst,unix,parking_sum"; cat body.csv; } > parking_log.csv && rm body.csv
+          printf '# 올림픽공원 주차 기록\n\n한국체육산업개발 실시간 주차 API(동2·남2·북2문 주차대수)를 30분마다 기록. 출차 기록이 없는 장기 주차가 포함될 수 있음(기관 설명).\n' > README.md
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -q --orphan new && git add parking_log.csv README.md
+          git commit -qm "주차 기록 $(TZ=Asia/Seoul date +%m-%d\ %H:%M) ${n}대"
+          git push -qf origin new:parking-log

@@ -5,7 +5,7 @@
    "full": "올림픽수영장",
    "id": "15101610",
    "data_month": "2026-05",
-   "mod": null,
+   "mod": "2026-09-21",
    "home": "https://www.ksponco.or.kr/sports/olparkswim",
    "n_current": 283,
    "n_school": 0,
@@ -16,7 +16,7 @@
    "full": "올림픽스포츠센터",
    "id": "15110953",
    "data_month": "2026-06",
-   "mod": null,
+   "mod": "2026-09-21",
    "home": "https://www.ksponco.or.kr/sports/olparksports",
    "n_current": 1344,
    "n_school": 0,
@@ -27,7 +27,7 @@
    "full": "일산올림픽스포츠센터",
    "id": "15114776",
    "data_month": "2026-10",
-   "mod": null,
+   "mod": "2026-09-21",
    "home": "https://www.ksponco.or.kr/sports/ilsansports",
    "n_current": 373,
    "n_school": 0,
@@ -38,7 +38,7 @@
    "full": "분당올림픽스포츠센터",
    "id": "15118652",
    "data_month": "2026-08",
-   "mod": null,
+   "mod": "2026-09-21",
    "home": "https://www.ksponco.or.kr/sports/bundangsports",
    "n_current": 303,
    "n_school": 12,
@@ -177,5 +177,6 @@
    26,
    9
   ]
- }
+ },
+ "checked": "2026-11-23"
 }

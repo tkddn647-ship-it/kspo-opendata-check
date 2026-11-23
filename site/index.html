@@ -4,6 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>공공스포츠센터 강좌 찾기 — 올림픽공원·일산·분당</title>
+<meta name="description" content="한국체육산업개발 스포츠센터 4곳(올림픽수영장·올림픽스포츠센터·일산·분당) 강좌를 퇴근 후·주말·아이와·실버로 찾고, 올림픽공원 주차를 실시간으로 확인합니다.">
+<meta name="theme-color" content="#1B2623">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="내 시간에 맞는 공공스포츠 강좌 찾기">
+<meta property="og:description" content="올림픽공원·일산·분당 스포츠센터 강좌를 내 시간으로 한 번에. 로그인 없이, 실시간 주차까지.">
+<meta property="og:url" content="https://tkddn647-ship-it.github.io/kspo-opendata-check/">
+<meta property="og:image" content="https://tkddn647-ship-it.github.io/kspo-opendata-check/og.png">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
@@ -17,11 +29,13 @@ body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.6 "Pretendard
 a{color:var(--ok)}
 :focus-visible{outline:3px solid var(--ok);outline-offset:2px}
 .wrap{max-width:1040px;margin:0 auto;padding:40px 24px 80px}
-nav.top{display:flex;gap:4px;margin-bottom:24px}
+nav.top{display:flex;gap:4px;margin-bottom:24px;align-items:center}
+nav.top a:last-of-type{margin-right:auto}
+nav.top .big[hidden]{display:none}
 nav.top a{font-size:15px;font-weight:600;color:var(--ink2);text-decoration:none;padding:6px 12px;border-radius:var(--r)}
 nav.top a[aria-current]{background:var(--ink);color:#fff}
 nav.top a:hover:not([aria-current]){background:#E4EBE8}
-nav.top .big{margin-left:auto;font:inherit;font-size:15px;font-weight:700;border:2px solid var(--ink);background:var(--sheet);color:var(--ink);border-radius:var(--r);padding:4px 12px;cursor:pointer}
+nav.top .big{margin-left:8px;font:inherit;font-size:15px;font-weight:700;border:2px solid var(--ink);background:var(--sheet);color:var(--ink);border-radius:var(--r);padding:4px 12px;cursor:pointer}
 nav.top .big[aria-pressed="true"]{background:var(--ink);color:#fff}
 body.bigtext .wrap{zoom:1.2}
 .share{font:inherit;font-size:14px;font-weight:700;border:1px solid var(--ok);background:var(--sheet);color:var(--ok);border-radius:var(--r);padding:4px 10px;cursor:pointer}
@@ -79,7 +93,7 @@ h1 small{display:block;font-size:.42em;font-weight:600;color:var(--ink2);letter-
 .pr{text-align:right;white-space:nowrap}
 .pr b{font-size:17px}
 .pr span{display:block;font-size:13px;color:var(--muted)}
-.pr a{font-size:13px;display:block;margin-top:2px}
+.pr .acts a{display:inline}
 .more{display:block;margin:18px auto 0;font:inherit;font-size:15px;font-weight:700;border:2px solid var(--ink);background:var(--sheet);color:var(--ink);border-radius:var(--r);padding:8px 20px;cursor:pointer}
 .empty{padding:28px 4px;color:var(--ink2)}
 
@@ -98,7 +112,19 @@ td.warn{color:var(--warn);font-weight:700}
 .facts p{margin:0;font-size:15px;color:var(--ink2)}
 footer{margin-top:56px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
 
+.live{margin:20px 0 0;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;background:var(--sheet);border:1px solid var(--line);border-left:4px solid var(--ok);border-radius:var(--r);padding:10px 14px;font-size:15px}
+.live[hidden]{display:none}
+.live b{font-size:20px}
+.live .src{font-size:13px;color:var(--muted)}
+.search{margin:18px 0 0;display:flex;gap:8px}
+.search input{flex:1;font:inherit;font-size:17px;padding:10px 14px;border:2px solid var(--ink);border-radius:var(--r);background:var(--sheet);color:var(--ink);min-width:0}
+.ftoggle{display:none}
+.acts{display:flex;flex-wrap:wrap;gap:4px 10px;justify-content:flex-end;margin-top:4px}
+.acts a,.acts button{font:inherit;font-size:13px;color:var(--ok);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline}
 @media (max-width:720px){
+  .ftoggle{display:block;margin:12px 0 0;font:inherit;font-size:15px;font-weight:700;border:1px solid var(--ink);background:var(--sheet);color:var(--ink);border-radius:var(--r);padding:8px 12px;width:100%;cursor:pointer}
+  .filters:not(.open){display:none}
+  .acts{justify-content:flex-start}
   .it{grid-template-columns:78px 1fr}
   .tm{font-size:18px}
   .pr{grid-column:2;text-align:left}
@@ -108,15 +134,19 @@ footer{margin-top:56px;font-size:13px;color:var(--muted);border-top:1px solid va
 </head>
 <body>
 <div class="wrap">
-<nav class="top" aria-label="화면 바꾸기"><a href="index.html" aria-current="page">강좌 찾기</a><a href="check.html">데이터 건강검진</a><button class="big" id="bigBtn" aria-pressed="false">글자 크게</button></nav>
+<nav class="top" aria-label="화면 바꾸기"><a href="index.html" aria-current="page">강좌 찾기</a><a href="check.html">데이터 건강검진</a><button class="big" id="installBtn" hidden>홈 화면에 추가</button><button class="big" id="bigBtn" aria-pressed="false">글자 크게</button></nav>
 <header>
   <h1><small>한국체육산업개발 스포츠센터 4곳</small>내 시간에 맞는 공공스포츠 강좌 찾기</h1>
   <p class="lede" id="lede"></p>
 </header>
 
+<div class="live" id="live" hidden></div>
+<div class="search"><input id="fQ" type="search" placeholder="강좌 이름으로 찾기 (예: 자유수영, 초급, 필라테스)" aria-label="강좌 이름으로 찾기"></div>
+
 <div class="presets" role="group" aria-label="빠르게 고르기" id="presets"></div>
 
-<div class="filters">
+<button class="ftoggle" id="ftoggle" aria-expanded="false" aria-controls="filters">조건 더 보기 (센터·종목·요일·시각·대상)</button>
+<div class="filters" id="filters">
   <div><span class="lab" id="lab-c">센터</span><div class="chips" role="group" aria-labelledby="lab-c" id="fCenter"></div></div>
   <div><label for="fSport">종목</label><select id="fSport"></select></div>
   <div><span class="lab" id="lab-d">요일 (하나라도 포함)</span><div class="chips" role="group" aria-labelledby="lab-d" id="fDay"></div></div>
@@ -178,7 +208,8 @@ document.getElementById("lede").textContent =
   `올림픽수영장·올림픽스포츠센터·일산·분당 올림픽스포츠센터의 운영 중 강좌 ${R.length.toLocaleString()}개를 한곳에 모았습니다. 이 가운데 최근 1년 안에 바뀐 기록이 있는 강좌는 ${fresh.toLocaleString()}개입니다. 자료는 공공데이터포털의 공개 파일이고, 신청은 각 센터 홈페이지에서 합니다.`;
 
 // 상태
-const st = {c:new Set(), s:"", d:new Set(), t:"", w:"", sort:"time", fresh:true, preset:""};
+const st = {c:new Set(), s:"", d:new Set(), t:"", w:"", sort:"time", fresh:true, preset:"", q:""};
+const norm = x => String(x||"").replace(/\s+/g,"").toLowerCase();
 const PRESETS = [
   {k:"eve", label:"퇴근 후", sub:"평일 19시부터", set:()=>{st.d=new Set("월화수목금"); st.t="1140-1440";}},
   {k:"wkd", label:"주말", sub:"토·일", set:()=>{st.d=new Set("토일");}},
@@ -200,6 +231,7 @@ document.getElementById("fSport").innerHTML = `<option value="">전체 종목</o
 function match(r, ignorePresetFresh){
   if (st.c.size && !st.c.has(r.c)) return false;
   if (st.s && r.s!==st.s) return false;
+  if (st.q && !norm(r.n+r.s).includes(norm(st.q))) return false;
   if (st.d.size && ![...r.d].some(d=>st.d.has(d))) return false;
   if (st.t){ const [a,b]=st.t.split("-").map(Number); if (r.t0==null || r.t0<a || r.t0>=b) return false; }
   if (st.w && !r.g.includes(st.w)) return false;
@@ -231,7 +263,8 @@ fC.addEventListener("click", e=>{const b=e.target.closest("button"); if(!b) retu
 fD.addEventListener("click", e=>{const b=e.target.closest("button"); if(!b) return; st.preset=""; st.d.has(b.dataset.v)?st.d.delete(b.dataset.v):st.d.add(b.dataset.v); sync(); render(true);});
 [["fSport","s"],["fTime","t"],["fWho","w"],["fSort","sort"]].forEach(([id,k])=>document.getElementById(id).addEventListener("change",e=>{st[k]=e.target.value; if(k!=="s"&&k!=="sort") st.preset=""; render(true);}));
 document.getElementById("fFresh").addEventListener("change",e=>{st.fresh=e.target.checked; render(true);});
-document.getElementById("reset").addEventListener("click",()=>{st.c=new Set();st.s="";st.d=new Set();st.t="";st.w="";st.sort="time";st.fresh=true;st.preset="";sync();render(true);});
+document.getElementById("fQ").addEventListener("input",e=>{st.q=e.target.value.trim(); render(true);});
+document.getElementById("reset").addEventListener("click",()=>{st.q="";document.getElementById("fQ").value="";st.c=new Set();st.s="";st.d=new Set();st.t="";st.w="";st.sort="time";st.fresh=true;st.preset="";sync();render(true);});
 
 const PK = C.parking, PARKC = new Set(["올림픽수영장","올림픽스포츠센터"]);
 function parkLevel(r){
@@ -243,7 +276,7 @@ function parkLevel(r){
 }
 function park(r){ const p=parkLevel(r); return p?`<span class="tag park">주차 ${p.wd?"평일":"주말"} 이 시각 ${p.lv} · 지수 ${p.v}</span>`:""; }
 const week = r => `<span class="wk" aria-label="요일 ${esc(r.d||"정보 없음")}${r.o?", 괄호 표기 "+esc(r.o):""}">${[...W].map(d=>`<i class="${r.d.includes(d)?"on":r.o.includes(d)?"opt":""}">${d}</i>`).join("")}</span>`;
-function item(r){
+function item(r, i){
   const fr = r.fr==="최근" ? `<span class="fr fr-ok">최근 변경 ${esc(r.last.slice(0,4))}.${+r.last.slice(5,7)}</span>`
            : r.fr==="미입력" ? `<span class="fr fr-old">시작일 미입력 · 센터 확인</span>`
            : `<span class="fr fr-old">${esc(r.last.slice(0,4))}.${+r.last.slice(5,7)} 이후 변경 없음 · 운영 여부 센터 확인</span>`;
@@ -253,11 +286,11 @@ function item(r){
     <div><div class="nm">${esc(r.n)}</div>
       <div class="meta">${week(r)}${esc(r.c)} · ${esc(r.s)}${r.tg?` · ${esc(r.tg)}`:""}${r.cap?` · 정원 ${r.cap}명`:""}</div>
       <div class="tags">${fr}${park(r)}${r.nd?`<span class="tag">강좌명에는 ${esc(r.nd)} · 강습 요일은 센터 확인</span>`:""}${r.o?`<span class="tag">괄호 요일(${esc(r.o)})은 자료에 뜻이 적혀 있지 않음</span>`:""}</div></div>
-    <div class="pr"><b>${won(r.fee)}</b>${r.per?`<span>1회 약 ${won(r.per)} (추정)</span>`:""}<a href="${esc(r.link)}" target="_blank" rel="noopener">센터 안내 보기</a></div>
+    <div class="pr"><b>${won(r.fee)}</b>${r.per?`<span>1회 약 ${won(r.per)} (추정)</span>`:""}<div class="acts"><a href="${esc(r.link)}" target="_blank" rel="noopener">센터 안내</a><a href="https://www.ksponco.or.kr/spm/index.do" target="_blank" rel="noopener">온라인 수강신청</a>${r.d&&r.t0!=null&&r.t1!=null?`<button data-ics="${i}">내 캘린더에 넣기</button>`:""}</div></div>
   </li>`;
 }
 
-let page = 1; const PER = 40;
+let page = 1, cur = []; const PER = 40;
 const list = document.getElementById("list"), more = document.getElementById("more");
 function render(reset){
   if (reset) page = 1;
@@ -267,7 +300,8 @@ function render(reset){
   all.sort(st.sort==="per" ? (a,b)=>(a.per??1e9)-(b.per??1e9) || (a.t0??1e4)-(b.t0??1e4) : (a,b)=>(a.t0??1e4)-(b.t0??1e4) || a.c.localeCompare(b.c,"ko"));
   document.getElementById("n").textContent = all.length.toLocaleString();
   document.getElementById("hid").textContent = hidden ? `조건에 맞지만 1년 넘게 바뀐 기록이 없어 숨긴 강좌 ${hidden.toLocaleString()}개` : "";
-  list.innerHTML = all.length ? all.slice(0, page*PER).map(item).join("") : `<li class="empty">조건에 맞는 강좌가 없습니다. 요일이나 시작 시각 조건을 하나 빼 보세요.</li>`;
+  cur = all;
+  list.innerHTML = all.length ? all.slice(0, page*PER).map((r,i)=>item(r,i)).join("") : `<li class="empty">조건에 맞는 강좌가 없습니다. 요일이나 시작 시각 조건을 하나 빼 보세요.</li>`;
   more.hidden = all.length <= page*PER;
   more.textContent = `더 보기 (${(all.length-page*PER).toLocaleString()}개 남음)`;
 }
@@ -277,14 +311,14 @@ more.addEventListener("click",()=>{page++; render(false);});
 function toHash(){
   const q = new URLSearchParams();
   if (st.c.size) q.set("c",[...st.c].join(",")); if (st.s) q.set("s",st.s); if (st.d.size) q.set("d",[...st.d].join(""));
-  if (st.t) q.set("t",st.t); if (st.w) q.set("w",st.w); if (st.sort!=="time") q.set("o",st.sort); if (!st.fresh) q.set("all","1"); if (st.preset) q.set("p",st.preset);
+  if (st.t) q.set("t",st.t); if (st.w) q.set("w",st.w); if (st.sort!=="time") q.set("o",st.sort); if (!st.fresh) q.set("all","1"); if (st.preset) q.set("p",st.preset); if (st.q) q.set("q",st.q);
   return q.toString();
 }
 function fromHash(){
   const q = new URLSearchParams(location.hash.slice(1));
   st.c = new Set((q.get("c")||"").split(",").filter(x=>centers.includes(x))); st.s = q.get("s")||"";
   st.d = new Set([...(q.get("d")||"")].filter(x=>W.includes(x))); st.t = q.get("t")||""; st.w = q.get("w")||"";
-  st.sort = q.get("o")==="per"?"per":"time"; st.fresh = q.get("all")!=="1"; st.preset = q.get("p")||"";
+  st.sort = q.get("o")==="per"?"per":"time"; st.fresh = q.get("all")!=="1"; st.preset = q.get("p")||""; st.q = q.get("q")||""; document.getElementById("fQ").value = st.q;
 }
 const _render = render;
 render = function(reset){ _render(reset); const h=toHash(); try{ history.replaceState(null,"", h?"#"+h:location.pathname); }catch(e){} };
@@ -297,6 +331,77 @@ const bigBtn = document.getElementById("bigBtn");
 function setBig(on){ document.body.classList.toggle("bigtext",on); bigBtn.setAttribute("aria-pressed",String(on)); try{ localStorage.setItem("bigtext", on?"1":""); }catch(e){} }
 bigBtn.addEventListener("click",()=>setBig(!document.body.classList.contains("bigtext")));
 try{ if (localStorage.getItem("bigtext")) setBig(true); }catch(e){}
+
+// 모바일: 조건 접기
+const ft = document.getElementById("ftoggle"), fl = document.getElementById("filters");
+ft.addEventListener("click",()=>{ const o = fl.classList.toggle("open"); ft.setAttribute("aria-expanded", String(o)); ft.textContent = o ? "조건 접기" : "조건 더 보기 (센터·종목·요일·시각·대상)"; });
+
+// 내 캘린더에 넣기 (.ics, 매주 반복 4주)
+const BY = {"월":"MO","화":"TU","수":"WE","목":"TH","금":"FR","토":"SA","일":"SU"};
+const FULL = Object.fromEntries(C.centers.map(c=>[c.name,c.full]));
+function icsFor(r){
+  const now = new Date(Date.now() + 9*3600e3); // 한국 시각
+  let d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  for (let k=0; k<8; k++){ const wd = "일월화수목금토"[d.getUTCDay()]; if (r.d.includes(wd) && (k>0 || r.t0 > now.getUTCHours()*60+now.getUTCMinutes())) break; d = new Date(d.getTime()+864e5); }
+  const ymd = d.toISOString().slice(0,10).replace(/-/g,"");
+  const t = m => String(Math.floor(m/60)).padStart(2,"0")+String(m%60).padStart(2,"0")+"00";
+  const e = x => String(x).replace(/[\\,;]/g, c=>"\\"+c).replace(/\n/g,"\\n");
+  const stamp = new Date().toISOString().replace(/[-:]/g,"").slice(0,15)+"Z";
+  return ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//kspo-course-finder//KO","CALSCALE:GREGORIAN",
+    "BEGIN:VTIMEZONE","TZID:Asia/Seoul","BEGIN:STANDARD","DTSTART:19700101T000000","TZOFFSETFROM:+0900","TZOFFSETTO:+0900","TZNAME:KST","END:STANDARD","END:VTIMEZONE",
+    "BEGIN:VEVENT", `UID:${ymd}-${t(r.t0)}-${[...r.c+r.n].reduce((h,c)=>(h*31+c.charCodeAt(0))>>>0,7).toString(36)}@kspo-course-finder`, `DTSTAMP:${stamp}`,
+    `DTSTART;TZID=Asia/Seoul:${ymd}T${t(r.t0)}`, `DTEND;TZID=Asia/Seoul:${ymd}T${t(r.t1)}`,
+    `RRULE:FREQ=WEEKLY;BYDAY=${[...r.d].map(x=>BY[x]).join(",")};COUNT=${r.d.length*4}`,
+    `SUMMARY:${e(r.s+" · "+r.n)}`, `LOCATION:${e(FULL[r.c]||r.c)}`,
+    `DESCRIPTION:${e(`강습비 ${r.fee?r.fee.toLocaleString()+"원":"정보 없음"} (자료 기준). 신청·일정 변경은 센터에서 확인하세요. ${r.link}`)}`,
+    "END:VEVENT","END:VCALENDAR"].join("\r\n");
+}
+list.addEventListener("click", e=>{
+  const b = e.target.closest("button[data-ics]"); if (!b) return;
+  const r = cur[+b.dataset.ics]; if (!r) return;
+  const url = URL.createObjectURL(new Blob([icsFor(r)], {type:"text/calendar;charset=utf-8"}));
+  const a = document.createElement("a"); a.href = url; a.download = `${r.s}_${hm(r.t0).replace(":","")}.ics`; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+});
+
+// 지금 올림픽공원 주차 (기관이 공개한 실시간 API, 공개 인증키)
+const LIVE_URL = "https://www.ksponco.or.kr/online/main/parkingorsApi.do?apiKey=PARKING21803504";
+const LOG_URL = "https://raw.githubusercontent.com/tkddn647-ship-it/kspo-opendata-check/parking-log/parking_log.csv";
+const liveEl = document.getElementById("live");
+let usual = null;
+async function loadLog(){
+  try{
+    const t = await (await fetch(LOG_URL, {cache:"no-store"})).text();
+    usual = t.trim().split("\n").slice(1).map(l=>l.split(",")).filter(x=>x.length>=3 && /^\d+$/.test(x[2])).map(([ts,,n])=>({d:new Date(ts), n:+n}));
+  }catch(e){ usual = null; }
+}
+function usualAt(now){
+  if (!usual) return null;
+  const wk = d => (d.getDay()%6===0) ? "주말" : "평일";
+  const same = usual.filter(x=>wk(x.d)===wk(now) && x.d.getHours()===now.getHours() && now - x.d > 30*60e3).map(x=>x.n).sort((a,b)=>a-b);
+  return same.length >= 5 ? {m: same[Math.floor(same.length/2)], n: same.length} : null;
+}
+async function live(){
+  const ctl = new AbortController(); const to = setTimeout(()=>ctl.abort(), 7000);
+  try{
+    const j = await (await fetch(LIVE_URL, {signal: ctl.signal, cache:"no-store"})).json();
+    const n = +(j && j[0] && j[0].parking_sum);
+    if (!Number.isFinite(n)) throw 0;
+    const now = new Date(), u = usualAt(now);
+    let cmp = "";
+    if (u){ const r = n/u.m; cmp = ` · 평소 이 시각(기록 ${u.n}회 중간값 ${u.m.toLocaleString()}대)보다 ${r>1.15?"많음":r<0.85?"적음":"비슷"}`; }
+    liveEl.innerHTML = `<span>지금 올림픽공원 주차장(동2·남2·북2문)</span><b>${n.toLocaleString()}대</b><span>${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")} 기준${cmp}</span><span class="src">한국체육산업개발 실시간 주차 API. 출차 기록이 없는 장기 주차가 포함되어 실제보다 많을 수 있음(기관 설명)</span>`;
+    liveEl.hidden = false;
+  }catch(e){ liveEl.hidden = true; }
+  finally{ clearTimeout(to); }
+}
+loadLog().then(live); setInterval(live, 5*60e3);
+
+// 홈 화면에 추가 (지원하는 브라우저에서만 버튼이 보임)
+if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(()=>{});
+let deferredInstall = null; const ib = document.getElementById("installBtn");
+addEventListener("beforeinstallprompt", e=>{ e.preventDefault(); deferredInstall = e; ib.hidden = false; });
+ib.addEventListener("click", async ()=>{ if (!deferredInstall) return; deferredInstall.prompt(); await deferredInstall.userChoice; deferredInstall = null; ib.hidden = true; });
 
 if (location.hash.length>1) fromHash();
 sync(); render(true);
@@ -344,7 +449,7 @@ document.getElementById("ctab").innerHTML = `<thead><tr><th>센터</th><th>운�
 const tot = R.length;
 document.getElementById("cnote").textContent = `실버는 강좌명·대상에 ‘실버·어르신·효도·55세 이상 등’이 적힌 강좌만 셌습니다. 전체 ${tot.toLocaleString()}개 중 ${S.senior}개입니다. 성인 강좌에 어르신이 참여할 수 있으므로 ‘어르신 강좌가 이만큼뿐’이라는 뜻은 아니고, 자료로 찾을 수 있는 것이 이만큼이라는 뜻입니다. 학교 단체 생존수영처럼 일반 신청이 아닌 강좌는 뺐습니다.`;
 
-document.getElementById("foot").innerHTML = `자료: 공공데이터포털 한국체육산업개발 강좌정보 파일 4종(${C.centers.map(c=>`<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.name)}</a>`).join(", ")})과 스포츠센터 강좌 설명(링크), 2026-11-23 수집. 신청·환불·할인은 각 센터 안내를 따릅니다. 코드: <a href="https://github.com/tkddn647-ship-it/kspo-opendata-check">github.com/tkddn647-ship-it/kspo-opendata-check</a>`;
+document.getElementById("foot").innerHTML = `자료: 공공데이터포털 한국체육산업개발 강좌정보 파일 4종(${C.centers.map(c=>`<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.name)}</a>`).join(", ")})과 스포츠센터 강좌 설명(링크), ${esc(C.checked)} 확인 (매주 자동 확인, 포털 수정일이 바뀌면 새로 받음). 각 파일의 포털 수정일: ${C.centers.map(c=>`${esc(c.name)} ${esc(c.mod||"—")}`).join(", ")}. 신청·환불·할인은 각 센터 안내를 따릅니다. 코드: <a href="https://github.com/tkddn647-ship-it/kspo-opendata-check">github.com/tkddn647-ship-it/kspo-opendata-check</a>`;
 })();
 </script>
 </body>
