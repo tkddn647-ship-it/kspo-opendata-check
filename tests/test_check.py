@@ -182,3 +182,17 @@ class Parking(unittest.TestCase):
         self.assertEqual(len(p["weekday"]), len(p["hours"]))
         self.assertEqual(max(p["weekday"] + p["weekend"]), 100)
         self.assertEqual(p["n_days"]["weekday"] + p["n_days"]["weekend"], 31)  # 2024년 7월
+
+
+class Refresh(unittest.TestCase):
+    def test_page_info_ignores_scripts(self):
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
+        import refresh_courses as RC
+        html = ('<script type="application/ld+json">{"name":"업데이트 주기","value":"연간"},{"name":"보유근거"}</script>'
+                '<th>업데이트 주기</th><td>반기</td><th>수정일</th><td>2026-09-21</td>'
+                "<a onclick=\"fn_fileDataDown('15110953', 'uddi:abc-1')\">")
+        RC.req = lambda path, data=None, accept="*/*": (200, html.encode())
+        info = RC.page_info("15110953")
+        self.assertEqual(info["cycle"], "반기")
+        self.assertEqual(info["mod"], "2026-09-21")
+        self.assertEqual(info["uddi"], "uddi:abc-1")

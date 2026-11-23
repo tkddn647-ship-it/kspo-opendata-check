@@ -41,12 +41,13 @@ def field(text, key, pat):
 def page_info(i):
     _, b = req(f"/data/{i}/fileData.do", accept="text/html")
     h = b.decode("utf-8", "replace")
-    t = re.sub(r"<[^>]+>", " ", h)
+    t = re.sub(r"<(script|style)\b.*?</\1>", " ", h, flags=re.S | re.I)  # JSON-LD 등 스크립트 안의 같은 낱말 제외
+    t = re.sub(r"<[^>]+>", " ", t)
     t = re.sub(r"\s+", " ", t)
     u = re.search(r"fn_fileDataDown\('(\d+)',\s*'(uddi:[^']+)'", h)
     return {"uddi": u.group(2) if u else "", "mod": field(t, "수정일", r"([\d-]{10})"),
             "next": field(t, "차기 등록 예정일", r"([\d-]{10})"), "rows": field(t, "전체 행", r"([\d,]+)"),
-            "cycle": field(t, "업데이트 주기", r"(\S+)")}
+            "cycle": field(t, "업데이트 주기", r"(실시간|일간|주간|월간|분기|반기|연간|수시)")}
 
 
 def download(i, uddi):
