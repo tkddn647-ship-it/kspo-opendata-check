@@ -250,7 +250,7 @@ const cs = S.centers;
 document.getElementById("ctab").innerHTML = `<thead><tr><th>센터</th><th>운영 중 강좌</th><th>1년 넘게 변경 없음</th><th>평일 19시 이후</th><th>주말</th><th>어린이</th><th>실버</th><th>수영 1회 환산 (중앙값·추정)</th><th>파일의 마지막 달</th></tr></thead><tbody>` +
   C.centers.map(c=>{const v=cs[c.name]; return `<tr><td><a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.full)}</a></td><td>${v.n.toLocaleString()}</td><td class="${v.stale/v.n>.2?"warn":""}">${v.stale.toLocaleString()}</td><td>${v.evening}</td><td>${v.weekend}</td><td>${v.kids}</td><td>${v.senior}</td><td>${v.swim_per_median?won(v.swim_per_median):"수영 강좌 없음"}</td><td>${esc(c.data_month)}</td></tr>`}).join("") + `</tbody>`;
 const tot = R.length;
-document.getElementById("cnote").textContent = `실버는 강좌명·대상에 ‘실버·어르신·65세 이상’이 적힌 강좌만 셌습니다. 전체 ${tot.toLocaleString()}개 중 ${S.senior}개입니다. 성인 강좌에 어르신이 참여할 수 있으므로 ‘어르신 강좌가 이만큼뿐’이라는 뜻은 아니고, 자료로 찾을 수 있는 것이 이만큼이라는 뜻입니다. 학교 단체 생존수영처럼 일반 신청이 아닌 강좌는 뺐습니다.`;
+document.getElementById("cnote").textContent = `실버는 강좌명·대상에 ‘실버·어르신·효도·55세 이상 등’이 적힌 강좌만 셌습니다. 전체 ${tot.toLocaleString()}개 중 ${S.senior}개입니다. 성인 강좌에 어르신이 참여할 수 있으므로 ‘어르신 강좌가 이만큼뿐’이라는 뜻은 아니고, 자료로 찾을 수 있는 것이 이만큼이라는 뜻입니다. 학교 단체 생존수영처럼 일반 신청이 아닌 강좌는 뺐습니다.`;
 
 document.getElementById("foot").innerHTML = `자료: 공공데이터포털 한국체육산업개발 강좌정보 파일 4종(${C.centers.map(c=>`<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.name)}</a>`).join(", ")})과 스포츠센터 강좌 설명(링크), 2026-11-23 수집. 신청·환불·할인은 각 센터 안내를 따릅니다. 코드: <a href="https://github.com/tkddn647-ship-it/kspo-opendata-check">github.com/tkddn647-ship-it/kspo-opendata-check</a>`;
 })();

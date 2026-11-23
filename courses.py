@@ -65,7 +65,7 @@ def parse_time(s):
 
 KID = re.compile(r"어린이|유아|초등|키즈|생존수영|\d세\b|\(\d세\)|\d학년|유치")
 TEEN = re.compile(r"청소년|중고등|중·고|중학|고등")
-SENIOR = re.compile(r"실버|어르신|시니어|6[05]세\s*이상|노인")
+SENIOR = re.compile(r"실버|어르신|시니어|효도|(5[05]|6[05]|70)세\s*이상|노인")
 WOMEN = re.compile(r"여성|주부|\(여\)")
 
 
