@@ -1,0 +1,4 @@
+__pycache__/
+docs/out/*.pdf
+docs/out/page-*.jpg
+docs/source/
