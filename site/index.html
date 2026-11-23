@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>한국체육산업개발 공공데이터 건강검진표</title>
+<title>공공스포츠센터 강좌 찾기 — 올림픽공원·일산·분당</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
-  --paper:#F6F8F7; --sheet:#FFFFFF; --ink:#1B2623; --ink2:#4A5A56; --line:#D9E1DE;
-  --ok:#2F6B4F; --ok-bg:#E6F0EA; --warn:#A86A12; --warn-bg:#FBF1DF; --bad:#B4321F; --bad-bg:#F9E4E0; --muted:#7A8884;
+  --paper:#F6F8F7; --sheet:#FFFFFF; --ink:#1B2623; --ink2:#4A5A56; --line:#D9E1DE; --soft:#EEF3F1;
+  --ok:#2F6B4F; --ok-bg:#E6F0EA; --warn:#A86A12; --warn-bg:#FBF1DF; --bad:#B4321F; --muted:#6F7D79;
   --r:6px;
 }
 *{box-sizing:border-box}
@@ -17,235 +17,242 @@ body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.6 "Pretendard
 a{color:var(--ok)}
 :focus-visible{outline:3px solid var(--ok);outline-offset:2px}
 .wrap{max-width:1040px;margin:0 auto;padding:40px 24px 80px}
-header{display:grid;grid-template-columns:1fr auto;gap:8px 32px;align-items:end;border-bottom:2px solid var(--ink);padding-bottom:20px}
+nav.top{display:flex;gap:4px;margin-bottom:24px}
+nav.top a{font-size:15px;font-weight:600;color:var(--ink2);text-decoration:none;padding:6px 12px;border-radius:var(--r)}
+nav.top a[aria-current]{background:var(--ink);color:#fff}
+nav.top a:hover:not([aria-current]){background:#E4EBE8}
+header{border-bottom:2px solid var(--ink);padding-bottom:20px}
 h1{font-size:clamp(28px,4.2vw,44px);line-height:1.15;letter-spacing:-.02em;margin:0;font-weight:800}
 h1 small{display:block;font-size:.42em;font-weight:600;color:var(--ink2);letter-spacing:0;margin-bottom:10px}
-.stamp{border:2px solid var(--ink);border-radius:var(--r);padding:10px 14px;font-size:14px;line-height:1.5;text-align:right;white-space:nowrap}
-.stamp b{font-size:18px}
-.lede{max-width:68ch;color:var(--ink2);margin:20px 0 0}
+.lede{max-width:66ch;color:var(--ink2);margin:16px 0 0}
 
-/* 58칸 판정 띠 */
-.strip-sec{margin:36px 0 8px}
-.strip-head{display:flex;flex-wrap:wrap;gap:12px 28px;align-items:baseline;margin-bottom:14px}
-.strip-head h2{margin:0;font-size:20px}
-.tally{display:flex;gap:18px;flex-wrap:wrap;font-size:15px}
-.tally span{display:inline-flex;gap:6px;align-items:center}
-.strip{display:grid;grid-template-columns:repeat(29,1fr);gap:4px}
-.cell{aspect-ratio:3/4;border:0;border-radius:3px;cursor:pointer;position:relative;padding:0;font:inherit;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
-.cell.g-ok{background:var(--ok)} .cell.g-warn{background:var(--warn)} .cell.g-bad{background:var(--bad)}
-.cell.api{opacity:.55}
-.cell:hover{filter:brightness(1.15)}
-.strip-note{font-size:13px;color:var(--muted);margin-top:8px}
-#tip{position:fixed;pointer-events:none;background:var(--ink);color:#fff;font-size:13px;padding:6px 10px;border-radius:4px;max-width:280px;display:none;z-index:5}
+/* 빠른 고르기 */
+.presets{display:flex;flex-wrap:wrap;gap:8px;margin:28px 0 0}
+.presets button{font:inherit;font-size:16px;font-weight:700;border:2px solid var(--ink);background:var(--sheet);color:var(--ink);border-radius:999px;padding:8px 16px;cursor:pointer}
+.presets button small{font-weight:500;color:var(--ink2);margin-left:6px;font-size:14px}
+.presets button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.presets button[aria-pressed="true"] small{color:#C9D4D0}
 
-.mark{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;font-size:12px;font-weight:800;color:#fff;flex:none}
-.m-bad{background:var(--bad)} .m-warn{background:var(--warn)} .m-ok{background:var(--ok)} .m-info{background:var(--muted)}
+/* 거르기 */
+.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px 20px;margin:22px 0 0;padding:16px 18px;background:var(--sheet);border:1px solid var(--line);border-radius:var(--r)}
+.filters label,.filters .lab{display:block;font-size:13px;color:var(--ink2);font-weight:600;margin-bottom:6px}
+.filters select{width:100%;font:inherit;font-size:15px;padding:7px 8px;border:1px solid var(--line);border-radius:var(--r);background:var(--sheet);color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chips button{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--sheet);color:var(--ink);border-radius:var(--r);padding:4px 9px;cursor:pointer}
+.chips button[aria-pressed="true"]{background:var(--ok);border-color:var(--ok);color:#fff}
+.chk{display:flex;gap:8px;align-items:flex-start;font-size:14px;color:var(--ink);font-weight:500}
+.chk input{margin-top:4px;accent-color:var(--ok)}
+.reset{font:inherit;font-size:14px;background:none;border:0;color:var(--ok);text-decoration:underline;cursor:pointer;padding:0}
 
-section{margin-top:48px}
+.resbar{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:baseline;margin:24px 0 10px}
+.resbar b{font-size:22px}
+.resbar .hid{font-size:14px;color:var(--muted)}
+
+/* 결과 */
+.list{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.it{display:grid;grid-template-columns:112px 1fr auto;gap:6px 20px;padding:14px 4px;border-bottom:1px solid var(--line);align-items:start}
+.tm{font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1.2}
+.tm span{display:block;font-size:13px;font-weight:500;color:var(--muted);letter-spacing:0}
+.nm{font-weight:700;line-height:1.4}
+.meta{font-size:14px;color:var(--ink2);margin-top:2px}
+.wk{display:inline-flex;gap:2px;vertical-align:middle;margin-right:8px}
+.wk i{font-style:normal;font-size:11px;width:19px;height:19px;display:inline-flex;align-items:center;justify-content:center;border-radius:3px;background:var(--soft);color:#A3B0AC}
+.wk i.on{background:var(--ink);color:#fff}
+.wk i.opt{background:var(--sheet);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink)}
+.tags{margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;font-size:12px}
+.tag{border:1px solid var(--line);border-radius:3px;padding:0 6px;color:var(--ink2)}
+.fr{font-weight:700;border-radius:3px;padding:0 6px}
+.fr-ok{background:var(--ok-bg);color:var(--ok)}
+.fr-old{background:var(--warn-bg);color:var(--warn)}
+.pr{text-align:right;white-space:nowrap}
+.pr b{font-size:17px}
+.pr span{display:block;font-size:13px;color:var(--muted)}
+.pr a{font-size:13px;display:block;margin-top:2px}
+.more{display:block;margin:18px auto 0;font:inherit;font-size:15px;font-weight:700;border:2px solid var(--ink);background:var(--sheet);color:var(--ink);border-radius:var(--r);padding:8px 20px;cursor:pointer}
+.empty{padding:28px 4px;color:var(--ink2)}
+
+section{margin-top:56px}
 section>h2{font-size:22px;margin:0 0 6px;letter-spacing:-.01em}
-section>p.sub{margin:0 0 18px;color:var(--ink2);max-width:68ch}
-
-/* 기관 전체 */
-.org{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
-.org li{display:grid;grid-template-columns:20px 1fr;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)}
-.org .fix{color:var(--ink2);font-size:14px;margin-top:4px}
-.org details{font-size:13px;color:var(--ink2);margin-top:6px}
-
-/* 목록 */
-.tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
-.seg{display:inline-flex;border:1px solid var(--ink);border-radius:var(--r);overflow:hidden}
-.seg button{border:0;background:var(--sheet);font:inherit;font-size:14px;padding:7px 12px;cursor:pointer;color:var(--ink)}
-.seg button+button{border-left:1px solid var(--ink)}
-.seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
-.tools input{font:inherit;font-size:14px;padding:7px 10px;border:1px solid var(--line);border-radius:var(--r);min-width:200px;background:var(--sheet)}
-.count{font-size:14px;color:var(--muted)}
-table{width:100%;border-collapse:collapse;background:var(--sheet);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
-th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top;font-size:15px}
-th{font-size:13px;color:var(--ink2);font-weight:600;background:#EEF3F1;white-space:nowrap}
-tr.row{cursor:pointer}
-tr.row:hover td{background:#F2F6F4}
-td.grade{white-space:nowrap}
-.pill{display:inline-flex;gap:6px;align-items:center;font-weight:700;font-size:14px}
-.p-bad{color:var(--bad)} .p-warn{color:var(--warn)} .p-ok{color:var(--ok)}
-.kind{font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:3px;padding:0 5px;margin-left:6px;white-space:nowrap}
-td.num{white-space:nowrap;color:var(--ink2)}
-tr.detail td{background:#FAFCFB;padding:4px 12px 16px}
-.f{display:grid;grid-template-columns:20px 1fr;gap:10px;padding:10px 0;border-top:1px dashed var(--line)}
-.f:first-child{border-top:0}
-.f .fix{font-size:14px;color:var(--ink2)}
-.f .ev{font-size:13px;color:var(--muted);word-break:break-all}
-.f .ai{font-size:12px;color:var(--ink2);background:#EEF3F1;border-radius:3px;padding:1px 6px;margin-left:6px}
-
-/* 이용자 보기 */
-.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
-.cd{background:var(--sheet);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
-.cd h3{margin:0 0 8px;font-size:16px;line-height:1.35}
-.fresh{display:inline-block;font-size:13px;font-weight:700;padding:2px 8px;border-radius:3px}
-.fr-ok{background:var(--ok-bg);color:var(--ok)} .fr-old{background:var(--warn-bg);color:var(--warn)} .fr-stop{background:var(--bad-bg);color:var(--bad)} .fr-na{background:#EEF3F1;color:var(--ink2)}
-.cd p{margin:8px 0 0;font-size:14px;color:var(--ink2)}
-
-.how{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;counter-reset:s}
-.how div{border-top:3px solid var(--ink);padding-top:10px}
-.how div::before{counter-increment:s;content:counter(s);font-weight:800;font-size:28px;line-height:1;display:block;margin-bottom:6px}
-.how p{margin:0;font-size:15px;color:var(--ink2)}
+section>p.sub{margin:0 0 16px;color:var(--ink2);max-width:68ch}
+table{width:100%;border-collapse:collapse;background:var(--sheet);border:1px solid var(--line)}
+th,td{padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-size:15px;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-size:13px;color:var(--ink2);font-weight:600;background:var(--soft)}
+td.warn{color:var(--warn);font-weight:700}
+.scroll{overflow-x:auto}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.facts div{border-top:3px solid var(--ink);padding-top:10px}
+.facts h3{margin:0 0 4px;font-size:16px}
+.facts p{margin:0;font-size:15px;color:var(--ink2)}
 footer{margin-top:56px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
 
 @media (max-width:720px){
-  header{grid-template-columns:1fr}.stamp{text-align:left;white-space:normal}
-  .strip{grid-template-columns:repeat(15,1fr)}
-  .hide-m{display:none}
-}
-@media (prefers-reduced-motion:no-preference){
-  .cell{transition:filter .12s}
+  .it{grid-template-columns:78px 1fr}
+  .tm{font-size:18px}
+  .pr{grid-column:2;text-align:left}
+  .pr span{display:inline;margin-left:8px}
 }
 </style>
 </head>
 <body>
 <div class="wrap">
+<nav class="top" aria-label="화면 바꾸기"><a href="index.html" aria-current="page">강좌 찾기</a><a href="check.html">데이터 건강검진</a></nav>
 <header>
-  <h1><small>한국체육산업개발(주) 개방 공공데이터</small>공공데이터 건강검진표</h1>
-  <div class="stamp" id="stamp"></div>
+  <h1><small>한국체육산업개발 스포츠센터 4곳</small>내 시간에 맞는 공공스포츠 강좌 찾기</h1>
   <p class="lede" id="lede"></p>
 </header>
 
-<div class="strip-sec">
-  <div class="strip-head">
-    <h2>판정 한눈에 보기</h2>
-    <div class="tally" id="tally"></div>
+<div class="presets" role="group" aria-label="빠르게 고르기" id="presets"></div>
+
+<div class="filters">
+  <div><span class="lab" id="lab-c">센터</span><div class="chips" role="group" aria-labelledby="lab-c" id="fCenter"></div></div>
+  <div><label for="fSport">종목</label><select id="fSport"></select></div>
+  <div><span class="lab" id="lab-d">요일 (하나라도 포함)</span><div class="chips" role="group" aria-labelledby="lab-d" id="fDay"></div></div>
+  <div><label for="fTime">시작 시각</label><select id="fTime">
+    <option value="">아무 때나</option><option value="0-540">아침 (9시 전)</option><option value="540-720">오전 (9~12시)</option>
+    <option value="720-1080">오후 (12~18시)</option><option value="1080-1140">저녁 (18~19시)</option><option value="1140-1440">퇴근 후 (19시부터)</option></select></div>
+  <div><label for="fWho">대상</label><select id="fWho">
+    <option value="">누구나</option><option>성인</option><option>여성</option><option>청소년</option><option>어린이</option><option>실버</option></select></div>
+  <div><label for="fSort">정렬</label><select id="fSort">
+    <option value="time">시작 시각 순</option><option value="per">1회 환산 강습비 낮은 순</option></select></div>
+  <div style="grid-column:1/-1;display:flex;flex-wrap:wrap;gap:10px 24px;align-items:center">
+    <label class="chk"><input type="checkbox" id="fFresh" checked> 1년 넘게 바뀐 기록이 없는 강좌는 숨기기 <span style="color:var(--muted)">(운영 여부를 자료로 확인할 수 없음)</span></label>
+    <button class="reset" id="reset">조건 모두 지우기</button>
   </div>
-  <div class="strip" id="strip" role="list"></div>
-  <p class="strip-note">한 칸이 데이터 하나입니다. 진한 칸은 파일데이터(내용까지 점검), 옅은 칸은 오픈 API(설명·메타데이터만 점검). 칸을 누르면 아래 목록에서 그 데이터를 엽니다.</p>
 </div>
 
+<div class="resbar" aria-live="polite"><span><b id="n">0</b>개 강좌</span><span class="hid" id="hid"></span></div>
+<ul class="list" id="list"></ul>
+<button class="more" id="more" hidden>더 보기</button>
+
 <section>
-  <h2>기관 전체에서 보이는 문제</h2>
-  <p class="sub">데이터 한 개가 아니라 개방 목록과 관리 방식 전체에 걸친 발견 사항입니다.</p>
-  <ul class="org" id="org"></ul>
+  <h2>센터 4곳 한눈에</h2>
+  <p class="sub">같은 자료로 센터마다 퇴근 후·주말·어린이·실버 강좌가 얼마나 있는지 셌습니다. ‘운영 중’은 공개 파일에서 종료일이 9999-12-31로 적힌 강좌입니다.</p>
+  <div class="scroll"><table id="ctab"></table></div>
+  <p class="sub" id="cnote" style="margin-top:10px;font-size:14px"></p>
 </section>
 
 <section>
-  <h2>데이터별 결과</h2>
-  <p class="sub">줄을 누르면 발견 사항과 고치는 방법이 열립니다. ‘자료 기준일’은 파일 안에 들어 있는 가장 최근 날짜로, 포털의 수정일과 다를 수 있습니다.</p>
-  <div class="tools">
-    <div class="seg" role="group" aria-label="판정으로 거르기" id="segGrade">
-      <button aria-pressed="true" data-g="">전체</button><button aria-pressed="false" data-g="점검 필요">점검 필요</button><button aria-pressed="false" data-g="주의">주의</button><button aria-pressed="false" data-g="양호">양호</button>
-    </div>
-    <input id="q" type="search" placeholder="데이터 이름으로 찾기" aria-label="데이터 이름으로 찾기">
-    <span class="count" id="count"></span>
-  </div>
-  <table>
-    <thead><tr><th>판정</th><th>데이터</th><th class="hide-m">자료 기준일</th><th class="hide-m">갱신 주기</th><th>발견</th></tr></thead>
-    <tbody id="rows"></tbody>
-  </table>
-</section>
-
-<section>
-  <h2>이용자에게 보여 줄 최신성 표시</h2>
-  <p class="sub">포털 수정일만으로는 자료가 언제까지인지 알 수 없습니다. 같은 점검 결과로 이용자 화면에 이렇게 붙일 수 있습니다 (파일데이터만).</p>
-  <div class="cards" id="cards"></div>
-</section>
-
-<section>
-  <h2>이 점검표가 만들어지는 과정</h2>
-  <div class="how">
-    <div><p>공공데이터포털에서 기관 데이터 목록·상세 정보와 파일데이터를 내려받습니다.</p></div>
-    <div><p>정해진 규칙으로 판정합니다: 갱신 예정일 경과, 갱신 주기의 두 배 넘게 새 자료 없음, 설명과 실제 기간 불일치, 같은 행 반복, 다른 데이터 설명 복사, 개방목록 누락.</p></div>
-    <div><p>설명문 오탈자는 AI가 후보를 찾고, 원문과 글자 그대로 대조해 확인된 것만 남깁니다. 판정은 AI가 하지 않습니다.</p></div>
-    <div><p>담당자가 결과를 보고 고칩니다. 다음 갱신 때 같은 점검을 다시 돌려 고쳐졌는지 확인합니다.</p></div>
+  <h2>이 화면이 보여 주는 것과 못 보여 주는 것</h2>
+  <div class="facts">
+    <div><h3>보여 주는 것</h3><p>4개 센터 강좌를 한 번에, 로그인 없이, 요일·시작 시각·대상으로 거릅니다. 강좌마다 자료에서 마지막으로 바뀐 달을 붙여, 오래된 정보인지 바로 알 수 있게 했습니다.</p></div>
+    <div><h3>추정이 들어간 것</h3><p>1회 환산 강습비는 월 강습비를 주당 횟수×4.345주로 나눈 값입니다. 센터 간 비교용이며 실제 회차와 다를 수 있습니다. 금액은 자료에 적힌 기본 금액이고 중고생·할인 요금은 자료에 없습니다.</p></div>
+    <div><h3>자료가 헷갈리게 적힌 것</h3><p>일부 강좌는 요일 칸에 강습일과 자유이용일이 함께 적혀 있습니다. 강좌명에 다른 요일이 적힌 강좌에는 표시를 붙였습니다. 올림픽수영장의 ‘(토)’처럼 괄호로 적힌 요일은 뜻이 자료에 없어, 요일로 찾을 때 넣지 않았습니다.</p></div>
+    <div><h3>자료에 없는 것</h3><p>남은 자리, 추첨·선착순 여부, 신청 기간은 공개 데이터에 없습니다. 신청 전에 센터 안내 페이지에서 확인하세요. 이 항목들을 개방해 달라는 제안이 건강검진 결과에 들어 있습니다.</p></div>
   </div>
 </section>
 
 <footer id="foot"></footer>
 </div>
-<div id="tip" role="tooltip"></div>
-<script src="data.js"></script>
+<script src="courses.js"></script>
 <script>
 (function(){
-const D = window.FINDINGS;
-const G = {"점검 필요":"bad","주의":"warn","양호":"ok"};
-const LV = {error:["bad","!","점검 필요"],warn:["warn","△","주의"],info:["info","i","참고"]};
+const C = window.COURSES, R = C.rows, S = C.summary;
+const W = "월화수목금토일";
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const mark = g => `<span class="mark m-${g}" aria-hidden="true">${g==="bad"?"!":g==="warn"?"△":g==="ok"?"✓":"i"}</span>`;
-const order = {"점검 필요":0,"주의":1,"양호":2};
-const ds = D.datasets.slice().sort((a,b)=> order[a.grade]-order[b.grade] || (a.kind>b.kind?1:-1));
+const won = n => n==null ? "—" : n.toLocaleString("ko-KR")+"원";
+const hm = m => m==null ? "" : String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0");
+const fresh = R.filter(r=>r.fr==="최근").length;
 
-const n = D.grades, total = D.datasets.length;
-document.getElementById("stamp").innerHTML = `점검일 <b>${esc(D.ref_date)}</b><br>파일 ${D.n_files}종 · API ${D.n_apis}종`;
-const nf = D.datasets.filter(d=>d.findings.some(f=>f.level!=="info")).length;
 document.getElementById("lede").textContent =
-  `공공데이터포털에 개방된 ${total}종을 같은 규칙으로 점검했습니다. 파일데이터 ${D.n_csv_checked}종은 파일 내용까지, 오픈 API는 인증키가 필요해 설명과 메타데이터만 봤습니다. ${nf}종에서 고칠 거리가 나왔고, 기관 전체에 걸친 문제가 ${D.org.filter(f=>f.level!=="info").length}건 있습니다.`;
-document.getElementById("tally").innerHTML = ["점검 필요","주의","양호"].map(g=>`<span>${mark(G[g])}${g} <b>${n[g]||0}</b></span>`).join("");
+  `올림픽수영장·올림픽스포츠센터·일산·분당 올림픽스포츠센터의 운영 중 강좌 ${R.length.toLocaleString()}개를 한곳에 모았습니다. 이 가운데 최근 1년 안에 바뀐 기록이 있는 강좌는 ${fresh.toLocaleString()}개입니다. 자료는 공공데이터포털의 공개 파일이고, 신청은 각 센터 홈페이지에서 합니다.`;
 
-const strip = document.getElementById("strip"), tip = document.getElementById("tip");
-ds.forEach(d=>{
-  const b = document.createElement("button");
-  b.className = `cell g-${G[d.grade]}` + (d.kind==="API"?" api":"");
-  b.setAttribute("role","listitem");
-  b.setAttribute("aria-label", `${d.title}, ${d.grade}`);
-  b.textContent = d.grade==="점검 필요"?"!":d.grade==="주의"?"△":"";
-  b.onmouseenter = e => { tip.style.display="block"; tip.textContent = `${d.title} (${d.kind}) — ${d.grade}`; };
-  b.onmousemove = e => { tip.style.left = Math.min(e.clientX+12, innerWidth-300)+"px"; tip.style.top = (e.clientY+14)+"px"; };
-  b.onmouseleave = () => tip.style.display="none";
-  b.onclick = () => open(d.id, true);
-  strip.appendChild(b);
+// 상태
+const st = {c:new Set(), s:"", d:new Set(), t:"", w:"", sort:"time", fresh:true, preset:""};
+const PRESETS = [
+  {k:"eve", label:"퇴근 후", sub:"평일 19시부터", set:()=>{st.d=new Set("월화수목금"); st.t="1140-1440";}},
+  {k:"wkd", label:"주말", sub:"토·일", set:()=>{st.d=new Set("토일");}},
+  {k:"kid", label:"아이와", sub:"어린이·유아", set:()=>{st.w="어린이";}},
+  {k:"teen", label:"청소년", sub:"", set:()=>{st.w="청소년";}},
+  {k:"sen", label:"실버", sub:"어르신 대상", set:()=>{st.w="실버";}},
+];
+function count(p){ const save=JSON.stringify([...st.d,st.t,st.w]); const o={d:st.d,t:st.t,w:st.w}; st.d=new Set(); st.t=""; st.w=""; p.set(); const n=R.filter(r=>match(r,true)).length; st.d=o.d; st.t=o.t; st.w=o.w; return n; }
+
+// 센터·종목·요일 칩
+const centers = C.centers.map(c=>c.name);
+const fC = document.getElementById("fCenter");
+fC.innerHTML = centers.map(c=>`<button aria-pressed="false" data-v="${esc(c)}">${esc(c)}</button>`).join("");
+const fD = document.getElementById("fDay");
+fD.innerHTML = [...W].map(d=>`<button aria-pressed="false" data-v="${d}">${d}</button>`).join("");
+const sports = Object.entries(R.reduce((a,r)=>(a[r.s]=(a[r.s]||0)+1,a),{})).sort((a,b)=>b[1]-a[1]);
+document.getElementById("fSport").innerHTML = `<option value="">전체 종목</option>` + sports.map(([s,n])=>`<option value="${esc(s)}">${esc(s)} (${n})</option>`).join("");
+
+function match(r, ignorePresetFresh){
+  if (st.c.size && !st.c.has(r.c)) return false;
+  if (st.s && r.s!==st.s) return false;
+  if (st.d.size && ![...r.d].some(d=>st.d.has(d))) return false;
+  if (st.t){ const [a,b]=st.t.split("-").map(Number); if (r.t0==null || r.t0<a || r.t0>=b) return false; }
+  if (st.w && !r.g.includes(st.w)) return false;
+  if (st.fresh && r.fr!=="최근") return false;
+  return true;
+}
+
+const presetEl = document.getElementById("presets");
+function drawPresets(){
+  presetEl.innerHTML = PRESETS.map(p=>`<button aria-pressed="${st.preset===p.k}" data-k="${p.k}">${p.label}<small>${p.sub?p.sub+" · ":""}${count(p)}개</small></button>`).join("");
+}
+presetEl.addEventListener("click", e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  const p=PRESETS.find(x=>x.k===b.dataset.k);
+  const off = st.preset===p.k;
+  st.d=new Set(); st.t=""; st.w=""; st.preset="";
+  if(!off){ p.set(); st.preset=p.k; }
+  sync(); render(true);
 });
 
-const LO = {error:0,warn:1,info:2};
-document.getElementById("org").innerHTML = D.org.slice().sort((a,b)=>LO[a.level]-LO[b.level]).map(f=>{
-  const [g] = LV[f.level];
-  return `<li>${mark(g)}<div><div><b>${esc(f.msg)}</b></div>${f.fix?`<div class="fix">고치는 방법: ${esc(f.fix)}</div>`:""}${f.evidence?`<details><summary>해당 데이터 보기</summary>${esc(f.evidence)}</details>`:""}</div></li>`;
-}).join("");
-
-let gf = "", q = "", openId = null;
-const rows = document.getElementById("rows");
-function shown(d){ return (!gf || d.grade===gf) && (!q || d.title.includes(q)); }
-function render(){
-  const list = ds.filter(shown);
-  document.getElementById("count").textContent = `${list.length}종`;
-  rows.innerHTML = list.map(d=>{
-    const g = G[d.grade];
-    const main = d.findings.filter(f=>f.rule!=="API");
-    const head = main.filter(f=>f.level!=="info").map(f=>f.msg)[0] || (main.length? `참고 ${main.length}건` : "발견 없음");
-    const det = d.id===openId ? `<tr class="detail"><td colspan="5">${
-      d.findings.map(f=>{const [lg]=LV[f.level];
-        return `<div class="f">${mark(lg)}<div><div>${esc(f.msg)}${f.rule==="오탈자"?'<span class="ai">AI 후보 · 원문 대조 확인</span>':""}</div>${f.fix?`<div class="fix">고치는 방법: ${esc(f.fix)}</div>`:""}${f.evidence?`<div class="ev">${esc(f.evidence)}</div>`:""}</div></div>`}).join("")
-      }<div class="f"><span></span><div class="ev"><a href="${esc(d.url)}" target="_blank" rel="noopener">공공데이터포털에서 원본 보기</a> · 차기 등록 예정일 ${esc(d.next||"-")} · 포털 수정일 ${esc(d.mod||"-")}</div></div></td></tr>` : "";
-    return `<tr class="row" id="r-${d.id}" tabindex="0" aria-expanded="${d.id===openId}" data-id="${d.id}">
-      <td class="grade"><span class="pill p-${g}">${mark(g)}${d.grade}</span></td>
-      <td>${esc(d.title)}<span class="kind">${d.kind}</span></td>
-      <td class="num hide-m">${esc(d.last_data||"—")}</td>
-      <td class="num hide-m">${esc(d.cycle||"—")}</td>
-      <td>${esc(head)}</td></tr>${det}`;
-  }).join("");
+function sync(){
+  fC.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", String(st.c.has(b.dataset.v))));
+  fD.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", String(st.d.has(b.dataset.v))));
+  document.getElementById("fSport").value=st.s; document.getElementById("fTime").value=st.t;
+  document.getElementById("fWho").value=st.w; document.getElementById("fSort").value=st.sort;
+  document.getElementById("fFresh").checked=st.fresh;
 }
-function open(id, scroll){
-  openId = openId===id && !scroll ? null : id;
-  if (scroll){ gf=""; q=""; document.getElementById("q").value=""; setSeg(""); }
-  render();
-  if (scroll) document.getElementById("r-"+id)?.scrollIntoView({block:"center", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
+fC.addEventListener("click", e=>{const b=e.target.closest("button"); if(!b) return; st.c.has(b.dataset.v)?st.c.delete(b.dataset.v):st.c.add(b.dataset.v); sync(); render(true);});
+fD.addEventListener("click", e=>{const b=e.target.closest("button"); if(!b) return; st.preset=""; st.d.has(b.dataset.v)?st.d.delete(b.dataset.v):st.d.add(b.dataset.v); sync(); render(true);});
+[["fSport","s"],["fTime","t"],["fWho","w"],["fSort","sort"]].forEach(([id,k])=>document.getElementById(id).addEventListener("change",e=>{st[k]=e.target.value; if(k!=="s"&&k!=="sort") st.preset=""; render(true);}));
+document.getElementById("fFresh").addEventListener("change",e=>{st.fresh=e.target.checked; render(true);});
+document.getElementById("reset").addEventListener("click",()=>{st.c=new Set();st.s="";st.d=new Set();st.t="";st.w="";st.sort="time";st.fresh=true;st.preset="";sync();render(true);});
+
+const week = r => `<span class="wk" aria-label="요일 ${esc(r.d||"정보 없음")}${r.o?", 괄호 표기 "+esc(r.o):""}">${[...W].map(d=>`<i class="${r.d.includes(d)?"on":r.o.includes(d)?"opt":""}">${d}</i>`).join("")}</span>`;
+function item(r){
+  const fr = r.fr==="최근" ? `<span class="fr fr-ok">최근 변경 ${esc(r.last.slice(0,4))}.${+r.last.slice(5,7)}</span>`
+           : r.fr==="미입력" ? `<span class="fr fr-old">시작일 미입력 · 센터 확인</span>`
+           : `<span class="fr fr-old">${esc(r.last.slice(0,4))}.${+r.last.slice(5,7)} 이후 변경 없음 · 운영 여부 센터 확인</span>`;
+  const long = r.t0!=null && r.t1!=null && r.t1-r.t0>180;
+  return `<li class="it">
+    <div class="tm">${r.t0!=null?hm(r.t0):"—"}<span>${r.t1!=null?(long?"~"+hm(r.t1)+" 이용":"~"+hm(r.t1)):esc(r.tt)}</span></div>
+    <div><div class="nm">${esc(r.n)}</div>
+      <div class="meta">${week(r)}${esc(r.c)} · ${esc(r.s)}${r.tg?` · ${esc(r.tg)}`:""}${r.cap?` · 정원 ${r.cap}명`:""}</div>
+      <div class="tags">${fr}${r.nd?`<span class="tag">강좌명에는 ${esc(r.nd)} · 강습 요일은 센터 확인</span>`:""}${r.o?`<span class="tag">괄호 요일(${esc(r.o)})은 자료에 뜻이 적혀 있지 않음</span>`:""}</div></div>
+    <div class="pr"><b>${won(r.fee)}</b>${r.per?`<span>1회 약 ${won(r.per)} (추정)</span>`:""}<a href="${esc(r.link)}" target="_blank" rel="noopener">센터 안내 보기</a></div>
+  </li>`;
 }
-rows.addEventListener("click", e=>{ const tr=e.target.closest("tr.row"); if(tr && !e.target.closest("a")) open(tr.dataset.id); });
-rows.addEventListener("keydown", e=>{ const tr=e.target.closest("tr.row"); if(tr && (e.key==="Enter"||e.key===" ")){ e.preventDefault(); open(tr.dataset.id); requestAnimationFrame(()=>document.getElementById("r-"+tr.dataset.id)?.focus()); }});
-function setSeg(v){ document.querySelectorAll("#segGrade button").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.g===v))); }
-document.getElementById("segGrade").addEventListener("click", e=>{ const b=e.target.closest("button"); if(!b) return; gf=b.dataset.g; setSeg(gf); render(); });
-document.getElementById("q").addEventListener("input", e=>{ q=e.target.value.trim(); render(); });
-render();
 
-// 이용자 보기
-const ref = new Date(D.ref_date);
-const days = s => Math.round((ref - new Date(s))/864e5);
-const LIM = {"월간":60,"분기":180,"반기":365,"연간":730};
-document.getElementById("cards").innerHTML = D.datasets.filter(d=>d.kind==="파일" && d.last_data).sort((a,b)=>a.title.localeCompare(b.title,"ko")).map(d=>{
-  const age = days(d.last_data), lim = LIM[d.cycle];
-  let cls="fr-ok", label=`${d.last_data.slice(0,4)}년 ${+d.last_data.slice(5,7)}월까지의 자료`;
-  let note = `${esc(d.cycle)} 갱신 · 다음 갱신 예정 ${esc(d.next||"미정")}`;
-  if (d.findings.some(f=>f.rule==="갱신예정일")) { cls="fr-stop"; note = `갱신 예정일(${esc(d.next)})이 지났습니다. 최신 정보는 기관 홈페이지에서 확인하세요.`; }
-  else if (lim && age>lim) { cls="fr-old"; note = `${Math.floor(age/30)}개월째 새 자료가 없습니다.`; }
-  else if (d.cycle==="수시" && age>365*5) { cls="fr-old"; note = `지난 기록입니다 (${d.last_data.slice(0,4)}년이 마지막).`; }
-  return `<div class="cd"><h3>${esc(d.title)}</h3><span class="fresh ${cls}">${label}</span><p>${note}</p></div>`;
-}).join("");
+let page = 1; const PER = 40;
+const list = document.getElementById("list"), more = document.getElementById("more");
+function render(reset){
+  if (reset) page = 1;
+  drawPresets();
+  const all = R.filter(r=>match(r));
+  const hidden = st.fresh ? R.filter(r=>{st.fresh=false; const m=match(r); st.fresh=true; return m && r.fr!=="최근";}).length : 0;
+  all.sort(st.sort==="per" ? (a,b)=>(a.per??1e9)-(b.per??1e9) || (a.t0??1e4)-(b.t0??1e4) : (a,b)=>(a.t0??1e4)-(b.t0??1e4) || a.c.localeCompare(b.c,"ko"));
+  document.getElementById("n").textContent = all.length.toLocaleString();
+  document.getElementById("hid").textContent = hidden ? `조건에 맞지만 1년 넘게 바뀐 기록이 없어 숨긴 강좌 ${hidden.toLocaleString()}개` : "";
+  list.innerHTML = all.length ? all.slice(0, page*PER).map(item).join("") : `<li class="empty">조건에 맞는 강좌가 없습니다. 요일이나 시작 시각 조건을 하나 빼 보세요.</li>`;
+  more.hidden = all.length <= page*PER;
+  more.textContent = `더 보기 (${(all.length-page*PER).toLocaleString()}개 남음)`;
+}
+more.addEventListener("click",()=>{page++; render(false);});
+sync(); render(true);
 
-document.getElementById("foot").innerHTML = `자료: 공공데이터포털(data.go.kr) 한국체육산업개발주식회사 개방 데이터, ${esc(D.fetched_at.slice(0,10))} 수집. 판정은 규칙 기반이며 ‘주의’ 중 중복 행처럼 식별번호가 없어 확정할 수 없는 항목은 담당자 확인이 필요합니다. 점검 코드와 규칙: <a href="https://github.com/tkddn647-ship-it/kspo-opendata-check">github.com/tkddn647-ship-it/kspo-opendata-check</a>`;
+// 센터 표
+const cs = S.centers;
+document.getElementById("ctab").innerHTML = `<thead><tr><th>센터</th><th>운영 중 강좌</th><th>1년 넘게 변경 없음</th><th>평일 19시 이후</th><th>주말</th><th>어린이</th><th>실버</th><th>수영 1회 환산 (중앙값·추정)</th><th>파일의 마지막 달</th></tr></thead><tbody>` +
+  C.centers.map(c=>{const v=cs[c.name]; return `<tr><td><a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.full)}</a></td><td>${v.n.toLocaleString()}</td><td class="${v.stale/v.n>.2?"warn":""}">${v.stale.toLocaleString()}</td><td>${v.evening}</td><td>${v.weekend}</td><td>${v.kids}</td><td>${v.senior}</td><td>${v.swim_per_median?won(v.swim_per_median):"수영 강좌 없음"}</td><td>${esc(c.data_month)}</td></tr>`}).join("") + `</tbody>`;
+const tot = R.length;
+document.getElementById("cnote").textContent = `실버는 강좌명·대상에 ‘실버·어르신·65세 이상’이 적힌 강좌만 셌습니다. 전체 ${tot.toLocaleString()}개 중 ${S.senior}개입니다. 성인 강좌에 어르신이 참여할 수 있으므로 ‘어르신 강좌가 이만큼뿐’이라는 뜻은 아니고, 자료로 찾을 수 있는 것이 이만큼이라는 뜻입니다. 학교 단체 생존수영처럼 일반 신청이 아닌 강좌는 뺐습니다.`;
+
+document.getElementById("foot").innerHTML = `자료: 공공데이터포털 한국체육산업개발 강좌정보 파일 4종(${C.centers.map(c=>`<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.name)}</a>`).join(", ")})과 스포츠센터 강좌 설명(링크), 2026-11-23 수집. 신청·환불·할인은 각 센터 안내를 따릅니다. 코드: <a href="https://github.com/tkddn647-ship-it/kspo-opendata-check">github.com/tkddn647-ship-it/kspo-opendata-check</a>`;
 })();
 </script>
 </body>

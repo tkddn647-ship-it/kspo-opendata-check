@@ -3,7 +3,7 @@ name: Pages
 on:
   push:
     branches: [main]
-    paths: ["site/**", ".github/workflows/pages.yml"]
+    paths: ["site/**", "*.py", "tests/**", ".github/workflows/pages.yml"]
   workflow_dispatch:
 permissions:
   contents: read
@@ -25,6 +25,9 @@ jobs:
           cp site/data.js /tmp/data.js.before
           python check.py
           cmp site/data.js /tmp/data.js.before
+          cp site/courses.js /tmp/courses.js.before
+          python courses.py > /dev/null
+          cmp site/courses.js /tmp/courses.js.before
   deploy:
     needs: test
     runs-on: ubuntu-latest

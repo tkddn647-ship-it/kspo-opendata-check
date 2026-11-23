@@ -131,6 +131,53 @@ def check_inout(hdr: list[str], body: list[list[str]], desc: str) -> list[dict]:
     return fs
 
 
+def check_courses(i: str, hdr: list[str], body: list[list[str]]) -> list[dict]:
+    """강좌정보 파일 4종: 시민 서비스에 그대로 쓰면 틀리는 부분."""
+    import courses as CO
+    fs: list[dict] = []
+    # 날짜 열에 기간이 들어 있음 (예: 시작일자 = '2026-01-01~9999-12-31')
+    for j, h in enumerate(hdr):
+        if re.search(r"(일자|일)$", h.strip()):
+            n = sum(1 for r in body if j < len(r) and re.fullmatch(r"\d{4}-\d{2}-\d{2}~\d{4}-\d{2}-\d{2}", r[j].strip()))
+            if body and n / len(body) > 0.5:
+                nxt = hdr[j + 1] if j + 1 < len(hdr) else ""
+                fs.append(F("warn", "열값형식", f"'{h}' 열에 날짜 하나가 아니라 기간(시작~종료)이 들어 있음 ({n}/{len(body)}행)"
+                            + (f". 옆의 '{nxt}' 열에는 종료일 대신 시작일이 들어 있음" if nxt.startswith("종료") else ""),
+                            "기간을 시작일·종료일 두 열로 나누고 열 이름과 값을 맞춤"))
+    if i not in CO.SPEC:
+        return fs
+    sp = CO.SPEC[i]
+    rows = [dict(zip(hdr, r)) for r in body]
+    end = (lambda x: x[sp[2]]) if sp[2] else (lambda x: x[sp[3]].split("~")[-1])
+    months = sorted(m for m in (CO.month_key(x[sp[1]]) for x in rows) if "2000" < m < "3000")
+    last_m = months[-1] if months else ""
+    best = {}
+    for x in rows:
+        if end(x).startswith("9999") and (x[sp[10]] not in best or x[sp[1]] > best[x[sp[10]]][sp[1]]):
+            best[x[sp[10]]] = x
+    old = bad = 0
+    for x in best.values():
+        m = CO.month_key(x[sp[1]])
+        if not ("2000" < m < "3000"):
+            bad += 1
+        elif last_m and (int(last_m[:4]) - int(m[:4])) * 12 + int(last_m[5:7]) - int(m[5:7]) >= 12:
+            old += 1
+    if old or bad:
+        fs.append(F("warn", "운영중강좌", f"종료일 9999(운영 중)로 남은 강좌 {len(best)}개 중 {old}개는 파일의 마지막 달({last_m})보다 1년 넘게 전에 바뀐 뒤 그대로"
+                    + (f", {bad}개는 시작일이 1990-01-01·잘못된 연도" if bad else ""),
+                    "끝난 강좌는 종료일을 넣고, 계속하는 강좌는 그대로 두되 확인 날짜를 남김. 시민 화면에서는 '운영 여부 확인' 표시가 붙음"))
+    mism = 0
+    for x in best.values():
+        nd = CO.name_days(x["강좌명"])
+        base, _ = CO.parse_days(x[sp[6]])
+        if len(nd) >= 2 and nd != set(base):
+            mism += 1
+    if mism:
+        fs.append(F("info", "요일", f"강좌명의 요일과 '{sp[6]}' 열이 다른 운영 중 강좌 {mism}개 (예: 강좌명 '화목', 요일 열 '월~일')",
+                    "강습 요일과 자유이용 요일을 다른 열로 나눔. 지금은 요일로 찾으면 자유이용만 되는 날도 강습일처럼 나옴"))
+    return fs
+
+
 def check_file(i: str, meta: dict, cat: dict, ref: dt.date) -> list[dict]:
     fs: list[dict] = []
     path = csv_path(i)
@@ -214,6 +261,7 @@ def check_file(i: str, meta: dict, cat: dict, ref: dt.date) -> list[dict]:
                     "'상시'를 뜻한다면 다른 상시 항목과 같은 표기로 통일"))
 
     fs += check_inout(hdr, body, desc)
+    fs += check_courses(i, hdr, body)
 
     # 8. 빈칸이 절반 넘는 열
     for j, h in enumerate(hdr):
@@ -348,6 +396,18 @@ def run(ref: dt.date | None = None) -> dict:
     with (RAW / "15147873.csv").open(encoding="utf-8", newline="") as f:
         open_list = list(csv.DictReader(f))
     org = check_catalog(cat, open_list, ref)
+    course_cols = set()
+    for i in ("15101610", "15110953", "15114776", "15118652"):
+        if (pth := csv_path(i)):
+            course_cols |= set(read_csv(pth)[0])
+    if course_cols:
+        missing = [n for n, pat in (("남은 자리(잔여 정원)", r"잔여|신청인원|현원"), ("신청 기간", r"신청.*(시작|기간|마감)|접수"),
+                                    ("선착순·추첨 여부", r"추첨|선착순|접수방식"), ("대상별 요금(중고생·할인)", r"할인|청소년.*금액|요금구분"))
+                   if not any(re.search(pat, c) for c in course_cols)]
+        if missing:
+            org.append(F("warn", "시민 서비스", f"강좌정보 파일 4종에 시민이 신청 전에 가장 먼저 찾는 항목이 없음: {', '.join(missing)}",
+                         "강좌정보 파일에 이 열들을 추가하거나 같은 강좌번호로 이어 붙일 수 있는 오픈 API로 개방. 강좌 찾기 화면이 '신청 가능 여부'까지 보여 줄 수 있게 됨",
+                         "열 목록: " + ", ".join(sorted(course_cols))))
     grades = Counter(d["grade"] for d in datasets)
     rules = Counter(f["rule"] for d in datasets for f in d["findings"] if f["level"] != "info" or f["rule"] == "오탈자")
     result = {"ref_date": str(ref), "fetched_at": cat["fetched_at"], "n_files": len(cat["files"]), "n_apis": len(cat["apis"]),

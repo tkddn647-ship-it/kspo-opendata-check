@@ -1,0 +1,106 @@
+{
+ "centers": [
+  {
+   "name": "올림픽수영장",
+   "full": "올림픽수영장",
+   "id": "15101610",
+   "data_month": "2026-05",
+   "mod": null,
+   "home": "https://www.ksponco.or.kr/sports/olparkswim",
+   "n_current": 283,
+   "n_school": 0,
+   "url": "https://www.data.go.kr/data/15101610/fileData.do"
+  },
+  {
+   "name": "올림픽스포츠센터",
+   "full": "올림픽스포츠센터",
+   "id": "15110953",
+   "data_month": "2026-06",
+   "mod": null,
+   "home": "https://www.ksponco.or.kr/sports/olparksports",
+   "n_current": 1344,
+   "n_school": 0,
+   "url": "https://www.data.go.kr/data/15110953/fileData.do"
+  },
+  {
+   "name": "일산",
+   "full": "일산올림픽스포츠센터",
+   "id": "15114776",
+   "data_month": "2026-10",
+   "mod": null,
+   "home": "https://www.ksponco.or.kr/sports/ilsansports",
+   "n_current": 373,
+   "n_school": 0,
+   "url": "https://www.data.go.kr/data/15114776/fileData.do"
+  },
+  {
+   "name": "분당",
+   "full": "분당올림픽스포츠센터",
+   "id": "15118652",
+   "data_month": "2026-08",
+   "mod": null,
+   "home": "https://www.ksponco.or.kr/sports/bundangsports",
+   "n_current": 303,
+   "n_school": 12,
+   "url": "https://www.data.go.kr/data/15118652/fileData.do"
+  }
+ ],
+ "summary": {
+  "centers": {
+   "올림픽수영장": {
+    "n": 283,
+    "evening": 75,
+    "weekend": 4,
+    "kids": 22,
+    "senior": 5,
+    "stale": 0,
+    "daymis": 0,
+    "swim_per_median": 4400,
+    "swim_n": 152
+   },
+   "올림픽스포츠센터": {
+    "n": 1344,
+    "evening": 130,
+    "weekend": 619,
+    "kids": 21,
+    "senior": 2,
+    "stale": 964,
+    "daymis": 0,
+    "swim_per_median": null,
+    "swim_n": 0
+   },
+   "일산": {
+    "n": 373,
+    "evening": 71,
+    "weekend": 178,
+    "kids": 28,
+    "senior": 2,
+    "stale": 0,
+    "daymis": 49,
+    "swim_per_median": 4600,
+    "swim_n": 97
+   },
+   "분당": {
+    "n": 303,
+    "evening": 34,
+    "weekend": 93,
+    "kids": 5,
+    "senior": 2,
+    "stale": 48,
+    "daymis": 1,
+    "swim_per_median": 5000,
+    "swim_n": 84
+   }
+  },
+  "total": 2303,
+  "evening": 310,
+  "weekend": 894,
+  "kids": 76,
+  "senior": 11,
+  "stale": 1012
+ },
+ "notes": {
+  "올림픽스포츠센터: 시작일 미입력·잘못된 연도": 24,
+  "분당올림픽스포츠센터: 시작일 미입력·잘못된 연도": 1
+ }
+}

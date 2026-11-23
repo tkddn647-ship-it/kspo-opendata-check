@@ -145,3 +145,30 @@ class Catalog(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+import courses as CO  # noqa: E402
+
+
+class Courses(unittest.TestCase):
+    def test_parse_days(self):
+        self.assertEqual(CO.parse_days("월,화,수,목,금,(토)"), (list("월화수목금"), ["토"]))
+        self.assertEqual(CO.parse_days("화,목"), (["화", "목"], []))
+
+    def test_name_days(self):
+        self.assertEqual(CO.name_days("골프 15시(화목)"), {"화", "목"})
+        self.assertEqual(CO.name_days("19시 연수1 (오리발=화.목)"), set())          # 오리발 요일은 강습 요일 아님
+        self.assertEqual(CO.name_days("17시 기초2(배영팔동작.화목)(토.자유수영)"), {"화", "목"})
+        self.assertEqual(CO.name_days("검도 21시(월~금)"), set("월화수목금"))
+        self.assertEqual(CO.name_days("TRX 화요일반"), set())
+
+    def test_sessions(self):
+        self.assertEqual(CO.sessions_per_month("특강 (토) 12회", ["토"], 60), (12, "회차"))
+        self.assertEqual(CO.sessions_per_month("수영 주3회", list("월수금"), 50)[1], "주")
+        self.assertEqual(CO.sessions_per_month("자유이용", list("월화수목금"), 600), (None, None))  # 자유이용형은 환산 안 함
+
+    def test_range_in_date_column(self):
+        hdr = ["강좌번호", "시작월", "강좌명", "요일", "시작일자", "종료일자"]
+        body = [["1", "2026-01-01", "수영", "월", "2026-01-01~9999-12-31", "2026-01-01"]] * 3
+        fs = C.check_courses("x", hdr, body)
+        self.assertTrue(any(f["rule"] == "열값형식" and "종료일" in f["msg"] for f in fs))
