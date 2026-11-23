@@ -97,10 +97,37 @@ class CheckFile(unittest.TestCase):
         r = self.rules(C.check_file("d", {"rows": "2", "cycle": "연간"}, {"desc": "현재는 2023년도 1월 부터 12월까지 정보"}, REF))
         self.assertEqual(r.get("설명기간"), "warn")
 
+    def test_reads_gzip(self):
+        import gzip
+        with gzip.open(C.RAW / "g.csv.gz", "wt", encoding="utf-8") as f:
+            f.write("일련번호,등록일\n1,2026-01-01\n")
+        self.assertIsNotNone(C.csv_path("g"))
+        self.assertEqual(C.read_csv(C.csv_path("g"))[1], [["1", "2026-01-01"]])
+
     def test_row_count_mismatch(self):
         self.write("e", "일련번호\n1\n")
         r = self.rules(C.check_file("e", {"rows": "5", "cycle": "연간"}, {"desc": ""}, REF))
         self.assertEqual(r.get("행수"), "warn")
+
+
+class InOut(unittest.TestCase):
+    def test_zone_in_desc_but_no_zone_column(self):
+        hdr = ["입차일", "입차일시", "출차일시"]
+        body = [["2024-07-01", "2024-07-01 10:00", "2024-07-01 10:05"], ["2024-07-01", "2024-07-01 11:00", "2024-07-02 12:00"]]
+        fs = C.check_inout(hdr, body, "동2문/남2문/북2문 주차구역에 대한 입출차 정보. 장기 주차인경우에는 종료일이 표기가 되어 있지 않을수도 있습니다.")
+        rules = [(f["rule"], f["level"]) for f in fs]
+        self.assertIn(("설명내용", "warn"), rules)          # 구역 열 없음
+        self.assertEqual(sum(1 for r, _ in rules if r == "설명내용"), 2)  # + 출차 빈칸 0건
+        info = next(f for f in fs if f["rule"] == "입출차")
+        self.assertIn("24시간 넘음 1건", info["msg"])
+        self.assertIn("10분 미만 1건", info["msg"])
+
+    def test_exit_before_entry_is_error(self):
+        fs = C.check_inout(["입차일시", "출차일시"], [["2024-07-01 10:00", "2024-07-01 09:00"]], "")
+        self.assertEqual(fs[0]["level"], "error")
+
+    def test_not_parking_data(self):
+        self.assertEqual(C.check_inout(["일련번호"], [["1"]], ""), [])
 
 
 class Catalog(unittest.TestCase):

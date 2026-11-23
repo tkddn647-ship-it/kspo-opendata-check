@@ -14,7 +14,11 @@ def main(path: str) -> None:
     d = json.loads(gzip.open(path).read())
     RAW.mkdir(exist_ok=True)
     for k, v in d["csv"].items():
-        (RAW / f"{k}.csv").write_text(v["txt"], encoding="utf-8")
+        if len(v["txt"]) > 5_000_000:  # 큰 파일은 압축해서 둠 (check.py가 .csv.gz도 읽음)
+            with gzip.open(RAW / f"{k}.csv.gz", "wt", encoding="utf-8", newline="") as f:
+                f.write(v["txt"])
+        else:
+            (RAW / f"{k}.csv").write_text(v["txt"], encoding="utf-8")
     files = {k: {kk: vv for kk, vv in v.items() if kk != "txt"} for k, v in d["csv"].items()}
     (RAW / "_meta.json").write_text(json.dumps({"fetched_at": d["fetched_at"], "meta": d["meta"], "files": files},
                                                ensure_ascii=False, indent=1), encoding="utf-8")

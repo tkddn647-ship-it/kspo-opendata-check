@@ -14,6 +14,7 @@ from __future__ import annotations
 import csv
 import datetime as dt
 import difflib
+import gzip
 import json
 import re
 from collections import Counter
@@ -39,7 +40,8 @@ def F(level: str, rule: str, msg: str, fix: str = "", evidence: str = "") -> dic
 
 
 def read_csv(path: Path) -> tuple[list[str], list[list[str]]]:
-    with path.open(encoding="utf-8", newline="") as f:
+    opener = (lambda: gzip.open(path, "rt", encoding="utf-8", newline="")) if path.suffix == ".gz" else (lambda: path.open(encoding="utf-8", newline=""))
+    with opener() as f:
         rows = list(csv.reader(f))
     return rows[0], rows[1:]
 
@@ -90,10 +92,49 @@ def clean_desc(s: str) -> str:
     return (head[:end + 2] if end > 0 else head).strip()
 
 
+def csv_path(i: str) -> Path | None:
+    """raw/<id>.csv 또는 큰 파일은 raw/<id>.csv.gz"""
+    for p in (RAW / f"{i}.csv", RAW / f"{i}.csv.gz"):
+        if p.exists():
+            return p
+    return None
+
+
+def check_inout(hdr: list[str], body: list[list[str]], desc: str) -> list[dict]:
+    """입차·출차 시각이 있는 데이터: 출차 빈칸, 출차<입차, 체류시간 분포, 설명이 말하는 구역 열."""
+    if not {"입차일시", "출차일시"} <= set(hdr):
+        return []
+    ji, jo = hdr.index("입차일시"), hdr.index("출차일시")
+    fmt = "%Y-%m-%d %H:%M"
+    blank = neg = zero = over = short = 0
+    for r in body:
+        if not r[jo].strip():
+            blank += 1
+            continue
+        try:
+            m = (dt.datetime.strptime(r[jo][:16], fmt) - dt.datetime.strptime(r[ji][:16], fmt)).total_seconds() / 60
+        except ValueError:
+            continue
+        neg += m < 0; zero += m == 0; over += m > 24 * 60; short += 0 <= m < 10
+    fs = []
+    if neg:
+        fs.append(F("error", "입출차", f"출차가 입차보다 앞선 기록 {neg}건", "입·출차 시각을 바로잡음"))
+    fs.append(F("info", "입출차", f"체류 0분 {zero}건, 10분 미만 {short}건({short / max(1, len(body)):.1%}), 24시간 넘음 {over}건, 출차 빈칸 {blank}건",
+                "10분 미만은 회차·승하차일 수 있어 오류로 보지 않음. 이용자가 걸러 쓸 수 있게 설명에 적어 두면 좋음"))
+    if re.search(r"출차.{0,30}(종료일|표기).{0,20}않|종료일이 표기가 되어 있지 않", desc) and blank == 0:
+        fs.append(F("info", "설명내용", "설명은 장기 주차면 출차 시각이 비어 있을 수 있다고 하지만 실제로 빈칸은 0건",
+                    "설명을 실제 자료에 맞게 고침"))
+    zones = re.findall(r"(동\d문|남\d문|북\d문|서\d문)", desc)
+    if zones and not any(re.search(r"구역|출입문|주차장", h) for h in hdr):
+        fs.append(F("warn", "설명내용", f"설명은 주차구역({'·'.join(dict.fromkeys(zones))})별 자료라고 하지만 파일에 구역 열이 없음",
+                    "주차구역(출입문) 열을 추가하거나 설명에서 구역 언급을 뺌"))
+    return fs
+
+
 def check_file(i: str, meta: dict, cat: dict, ref: dt.date) -> list[dict]:
     fs: list[dict] = []
-    path = RAW / f"{i}.csv"
-    if not path.exists():
+    path = csv_path(i)
+    if not path:
         return [F("info", "미수집", "파일을 내려받지 않아 내용 점검을 하지 않음 (이미지 또는 대용량)")]
     hdr, body = read_csv(path)
 
@@ -171,6 +212,8 @@ def check_file(i: str, meta: dict, cat: dict, ref: dt.date) -> list[dict]:
     if far:
         fs.append(F("info", "먼미래날짜", f"3년 넘게 뒤인 날짜 {len(far)}건 (예: {far[0][:10]})",
                     "'상시'를 뜻한다면 다른 상시 항목과 같은 표기로 통일"))
+
+    fs += check_inout(hdr, body, desc)
 
     # 8. 빈칸이 절반 넘는 열
     for j, h in enumerate(hdr):
@@ -292,8 +335,8 @@ def run(ref: dt.date | None = None) -> dict:
                 fs.append(F("info", "오탈자", f"'{t['found']}' → '{t['fix']}' ({t.get('note', '설명문')})",
                             "설명문 수정", "AI가 찾은 후보를 사람이 원문과 대조해 확인한 것"))
         last = None
-        if kind == "파일" and (RAW / f"{i}.csv").exists():
-            ds = data_dates(read_csv(RAW / f"{i}.csv")[1], ref)
+        if kind == "파일" and csv_path(i):
+            ds = data_dates(read_csv(csv_path(i))[1], ref)
             last = str(max(ds)) if ds else None
         worst = min((f["level"] for f in fs), key=["error", "warn", "info"].index, default="info")
         grade = {"error": "점검 필요", "warn": "주의"}.get(worst, "양호")
@@ -308,7 +351,7 @@ def run(ref: dt.date | None = None) -> dict:
     grades = Counter(d["grade"] for d in datasets)
     rules = Counter(f["rule"] for d in datasets for f in d["findings"] if f["level"] != "info" or f["rule"] == "오탈자")
     result = {"ref_date": str(ref), "fetched_at": cat["fetched_at"], "n_files": len(cat["files"]), "n_apis": len(cat["apis"]),
-              "n_csv_checked": sum(1 for d in datasets if d["kind"] == "파일" and (RAW / f"{d['id']}.csv").exists()),
+              "n_csv_checked": sum(1 for d in datasets if d["kind"] == "파일" and csv_path(d["id"])),
               "grades": dict(grades), "rules": dict(rules), "org": org, "datasets": datasets}
     OUT.mkdir(exist_ok=True)
     (OUT / "findings.json").write_text(json.dumps(result, ensure_ascii=False, indent=1), encoding="utf-8")

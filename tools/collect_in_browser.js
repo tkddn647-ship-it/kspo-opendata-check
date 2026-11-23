@@ -2,10 +2,10 @@
 // 쓰는 법: 브라우저로 https://www.data.go.kr 아무 페이지를 연 뒤 개발자 도구 콘솔에 붙여 넣고 실행.
 //          끝나면 kspo_opendata.json.gz 하나가 내려받아진다 → tools/unpack.py 로 raw/ 에 푼다.
 // 포털의 내려받기 횟수 제한(보안문자)이 뜨면 거기서 멈춘다. 보안문자를 우회하지 않는다.
-// 2026-11-23 이 스크립트로 파일데이터 30종 중 28종(이미지 1종, 21만 행 입출차 1종 제외)을 받았다.
+// 2026-11-23 파일데이터 30종 중 이미지 1종을 뺀 29종을 받았다 (21만 행 입출차 파일 포함, 약 10MB).
 (async () => {
   const ORG = "한국체육산업개발주식회사";
-  const SKIP = new Set(["15138735", "15160326"]); // 대용량 입출차, 이미지
+  const SKIP = new Set(["15160326"]); // 이미지(JPG)
   const MAX = window.KSPO_MAX ?? Infinity; // 시험용: window.KSPO_MAX = 2 로 두면 파일 2개만 받음
   const text = (u) => fetch(u).then((r) => r.text());
   const doc = (h) => new DOMParser().parseFromString(h, "text/html");
