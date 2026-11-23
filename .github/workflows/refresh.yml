@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: "17 21 * * 0"   # 한국 시각 월요일 06:17
   workflow_dispatch:
+    inputs:
+      force:
+        description: "수정일이 같아도 받기"
+        type: boolean
+        default: false
 permissions:
   contents: write
   actions: write
@@ -19,7 +24,7 @@ jobs:
         id: r
         run: |
           set +e
-          python tools/refresh_courses.py; code=$?
+          if [ "${{ inputs.force }}" = "true" ]; then python tools/refresh_courses.py --force; else python tools/refresh_courses.py; fi; code=$?
           echo "code=$code" >> "$GITHUB_OUTPUT"
           if [ "$code" = "1" ]; then echo "::warning::포털 확인 실패 — 기존 자료 유지"; fi
           exit 0
