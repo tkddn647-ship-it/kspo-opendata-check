@@ -195,6 +195,7 @@ footer{margin-top:56px;font-size:13px;color:var(--muted);border-top:1px solid va
   <h2>올림픽공원 주차장, 언제 붐비나</h2>
   <p class="sub" id="parkSub"></p>
   <div class="chart" id="chart"><div class="legend"><span><i style="background:#237A4B"></i>평일</span><span><i style="background:#7A4FA8"></i>주말</span></div><div class="tt" id="tt" role="tooltip"></div></div>
+  <p class="sub" id="fcNote" style="margin-top:12px;font-size:15px"></p>
   <details class="tv"><summary>표로 보기</summary><div class="scroll"><table id="ptab"></table></div></details>
 </section>
 
@@ -446,16 +447,20 @@ sync(); render(true);
 // 주차 그래프
 if (PK){
   document.getElementById("parkSub").textContent = `한국체육산업개발이 개방한 올림픽공원 입출차 정보(동2문·남2문·북2문 주차구역, ${PK.month.slice(0,4)}년 ${+PK.month.slice(5,7)}월, 평일 ${PK.n_days.weekday}일·주말 ${PK.n_days.weekend}일)로 매시 30분에 주차장에 있던 차량 수를 세어, 가장 많았던 때를 100으로 둔 지수입니다. 올림픽수영장·올림픽스포츠센터 강좌에는 같은 지수로 ‘한산(40 미만)·보통·붐빔(70 이상)’을 붙였습니다. 한 달치 기록이라 방학·공연이 있는 달은 다를 수 있습니다.`;
+  const FC = PK.forecast;
+  if (FC) document.getElementById("fcNote").innerHTML = `<b>이 그래프로 예측하면 얼마나 맞나.</b> 선은 평균, 옅은 띠는 그 달에 가장 적었던 날~가장 많았던 날입니다. 하루를 빼고 나머지 날의 평균으로 그 하루를 맞혀 보면 ${FC.n_days}일 중 ${FC.n_within_15}일은 오차 15% 안(오차 중앙값 ${FC.mape_median}%)이었습니다. 그러나 가장 붐빈 ${+FC.busiest_day.slice(5,7)}월 ${+FC.busiest_day.slice(8)}일은 최고 ${FC.busiest_peak.toLocaleString()}대로 보통 날 최고(${FC.median_peak.toLocaleString()}대)의 ${(FC.busiest_peak/FC.median_peak).toFixed(1)}배였습니다. 공연·행사가 있는 날은 요일만으로 예측할 수 없으니, 그런 날은 위쪽의 ‘지금 주차’ 값을 보세요.`;
   const H = PK.hours, Wd = 760, Ht = 270, L = 36, Rm = 16, T = 22, B = 28;
-  const x = i => L + i*(Wd-L-Rm)/(H.length-1), y = v => T + (100-v)*(Ht-T-B)/100;
+  const x = i => L + i*(Wd-L-Rm)/(H.length-1), YM = PK.band ? Math.ceil(Math.max(...PK.band.weekend.hi, ...PK.band.weekday.hi)/20)*20 : 100, y = v => T + (YM-v)*(Ht-T-B)/YM;
   const line = arr => arr.map((v,i)=>`${i?"L":"M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join("");
-  const grid = [0,40,70,100].map(v=>`<line x1="${L}" x2="${Wd-Rm}" y1="${y(v)}" y2="${y(v)}" stroke="#E3E9E7" stroke-width="1"/><text x="${L-8}" y="${y(v)+4}" font-size="11" fill="#6F7D79" text-anchor="end">${v}</text>`).join("");
+  const area = k => PK.band ? `<path d="${PK.band[k].hi.map((v,i)=>`${i?"L":"M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join("")}${PK.band[k].lo.map((v,i)=>[x(i),y(v)]).reverse().map(([a,b])=>`L${a.toFixed(1)},${b.toFixed(1)}`).join("")}Z" fill="${k==="weekday"?"#237A4B":"#7A4FA8"}" fill-opacity=".10"/>` : "";
+  const grid = [...new Set([0,40,70,100,YM])].map(v=>`<line x1="${L}" x2="${Wd-Rm}" y1="${y(v)}" y2="${y(v)}" stroke="#E3E9E7" stroke-width="1"/><text x="${L-8}" y="${y(v)+4}" font-size="11" fill="#6F7D79" text-anchor="end">${v}</text>`).join("");
   const xt = H.map((h,i)=> h%3===0?`<text x="${x(i)}" y="${Ht-8}" font-size="11" fill="#6F7D79" text-anchor="middle">${h}시</text>`:"").join("");
   const lab = (arr,txt)=>{ const i = arr.indexOf(Math.max(...arr)); return `<text x="${x(i)}" y="${y(arr[i])-10}" font-size="12" font-weight="700" fill="#1B2623" text-anchor="middle">${txt} 최고 ${H[i]}시</text>`; };
   const svg = `<svg viewBox="0 0 ${Wd} ${Ht}" role="img" aria-label="올림픽공원 주차장 시각별 차량 지수, 평일과 주말">
     <rect x="${x(H.indexOf(19))}" y="${T}" width="${x(H.length-1)-x(H.indexOf(19))}" height="${Ht-T-B}" fill="#F2F6F4"/>
     ${grid}${xt}
     <text x="${x(H.indexOf(19))+4}" y="${T+12}" font-size="11" fill="#4A5A56">퇴근 후 강좌 시간대</text>
+    ${area("weekday")}${area("weekend")}
     <path d="${line(PK.weekday)}" fill="none" stroke="#237A4B" stroke-width="2" stroke-linejoin="round"/>
     <path d="${line(PK.weekend)}" fill="none" stroke="#7A4FA8" stroke-width="2" stroke-linejoin="round"/>
     ${lab(PK.weekday,"평일")}${lab(PK.weekend,"주말")}
@@ -468,7 +473,7 @@ if (PK){
   const show = i => {
     const cx=x(i); ["cx"].forEach(id=>{const e=sv.getElementById(id); e.setAttribute("x1",cx); e.setAttribute("x2",cx); e.setAttribute("visibility","visible");});
     [["d1","weekday"],["d2","weekend"]].forEach(([id,k])=>{const e=sv.getElementById(id); e.setAttribute("cx",cx); e.setAttribute("cy",y(PK[k][i])); e.setAttribute("visibility","visible");});
-    tt.innerHTML = `<b>${H[i]}시 30분</b><br>평일 ${PK.weekday[i]} · 주말 ${PK.weekend[i]}`;
+    tt.innerHTML = `<b>${H[i]}시 30분</b><br>평일 ${PK.weekday[i]}${PK.band?` (${PK.band.weekday.lo[i]}~${PK.band.weekday.hi[i]})`:""} · 주말 ${PK.weekend[i]}${PK.band?` (${PK.band.weekend.lo[i]}~${PK.band.weekend.hi[i]})`:""}`;
     const r = sv.getBoundingClientRect(), bx = box.getBoundingClientRect(), px = r.left - bx.left + cx * r.width / Wd;
     tt.style.display="block"; tt.style.left = Math.min(px+12, bx.width-tt.offsetWidth-6)+"px"; tt.style.top = "40px";
   };

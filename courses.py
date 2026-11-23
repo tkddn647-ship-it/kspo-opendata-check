@@ -241,7 +241,29 @@ def parking_profile():
         sel = [d for d in days if (d.weekday() < 5) == wk]
         prof[k] = [sum(occ[(d, h)] for d in sel) / len(sel) for h in hours]
     top = max(max(prof["weekday"]), max(prof["weekend"]))
-    return {"hours": hours, "month": month, "n_days": {"weekday": sum(d.weekday() < 5 for d in days), "weekend": sum(d.weekday() >= 5 for d in days)},
+    # 예측 검증: 하루를 빼고 나머지 같은 종류(평일/주말) 날의 평균으로 그 하루를 맞혀 본 오차 (100대 이상인 시각만)
+    import statistics as stt
+    V = {d: [occ[(d, h)] for h in hours] for d in days}
+    errs, band = {}, {}
+    for d in days:
+        grp = [x for x in days if x != d and (x.weekday() < 5) == (d.weekday() < 5)]
+        pred = [sum(V[x][i] for x in grp) / len(grp) for i in range(len(hours))]
+        e = [abs(pr - a) / a for pr, a in zip(pred, V[d]) if a >= 100]
+        errs[d] = sum(e) / len(e)
+    for k, wk in (("weekday", True), ("weekend", False)):
+        sel = [d for d in days if (d.weekday() < 5) == wk]
+        lo, hi = [], []
+        for i in range(len(hours)):
+            v = sorted(V[d][i] for d in sel)
+            lo.append(round(v[0] / top * 100)); hi.append(round(v[-1] / top * 100))
+        band[k] = {"lo": lo, "hi": hi}
+    peaks = {d: max(V[d]) for d in days}
+    busiest = max(peaks, key=peaks.get)
+    fc = {"mape_median": round(stt.median(errs.values()) * 100, 1), "mape_mean": round(stt.mean(errs.values()) * 100, 1),
+          "worst_day": str(max(errs, key=errs.get)), "worst_mape": round(max(errs.values()) * 100),
+          "busiest_day": str(busiest), "busiest_peak": peaks[busiest], "median_peak": int(stt.median(peaks.values())),
+          "n_within_15": sum(e <= 0.15 for e in errs.values()), "n_days": len(days)}
+    return {"band": band, "forecast": fc, "hours": hours, "month": month, "n_days": {"weekday": sum(d.weekday() < 5 for d in days), "weekend": sum(d.weekday() >= 5 for d in days)},
             "weekday": [round(v / top * 100) for v in prof["weekday"]], "weekend": [round(v / top * 100) for v in prof["weekend"]]}
 
 

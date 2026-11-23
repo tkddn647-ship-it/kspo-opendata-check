@@ -182,6 +182,8 @@ class Parking(unittest.TestCase):
         self.assertEqual(len(p["weekday"]), len(p["hours"]))
         self.assertEqual(max(p["weekday"] + p["weekend"]), 100)
         self.assertEqual(p["n_days"]["weekday"] + p["n_days"]["weekend"], 31)  # 2024년 7월
+        self.assertTrue(all(lo <= m <= hi for lo, m, hi in zip(p["band"]["weekend"]["lo"], p["weekend"], p["band"]["weekend"]["hi"])))
+        self.assertLess(p["forecast"]["mape_median"], p["forecast"]["mape_mean"])  # 일부 날(행사)이 평균 오차를 끌어올림
 
 
 class Refresh(unittest.TestCase):
