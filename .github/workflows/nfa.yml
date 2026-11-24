@@ -10,7 +10,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - run: python tools/probe_nfa.py
+      - run: python tools/nfa_vocab.py
         env:
           DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
           DATA_GO_KR_KEY_2: ${{ secrets.DATA_GO_KR_KEY_2 }}
