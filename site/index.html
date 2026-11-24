@@ -331,6 +331,14 @@ function rec(r){
   if (r.nd) score -= 1; else if (r.d) score += 1;
   const o = {score, why}; _rc.set(r,o); return o;
 }
+// 공식 주차 안내(한국체육산업개발 올림픽공원 누리집 '주차 안내', 2026-11-24 확인): 시설별 가장 가까운 주차장·주차면수
+const GUIDE_URL = "https://www.ksponco.or.kr/olympicpark/parkingInfo?mid=a20111000000";
+const LOTS = {P4:{near:"올림픽수영장",cap:117,gate:"북2문"},P5:{near:"KSPO DOME",cap:176,gate:"북2문"},P7:{near:"우리금융아트홀",cap:137,gate:"남2문"},P6:{near:"핸드볼경기장",cap:167,gate:"남2문"},P2:{near:"올림픽홀",cap:320,gate:"동2문"},P11:{near:"올림픽테니스경기장",cap:190,gate:"동2문"},P1A:{near:"K-아트홀",gate:"남2문"},P1B:{near:"K-아트홀",gate:"동2문"}};
+const nearLot = r => r.c==="올림픽수영장" ? {z:"P4", walk:"1분", alt:"P5"} : (r.c==="올림픽스포츠센터" && r.s==="테니스") ? {z:"P11", walk:"1~2분", alt:null} : null;
+const ZS = (()=>{ const q = window.ANALYSIS && window.ANALYSIS.queries.find(q=>q.id==="zone_full"); return q ? Object.fromEntries(q.rows.map(x=>[x[0],{days:x[1],full:x[2],pct:x[3],hour:x[4]}])) : {}; })();
+function lotTag(r){ const n = nearLot(r); if(!n) return ""; const z = ZS[n.z];
+  const late = r.t0!=null && z && Math.floor(r.t0/60) >= z.hour && [...r.d].some(d=>"토일".includes(d));
+  return `<span class="tag park">가까운 주차장 ${n.z} (도보 ${n.walk}${LOTS[n.z].cap?`, ${LOTS[n.z].cap}면`:""})${late&&n.alt?` · 주말 이 시각엔 자주 만차, ${n.alt}도 확인`:""}</span>`; }
 const MAPQ = {"올림픽수영장":"올림픽수영장","올림픽스포츠센터":"올림픽공원 스포츠센터","일산":"일산올림픽스포츠센터","분당":"분당올림픽스포츠센터"};
 const week = r => `<span class="wk" aria-label="요일 ${esc(r.d||"정보 없음")}${r.o?", 괄호 표기 "+esc(r.o):""}">${[...W].map(d=>`<i class="${r.d.includes(d)?"on":r.o.includes(d)?"opt":""}">${d}</i>`).join("")}</span>`;
 function item(r, i){
@@ -342,7 +350,7 @@ function item(r, i){
     <div class="tm">${r.t0!=null?hm(r.t0):"—"}<span>${r.t1!=null?(long?"~"+hm(r.t1)+" 이용":"~"+hm(r.t1)):esc(r.tt)}</span></div>
     <div><div class="nm">${esc(r.n)}</div>
       <div class="meta">${week(r)}${esc(r.c)} · ${esc(r.s)}${r.tg?` · ${esc(r.tg)}`:""}${r.cap?` · 정원 ${r.cap}명`:""}</div>
-      <div class="tags">${fr}${park(r)}${st.sort==="rec"?rec(r).why.map(w=>`<span class="tag" style="border-color:var(--ok);color:var(--ok)">${esc(w)}</span>`).join(""):""}${r.nd?`<span class="tag">강좌명에는 ${esc(r.nd)} · 강습 요일은 센터 확인</span>`:""}${r.o?`<span class="tag">괄호 요일(${esc(r.o)})은 자료에 뜻이 적혀 있지 않음</span>`:""}</div></div>
+      <div class="tags">${fr}${park(r)}${lotTag(r)}${st.sort==="rec"?rec(r).why.map(w=>`<span class="tag" style="border-color:var(--ok);color:var(--ok)">${esc(w)}</span>`).join(""):""}${r.nd?`<span class="tag">강좌명에는 ${esc(r.nd)} · 강습 요일은 센터 확인</span>`:""}${r.o?`<span class="tag">괄호 요일(${esc(r.o)})은 자료에 뜻이 적혀 있지 않음</span>`:""}</div></div>
     <div class="pr"><b>${won(r.fee)}</b>${r.per?`<span>1회 약 ${won(r.per)} (추정)</span>`:""}<div class="acts"><a href="${esc(r.link)}" target="_blank" rel="noopener">센터 안내</a><a href="https://www.ksponco.or.kr/spm/index.do" target="_blank" rel="noopener">온라인 수강신청</a><a href="https://map.kakao.com/link/search/${encodeURIComponent(MAPQ[r.c]||r.c)}" target="_blank" rel="noopener">지도·길찾기</a>${r.d&&r.t0!=null&&r.t1!=null?`<button data-ics="${i}">내 캘린더에 넣기</button>`:""}</div></div>
   </li>`;
 }
@@ -467,10 +475,15 @@ sync(); render(true);
 // 주차 그래프
 const ZQ = window.ANALYSIS && window.ANALYSIS.queries.find(q=>q.id==="zone_full");
 if (ZQ){
-  const z = ZQ.rows, lo = z.slice(0,3), hi = z.slice(-3).reverse();
-  document.getElementById("zoneBox").innerHTML = `<h3 style="font-size:17px;margin:22px 0 4px">붐비는 날엔 어느 주차구역으로 갈까</h3>
-   <p class="sub" style="font-size:15px;margin-bottom:10px">주차장 혼잡도 기록(2025년 2월~2026년 8월, 구역별 ${Math.min(...z.map(x=>x[1]))}~${Math.max(...z.map(x=>x[1]))}일치, 대부분 주말·행사일)에서 구역별로 ‘만차’가 된 날의 비율입니다. <b>${lo.map(x=>esc(x[0])).join("·")}</b>가 덜 찼고(${lo[0][3]}~${lo[2][3]}%), ${hi.map(x=>esc(x[0])).join("·")}이 자주 찼습니다(${hi[2][3]}~${hi[0][3]}%). 만차는 보통 13~14시에 시작되니, 붐비는 날은 13시 전에 도착하는 편이 안전합니다. 구역 위치는 자료에 없으니 현장 안내도를 확인하세요.</p>
-   <div class="scroll"><table><thead><tr><th>구역</th>${z.map(x=>`<th>${esc(x[0])}</th>`).join("")}</tr></thead><tbody><tr><td>만차가 된 날 (%)</td>${z.map(x=>`<td>${x[3]}</td>`).join("")}</tr><tr><td>처음 만차가 된 시 (중앙값)</td>${z.map(x=>`<td>${x[4]}시</td>`).join("")}</tr></tbody></table></div>`;
+  const z = ZQ.rows, lo = z.slice(0,3), p4 = ZS.P4, p5 = ZS.P5;
+  document.getElementById("zoneBox").innerHTML = `<h3 style="font-size:17px;margin:22px 0 4px">어느 주차구역으로 갈까</h3>
+   <p class="sub" style="font-size:15px;margin-bottom:10px"><b>올림픽수영장에 간다면</b> 가장 가까운 곳은 P4(도보 1분, ${LOTS.P4.cap}면)입니다. 다만 혼잡도 기록이 있는 날(대부분 주말·행사일)의 ${p4.pct}%에 P4가 만차가 됐고, 보통 ${p4.hour}시쯤부터였습니다. 같은 북2문 쪽 P5(${LOTS.P5.cap}면)도 ${p5.pct}%로 비슷합니다. <b>주말·행사일 오후 강좌라면 ${p4.hour}시 전에 도착</b>하거나, 덜 차는 ${lo.map(x=>esc(x[0])).join("·")}(만차 ${lo[0][3]}~${lo[2][3]}%)에 대고 걸어가는 편이 안전합니다. 평일 강좌 시간대는 주차 지수가 낮아 P4를 먼저 보면 됩니다.</p>
+   <div class="scroll"><table><thead><tr><th>구역</th>${z.map(x=>`<th>${esc(x[0])}</th>`).join("")}</tr></thead><tbody>
+    <tr><td>가까운 시설 (공식 안내)</td>${z.map(x=>`<td style="white-space:normal;min-width:64px;font-size:13px">${LOTS[x[0]]?esc(LOTS[x[0]].near):"—"}</td>`).join("")}</tr>
+    <tr><td>주차면수 (공식 안내)</td>${z.map(x=>`<td>${LOTS[x[0]]&&LOTS[x[0]].cap?LOTS[x[0]].cap:"—"}</td>`).join("")}</tr>
+    <tr><td>만차가 된 날 (%)</td>${z.map(x=>`<td>${x[3]}</td>`).join("")}</tr>
+    <tr><td>처음 만차가 된 시 (중앙값)</td>${z.map(x=>`<td>${x[4]}시</td>`).join("")}</tr></tbody></table></div>
+   <p class="caveat" style="font-size:13px;color:var(--muted);margin-top:8px">가까운 시설·주차면수는 <a href="${GUIDE_URL}" target="_blank" rel="noopener">올림픽공원 공식 주차 안내</a>(2026-11-24 확인), 만차 비율은 주차장 혼잡도 정보(2025년 2월~2026년 8월, 구역별 ${Math.min(...z.map(x=>x[1]))}~${Math.max(...z.map(x=>x[1]))}일치 기록)를 분석한 값입니다. 기록은 상태가 바뀐 날만 남아 있어 한산한 날은 빠져 있습니다. P1A·P1B는 공식 안내의 P1(562면)을 나눈 구역입니다. 올림픽스포츠센터 건물의 가까운 주차장은 공식 안내에 없어 표시하지 않았습니다(테니스 강좌만 올림픽테니스경기장 기준 P11).</p>`;
 }
 if (PK){
   document.getElementById("parkSub").textContent = `한국체육산업개발이 개방한 올림픽공원 입출차 정보(동2문·남2문·북2문 주차구역, ${PK.month.slice(0,4)}년 ${+PK.month.slice(5,7)}월, 평일 ${PK.n_days.weekday}일·주말 ${PK.n_days.weekend}일)로 매시 30분에 주차장에 있던 차량 수를 세어, 가장 많았던 때를 100으로 둔 지수입니다. 올림픽수영장·올림픽스포츠센터 강좌에는 같은 지수로 ‘한산(40 미만)·보통·붐빔(70 이상)’을 붙였습니다. 한 달치 기록이라 방학·공연이 있는 달은 다를 수 있습니다.`;
