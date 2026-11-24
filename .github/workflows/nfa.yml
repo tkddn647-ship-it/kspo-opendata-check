@@ -1,16 +1,24 @@
-# 국민체력100 공개 API 항목 확인 (손으로 실행). 키는 Secrets의 DATA_GO_KR_KEY.
-name: 국민체력100 API 확인
+# 국민체력100 측정결과(2024년 이후)를 받아 운동처방 집계를 만든다 (손으로 실행). 키는 Secrets의 DATA_GO_KR_KEY.
+name: 국민체력100 처방 집계
 on:
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
-  probe:
+  fetch:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 180
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - run: python tools/nfa_vocab.py
+      - run: python tools/fetch_nfa.py
         env:
           DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
-          DATA_GO_KR_KEY_2: ${{ secrets.DATA_GO_KR_KEY_2 }}
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add out/nfa_agg.json
+          git diff --cached --quiet && exit 0
+          git commit -qm "국민체력100 처방 집계 $(TZ=Asia/Seoul date +%Y-%m-%d)"
+          git pull -q --rebase && git push -q
