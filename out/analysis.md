@@ -188,6 +188,40 @@ GROUP BY 주제 ORDER BY 건수 DESC;
 | 주차 | 10 | 20.4 |
 | 대관·예약 | 5 | 10.2 |
 
+## 붐비는 날, 어느 주차구역이 먼저 차나
+
+질문: 혼잡도 기록이 있는 날 가운데 구역별로 '만차'가 된 날의 비율과, 그날 처음 만차가 된 시(時)의 중앙값
+
+```sql
+WITH daily AS (
+  SELECT zone, d, MIN(CASE WHEN status = '만차' THEN hour END) AS first_full FROM parking_zone GROUP BY zone, d),
+tot AS (SELECT zone, COUNT(*) AS n_days, COUNT(first_full) AS n_full FROM daily GROUP BY zone),
+r AS (
+  SELECT zone, first_full, ROW_NUMBER() OVER (PARTITION BY zone ORDER BY first_full) AS rn
+  FROM daily WHERE first_full IS NOT NULL)
+SELECT t.zone AS 구역, t.n_days AS 기록있는날, t.n_full AS 만차된날,
+       ROUND(100.0 * t.n_full / t.n_days, 1) AS 만차비율_pct,
+       MAX(CASE WHEN r.rn = (t.n_full + 1) / 2 THEN r.first_full END) AS 처음만차_시_중앙값
+FROM tot t JOIN r ON r.zone = t.zone
+WHERE t.n_days >= 20
+GROUP BY t.zone
+ORDER BY 만차비율_pct, 처음만차_시_중앙값 DESC;
+```
+
+| 구역 | 기록있는날 | 만차된날 | 만차비율_pct | 처음만차_시_중앙값 |
+|---|---|---|---|---|
+| P1B | 53 | 21 | 39.6 | 14 |
+| P1A | 45 | 18 | 40.0 | 14 |
+| P10 | 28 | 12 | 42.9 | 14 |
+| P9 | 41 | 19 | 46.3 | 14 |
+| P2 | 55 | 26 | 47.3 | 14 |
+| P4 | 57 | 31 | 54.4 | 13 |
+| P8 | 45 | 25 | 55.6 | 14 |
+| P5 | 57 | 32 | 56.1 | 13 |
+| P6 | 61 | 35 | 57.4 | 13 |
+| P7 | 28 | 17 | 60.7 | 13 |
+| P11 | 44 | 27 | 61.4 | 14 |
+
 ## 통계
 
 ```json

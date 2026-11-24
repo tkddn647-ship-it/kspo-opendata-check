@@ -54,6 +54,7 @@
 | 설명내용 | 주의 | 설명이 말하는 항목이 파일에 없음 (예: '동2문/남2문/북2문 주차구역'이라는데 구역 열이 없음) |
 | 열이름중복 · 행수 | 주의 | 포털 항목 정보에 같은 열이 두 번, 포털 '전체 행'과 실제 행 수가 다름 |
 | 입출차 | 점검 필요/참고 | 출차가 입차보다 앞서면 점검 필요, 체류 0분·10분 미만·24시간 넘음·출차 빈칸 건수는 참고 |
+| 시각형식 | 점검 필요 | 시각 열의 분·초 자리에 날짜의 월·일이 들어 있음 (예: 2026-08-12 → 17:08:12) |
 | 열값형식 | 주의 | 날짜 열에 기간(시작~종료)이 들어 있고 옆 종료 열엔 시작일이 들어 있음 |
 | 운영중강좌 | 주의 | 종료일 9999(운영 중)인데 파일의 마지막 달보다 1년 넘게 바뀐 기록이 없거나 시작일이 1990-01-01 |
 | 요일 | 참고 | 강좌명의 요일(예: 화목)과 요일 열(예: 월~일)이 다름 — 강습일과 자유이용일이 한 칸에 섞임 |
@@ -73,7 +74,7 @@ python tools/unpack.py ~/Downloads/kspo_opendata.json.gz   # raw/ 에 풀기
 python check.py                                            # out/findings.json, out/summary.csv, site/data.js
 python courses.py                                          # site/courses.js, out/courses_summary.json
 python analysis/run.py                                     # out/kspo.db, site/analysis.js, out/analysis.md
-python -m unittest discover -s tests                       # 테스트 26개
+python -m unittest discover -s tests                       # 테스트 28개
 ```
 
 외부 라이브러리 없이 Python 3.10+ 표준 라이브러리만 씁니다.

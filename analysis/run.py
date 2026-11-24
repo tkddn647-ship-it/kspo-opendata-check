@@ -85,7 +85,7 @@ def run():
         cur = con.execute(q["sql"])
         res.append({**q, "cols": [d[0] for d in cur.description], "rows": cur.fetchall()})
     payload = {"queries": res, "stats": extra_stats(con),
-               "tables": {t: con.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0] for t in ("courses", "courses_fresh", "parking_inout", "parking", "faq")}}
+               "tables": {t: con.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0] for t in ("courses", "courses_fresh", "parking_inout", "parking", "faq", "parking_zone")}}
     (ROOT / "site" / "analysis.js").write_text("window.ANALYSIS=" + json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + ";\n", encoding="utf-8")
     md = ["# 분석 결과 (자동 생성: python analysis/run.py)\n"]
     for q in res:

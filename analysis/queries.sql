@@ -96,3 +96,20 @@ SELECT 주제, COUNT(*) AS 건수, ROUND(100.0 * COUNT(*) / (SELECT COUNT(*) FRO
               WHEN title || body LIKE '%수강%' OR title || body LIKE '%강좌%' OR title || body LIKE '%강습%' THEN '강좌·수강'
               ELSE '그 밖(시설·행사·이용 안내 등)' END AS 주제 FROM faq)
 GROUP BY 주제 ORDER BY 건수 DESC;
+
+-- @id zone_full
+-- @title 붐비는 날, 어느 주차구역이 먼저 차나
+-- @question 혼잡도 기록이 있는 날 가운데 구역별로 '만차'가 된 날의 비율과, 그날 처음 만차가 된 시(時)의 중앙값
+WITH daily AS (
+  SELECT zone, d, MIN(CASE WHEN status = '만차' THEN hour END) AS first_full FROM parking_zone GROUP BY zone, d),
+tot AS (SELECT zone, COUNT(*) AS n_days, COUNT(first_full) AS n_full FROM daily GROUP BY zone),
+r AS (
+  SELECT zone, first_full, ROW_NUMBER() OVER (PARTITION BY zone ORDER BY first_full) AS rn
+  FROM daily WHERE first_full IS NOT NULL)
+SELECT t.zone AS 구역, t.n_days AS 기록있는날, t.n_full AS 만차된날,
+       ROUND(100.0 * t.n_full / t.n_days, 1) AS 만차비율_pct,
+       MAX(CASE WHEN r.rn = (t.n_full + 1) / 2 THEN r.first_full END) AS 처음만차_시_중앙값
+FROM tot t JOIN r ON r.zone = t.zone
+WHERE t.n_days >= 20
+GROUP BY t.zone
+ORDER BY 만차비율_pct, 처음만차_시_중앙값 DESC;

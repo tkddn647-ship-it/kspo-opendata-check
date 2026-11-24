@@ -236,3 +236,15 @@ class Analysis(unittest.TestCase):
         self.assertEqual(s2, self.p["stats"])            # 씨앗 고정 → 같은 값
         lo, hi = self.p["stats"]["peak"]["diff"][1:]
         self.assertLess(lo, hi)
+
+
+class TimeFmt(unittest.TestCase):
+    def test_month_day_in_time(self):
+        hdr = ["구역", "등록일", "등록시간"]
+        body = [["P1", f"2026-0{m}-1{d}", f"1{d}:0{m}:1{d}"] for m in range(1, 6) for d in range(5)]
+        self.assertTrue(any(f["rule"] == "시각형식" and f["level"] == "error" for f in C.check_timefmt(hdr, body)))
+
+    def test_normal_time_ok(self):
+        hdr = ["구역", "등록일", "등록시간"]
+        body = [["P1", f"2026-0{m}-1{d}", f"1{d}:3{d}:4{m}"] for m in range(1, 6) for d in range(5)]
+        self.assertEqual(C.check_timefmt(hdr, body), [])

@@ -131,6 +131,25 @@ def check_inout(hdr: list[str], body: list[list[str]], desc: str) -> list[dict]:
     return fs
 
 
+def check_timefmt(hdr: list[str], body: list[list[str]]) -> list[dict]:
+    """시각 열의 분·초 자리에 날짜의 월·일이 들어간 경우 (예: 2026-08-12 의 시각이 17:08:12). 시각 서식을 잘못 쓴 흔적."""
+    fs: list[dict] = []
+    dcols = [j for j, h in enumerate(hdr) if re.search(r"(일|일자)$", h.strip())]
+    tcols = [j for j, h in enumerate(hdr) if re.search(r"시간$|시각$", h.strip())]
+    for dj in dcols:
+        for tj in tcols:
+            pairs = [(r[dj].strip(), r[tj].strip()) for r in body if max(dj, tj) < len(r)]
+            pairs = [(d, t) for d, t in pairs if re.fullmatch(r"\d{4}-\d{2}-\d{2}", d) and re.fullmatch(r"\d{2}:\d{2}:\d{2}", t)]
+            if len(pairs) < 20:
+                continue
+            hit = sum(1 for d, t in pairs if t[3:5] == d[5:7] and t[6:8] == d[8:10])
+            if hit / len(pairs) >= 0.9 and len({d for d, _ in pairs}) >= 5:
+                d, t = pairs[0]
+                fs.append(F("error", "시각형식", f"'{hdr[tj]}' 열의 분·초 자리에 '{hdr[dj]}'의 월·일이 들어 있음 ({hit}/{len(pairs)}행, 예: {d} → {t}). 실제 분·초는 알 수 없고 '시'만 쓸 수 있음",
+                            "시각을 내보낼 때 서식을 시:분:초(HH:mm:ss)로 고침. 월(MM)·일(dd) 기호가 분·초 자리에 쓰인 것으로 보임"))
+    return fs
+
+
 def check_courses(i: str, hdr: list[str], body: list[list[str]]) -> list[dict]:
     """강좌정보 파일 4종: 시민 서비스에 그대로 쓰면 틀리는 부분."""
     import courses as CO
@@ -261,6 +280,7 @@ def check_file(i: str, meta: dict, cat: dict, ref: dt.date) -> list[dict]:
                     "'상시'를 뜻한다면 다른 상시 항목과 같은 표기로 통일"))
 
     fs += check_inout(hdr, body, desc)
+    fs += check_timefmt(hdr, body)
     fs += check_courses(i, hdr, body)
 
     # 8. 빈칸이 절반 넘는 열

@@ -166,8 +166,10 @@ footer{margin-top:56px;font-size:13px;color:var(--muted);border-top:1px solid va
     <option value="720-1080">오후 (12~18시)</option><option value="1080-1140">저녁 (18~19시)</option><option value="1140-1440">퇴근 후 (19시부터)</option></select></div>
   <div><label for="fWho">대상</label><select id="fWho">
     <option value="">누구나</option><option>성인</option><option>여성</option><option>청소년</option><option>어린이</option><option>실버</option></select></div>
+  <div><label for="fLevel">수준 (강좌명 기준)</label><select id="fLevel">
+    <option value="">전체</option><option value="입문">입문·초급</option><option value="중급">중급</option><option value="상급">상급·연수</option></select></div>
   <div><label for="fSort">정렬</label><select id="fSort">
-    <option value="time">시작 시각 순</option><option value="per">1회 환산 강습비 낮은 순</option></select></div>
+    <option value="time">시작 시각 순</option><option value="rec">추천 순 (자료 최신·강습비·주차)</option><option value="per">1회 환산 강습비 낮은 순</option></select></div>
   <div style="grid-column:1/-1;display:flex;flex-wrap:wrap;gap:10px 24px;align-items:center">
     <label class="chk"><input type="checkbox" id="fFresh" checked> 1년 넘게 바뀐 기록이 없는 강좌는 숨기기 <span style="color:var(--muted)">(운영 여부를 자료로 확인할 수 없음)</span></label>
     <button class="reset" id="reset">조건 모두 지우기</button>
@@ -196,6 +198,7 @@ footer{margin-top:56px;font-size:13px;color:var(--muted);border-top:1px solid va
   <p class="sub" id="parkSub"></p>
   <div class="chart" id="chart"><div class="legend"><span><i style="background:#237A4B"></i>평일</span><span><i style="background:#7A4FA8"></i>주말</span></div><div class="tt" id="tt" role="tooltip"></div></div>
   <p class="sub" id="fcNote" style="margin-top:12px;font-size:15px"></p>
+  <div id="zoneBox"></div>
   <details class="tv"><summary>표로 보기</summary><div class="scroll"><table id="ptab"></table></div></details>
 </section>
 
@@ -205,13 +208,14 @@ footer{margin-top:56px;font-size:13px;color:var(--muted);border-top:1px solid va
     <div><h3>보여 주는 것</h3><p>4개 센터 강좌를 한 번에, 로그인 없이, 요일·시작 시각·대상으로 거릅니다. 강좌마다 자료에서 마지막으로 바뀐 달을 붙여, 오래된 정보인지 바로 알 수 있게 했습니다.</p></div>
     <div><h3>추정이 들어간 것</h3><p>1회 환산 강습비는 월 강습비를 주당 횟수×4.345주로 나눈 값입니다. 센터 간 비교용이며 실제 회차와 다를 수 있습니다. 금액은 자료에 적힌 기본 금액이고 중고생·할인 요금은 자료에 없습니다.</p></div>
     <div><h3>자료가 헷갈리게 적힌 것</h3><p>일부 강좌는 요일 칸에 강습일과 자유이용일이 함께 적혀 있습니다. 강좌명에 다른 요일이 적힌 강좌에는 표시를 붙였습니다. 올림픽수영장의 ‘(토)’처럼 괄호로 적힌 요일은 뜻이 자료에 없어, 요일로 찾을 때 넣지 않았습니다.</p></div>
-    <div><h3>자료에 없는 것</h3><p>남은 자리, 추첨·선착순 여부, 신청 기간은 공개 데이터에 없습니다. 신청 전에 센터 안내 페이지에서 확인하세요. 이 항목들을 개방해 달라는 제안이 건강검진 결과에 들어 있습니다.</p></div>
+    <div><h3>자료에 없는 것</h3><p>수강 후기·평점은 공개 데이터에 없어 추천에 쓰지 않았습니다. ‘추천 순’은 자료 최신 여부, 같은 종목 대비 1회 강습비, 그 시각 주차 붐빔만으로 정하고 이유를 강좌마다 보여 줍니다. 남은 자리, 추첨·선착순 여부, 신청 기간은 공개 데이터에 없습니다. 신청 전에 센터 안내 페이지에서 확인하세요. 이 항목들을 개방해 달라는 제안이 건강검진 결과에 들어 있습니다.</p></div>
   </div>
 </section>
 
 <footer id="foot"></footer>
 </div>
 <script src="courses.js"></script>
+<script src="analysis.js"></script>
 <script>
 (function(){
 const C = window.COURSES, R = C.rows, S = C.summary;
@@ -225,7 +229,8 @@ document.getElementById("lede").textContent =
   `올림픽수영장·올림픽스포츠센터·일산·분당 올림픽스포츠센터의 운영 중 강좌 ${R.length.toLocaleString()}개를 한곳에 모았습니다. 이 가운데 최근 1년 안에 바뀐 기록이 있는 강좌는 ${fresh.toLocaleString()}개입니다. 자료는 공공데이터포털의 공개 파일이고, 신청은 각 센터 홈페이지에서 합니다.`;
 
 // 상태
-const st = {c:new Set(), s:"", d:new Set(), t:"", w:"", sort:"time", fresh:true, preset:"", q:"", h:""};
+const st = {c:new Set(), s:"", d:new Set(), t:"", w:"", sort:"time", fresh:true, preset:"", q:"", h:"", lv:""};
+const LV = n => /기초|초급|입문/.test(n) ? "입문" : /중급/.test(n) ? "중급" : /상급|고급|연수|마스터/.test(n) ? "상급" : "";
 const norm = x => String(x||"").replace(/\s+/g,"").toLowerCase();
 const PRESETS = [
   {k:"eve", label:"퇴근 후", sub:"평일 19시부터", set:()=>{st.d=new Set("월화수목금"); st.t="1140-1440";}},
@@ -253,6 +258,7 @@ function match(r, ignorePresetFresh){
   if (st.h!=="" && (r.t0==null || Math.floor(r.t0/60)!==+st.h)) return false;
   if (st.t){ const [a,b]=st.t.split("-").map(Number); if (r.t0==null || r.t0<a || r.t0>=b) return false; }
   if (st.w && !r.g.includes(st.w)) return false;
+  if (st.lv && LV(r.n)!==st.lv) return false;
   if (st.fresh && r.fr!=="최근") return false;
   return true;
 }
@@ -294,15 +300,15 @@ function sync(){
   fC.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", String(st.c.has(b.dataset.v))));
   fD.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", String(st.d.has(b.dataset.v))));
   document.getElementById("fSport").value=st.s; document.getElementById("fTime").value=st.t;
-  document.getElementById("fWho").value=st.w; document.getElementById("fSort").value=st.sort;
+  document.getElementById("fWho").value=st.w; document.getElementById("fLevel").value=st.lv; document.getElementById("fSort").value=st.sort;
   document.getElementById("fFresh").checked=st.fresh;
 }
 fC.addEventListener("click", e=>{const b=e.target.closest("button"); if(!b) return; st.c.has(b.dataset.v)?st.c.delete(b.dataset.v):st.c.add(b.dataset.v); sync(); render(true);});
 fD.addEventListener("click", e=>{const b=e.target.closest("button"); if(!b) return; st.preset=""; st.h=""; st.d.has(b.dataset.v)?st.d.delete(b.dataset.v):st.d.add(b.dataset.v); sync(); render(true);});
-[["fSport","s"],["fTime","t"],["fWho","w"],["fSort","sort"]].forEach(([id,k])=>document.getElementById(id).addEventListener("change",e=>{st[k]=e.target.value; if(k==="t") st.h=""; if(k!=="s"&&k!=="sort") st.preset=""; render(true);}));
+[["fSport","s"],["fTime","t"],["fWho","w"],["fSort","sort"],["fLevel","lv"]].forEach(([id,k])=>document.getElementById(id).addEventListener("change",e=>{st[k]=e.target.value; if(k==="t") st.h=""; if(k!=="s"&&k!=="sort"&&k!=="lv") st.preset=""; render(true);}));
 document.getElementById("fFresh").addEventListener("change",e=>{st.fresh=e.target.checked; render(true);});
 document.getElementById("fQ").addEventListener("input",e=>{st.q=e.target.value.trim(); render(true);});
-document.getElementById("reset").addEventListener("click",()=>{st.h="";st.q="";document.getElementById("fQ").value="";st.c=new Set();st.s="";st.d=new Set();st.t="";st.w="";st.sort="time";st.fresh=true;st.preset="";sync();render(true);});
+document.getElementById("reset").addEventListener("click",()=>{st.lv="";st.h="";st.q="";document.getElementById("fQ").value="";st.c=new Set();st.s="";st.d=new Set();st.t="";st.w="";st.sort="time";st.fresh=true;st.preset="";sync();render(true);});
 
 const PK = C.parking, PARKC = new Set(["올림픽수영장","올림픽스포츠센터"]);
 function parkLevel(r){
@@ -313,6 +319,18 @@ function parkLevel(r){
   return {wd, v, lv: v>=70?"붐빔":v>=40?"보통":"한산"};
 }
 function park(r){ const p=parkLevel(r); return p?`<span class="tag park">주차 ${p.wd?"평일":"주말"} 이 시각 ${p.lv} · 지수 ${p.v}</span>`:""; }
+// 추천 순: 후기·평점 자료가 없어, 자료로 확인되는 세 가지만 점수로 쓴다 (이유를 강좌마다 표시)
+const MED = (()=>{ const m={}; R.forEach(r=>{ if(r.fr==="최근" && r.per) (m[r.s]=m[r.s]||[]).push(r.per); }); Object.keys(m).forEach(k=>{ const v=m[k].sort((a,b)=>a-b); m[k]= v.length>=5 ? v[Math.floor(v.length/2)] : null; }); return m; })();
+const _rc = new WeakMap();
+function rec(r){
+  if (_rc.has(r)) return _rc.get(r);
+  let score = 0; const why = [];
+  if (r.fr==="최근"){ score += 2; } 
+  if (r.per && MED[r.s]){ const d = MED[r.s]-r.per; if (d >= 300){ score += 2; why.push(`같은 종목 중앙값보다 1회 약 ${d.toLocaleString()}원 낮음`); } else if (d <= -300) score -= 1; }
+  const p = parkLevel(r); if (p){ if (p.lv==="한산"){ score += 1; why.push("주차 한산한 시각"); } else if (p.lv==="붐빔") score -= 1; }
+  if (r.nd) score -= 1; else if (r.d) score += 1;
+  const o = {score, why}; _rc.set(r,o); return o;
+}
 const week = r => `<span class="wk" aria-label="요일 ${esc(r.d||"정보 없음")}${r.o?", 괄호 표기 "+esc(r.o):""}">${[...W].map(d=>`<i class="${r.d.includes(d)?"on":r.o.includes(d)?"opt":""}">${d}</i>`).join("")}</span>`;
 function item(r, i){
   const fr = r.fr==="최근" ? `<span class="fr fr-ok">최근 변경 ${esc(r.last.slice(0,4))}.${+r.last.slice(5,7)}</span>`
@@ -323,7 +341,7 @@ function item(r, i){
     <div class="tm">${r.t0!=null?hm(r.t0):"—"}<span>${r.t1!=null?(long?"~"+hm(r.t1)+" 이용":"~"+hm(r.t1)):esc(r.tt)}</span></div>
     <div><div class="nm">${esc(r.n)}</div>
       <div class="meta">${week(r)}${esc(r.c)} · ${esc(r.s)}${r.tg?` · ${esc(r.tg)}`:""}${r.cap?` · 정원 ${r.cap}명`:""}</div>
-      <div class="tags">${fr}${park(r)}${r.nd?`<span class="tag">강좌명에는 ${esc(r.nd)} · 강습 요일은 센터 확인</span>`:""}${r.o?`<span class="tag">괄호 요일(${esc(r.o)})은 자료에 뜻이 적혀 있지 않음</span>`:""}</div></div>
+      <div class="tags">${fr}${park(r)}${st.sort==="rec"?rec(r).why.map(w=>`<span class="tag" style="border-color:var(--ok);color:var(--ok)">${esc(w)}</span>`).join(""):""}${r.nd?`<span class="tag">강좌명에는 ${esc(r.nd)} · 강습 요일은 센터 확인</span>`:""}${r.o?`<span class="tag">괄호 요일(${esc(r.o)})은 자료에 뜻이 적혀 있지 않음</span>`:""}</div></div>
     <div class="pr"><b>${won(r.fee)}</b>${r.per?`<span>1회 약 ${won(r.per)} (추정)</span>`:""}<div class="acts"><a href="${esc(r.link)}" target="_blank" rel="noopener">센터 안내</a><a href="https://www.ksponco.or.kr/spm/index.do" target="_blank" rel="noopener">온라인 수강신청</a>${r.d&&r.t0!=null&&r.t1!=null?`<button data-ics="${i}">내 캘린더에 넣기</button>`:""}</div></div>
   </li>`;
 }
@@ -335,7 +353,8 @@ function render(reset){
   drawPresets(); drawGrid();
   const all = R.filter(r=>match(r));
   const hidden = st.fresh ? R.filter(r=>{st.fresh=false; const m=match(r); st.fresh=true; return m && r.fr!=="최근";}).length : 0;
-  all.sort(st.sort==="per" ? (a,b)=>(a.per??1e9)-(b.per??1e9) || (a.t0??1e4)-(b.t0??1e4) : (a,b)=>(a.t0??1e4)-(b.t0??1e4) || a.c.localeCompare(b.c,"ko"));
+  if (st.sort==="rec") all.sort((a,b)=>rec(b).score-rec(a).score || (a.t0??1e4)-(b.t0??1e4));
+  else all.sort(st.sort==="per" ? (a,b)=>(a.per??1e9)-(b.per??1e9) || (a.t0??1e4)-(b.t0??1e4) : (a,b)=>(a.t0??1e4)-(b.t0??1e4) || a.c.localeCompare(b.c,"ko"));
   document.getElementById("n").textContent = all.length.toLocaleString();
   document.getElementById("hid").textContent = hidden ? `조건에 맞지만 1년 넘게 바뀐 기록이 없어 숨긴 강좌 ${hidden.toLocaleString()}개` : "";
   cur = all;
@@ -349,14 +368,14 @@ more.addEventListener("click",()=>{page++; render(false);});
 function toHash(){
   const q = new URLSearchParams();
   if (st.c.size) q.set("c",[...st.c].join(",")); if (st.s) q.set("s",st.s); if (st.d.size) q.set("d",[...st.d].join(""));
-  if (st.t) q.set("t",st.t); if (st.w) q.set("w",st.w); if (st.sort!=="time") q.set("o",st.sort); if (!st.fresh) q.set("all","1"); if (st.preset) q.set("p",st.preset); if (st.q) q.set("q",st.q); if (st.h!=="") q.set("h",st.h);
+  if (st.t) q.set("t",st.t); if (st.w) q.set("w",st.w); if (st.sort!=="time") q.set("o",st.sort); if (!st.fresh) q.set("all","1"); if (st.preset) q.set("p",st.preset); if (st.q) q.set("q",st.q); if (st.h!=="") q.set("h",st.h); if (st.lv) q.set("lv",st.lv);
   return q.toString();
 }
 function fromHash(){
   const q = new URLSearchParams(location.hash.slice(1));
   st.c = new Set((q.get("c")||"").split(",").filter(x=>centers.includes(x))); st.s = q.get("s")||"";
   st.d = new Set([...(q.get("d")||"")].filter(x=>W.includes(x))); st.t = q.get("t")||""; st.w = q.get("w")||"";
-  st.sort = q.get("o")==="per"?"per":"time"; st.fresh = q.get("all")!=="1"; st.preset = q.get("p")||""; st.h = /^\d{1,2}$/.test(q.get("h")||"") ? q.get("h") : ""; st.q = q.get("q")||""; document.getElementById("fQ").value = st.q;
+  st.sort = ["per","rec"].includes(q.get("o")) ? q.get("o") : "time"; st.lv = ["입문","중급","상급"].includes(q.get("lv")) ? q.get("lv") : ""; st.fresh = q.get("all")!=="1"; st.preset = q.get("p")||""; st.h = /^\d{1,2}$/.test(q.get("h")||"") ? q.get("h") : ""; st.q = q.get("q")||""; document.getElementById("fQ").value = st.q;
 }
 const _render = render;
 render = function(reset){ _render(reset); const h=toHash(); try{ history.replaceState(null,"", h?"#"+h:location.pathname); }catch(e){} };
@@ -445,6 +464,13 @@ if (location.hash.length>1) fromHash();
 sync(); render(true);
 
 // 주차 그래프
+const ZQ = window.ANALYSIS && window.ANALYSIS.queries.find(q=>q.id==="zone_full");
+if (ZQ){
+  const z = ZQ.rows, lo = z.slice(0,3), hi = z.slice(-3).reverse();
+  document.getElementById("zoneBox").innerHTML = `<h3 style="font-size:17px;margin:22px 0 4px">붐비는 날엔 어느 주차구역으로 갈까</h3>
+   <p class="sub" style="font-size:15px;margin-bottom:10px">주차장 혼잡도 기록(2025년 2월~2026년 8월, 구역별 ${Math.min(...z.map(x=>x[1]))}~${Math.max(...z.map(x=>x[1]))}일치, 대부분 주말·행사일)에서 구역별로 ‘만차’가 된 날의 비율입니다. <b>${lo.map(x=>esc(x[0])).join("·")}</b>가 덜 찼고(${lo[0][3]}~${lo[2][3]}%), ${hi.map(x=>esc(x[0])).join("·")}이 자주 찼습니다(${hi[2][3]}~${hi[0][3]}%). 만차는 보통 13~14시에 시작되니, 붐비는 날은 13시 전에 도착하는 편이 안전합니다. 구역 위치는 자료에 없으니 현장 안내도를 확인하세요.</p>
+   <div class="scroll"><table><thead><tr><th>구역</th>${z.map(x=>`<th>${esc(x[0])}</th>`).join("")}</tr></thead><tbody><tr><td>만차가 된 날 (%)</td>${z.map(x=>`<td>${x[3]}</td>`).join("")}</tr><tr><td>처음 만차가 된 시 (중앙값)</td>${z.map(x=>`<td>${x[4]}시</td>`).join("")}</tr></tbody></table></div>`;
+}
 if (PK){
   document.getElementById("parkSub").textContent = `한국체육산업개발이 개방한 올림픽공원 입출차 정보(동2문·남2문·북2문 주차구역, ${PK.month.slice(0,4)}년 ${+PK.month.slice(5,7)}월, 평일 ${PK.n_days.weekday}일·주말 ${PK.n_days.weekend}일)로 매시 30분에 주차장에 있던 차량 수를 세어, 가장 많았던 때를 100으로 둔 지수입니다. 올림픽수영장·올림픽스포츠센터 강좌에는 같은 지수로 ‘한산(40 미만)·보통·붐빔(70 이상)’을 붙였습니다. 한 달치 기록이라 방학·공연이 있는 달은 다를 수 있습니다.`;
   const FC = PK.forecast;
