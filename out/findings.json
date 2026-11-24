@@ -4,6 +4,7 @@
  "n_files": 30,
  "n_apis": 28,
  "n_csv_checked": 29,
+ "rows_checked": 264177,
  "grades": {
   "점검 필요": 2,
   "양호": 42,

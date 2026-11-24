@@ -444,6 +444,7 @@ def run(ref: dt.date | None = None) -> dict:
     rules = Counter(f["rule"] for d in datasets for f in d["findings"] if f["level"] != "info" or f["rule"] == "오탈자")
     result = {"ref_date": str(ref), "fetched_at": cat["fetched_at"], "n_files": len(cat["files"]), "n_apis": len(cat["apis"]),
               "n_csv_checked": sum(1 for d in datasets if d["kind"] == "파일" and csv_path(d["id"])),
+              "rows_checked": sum(len(read_csv(csv_path(d["id"]))[1]) for d in datasets if d["kind"] == "파일" and csv_path(d["id"])),
               "grades": dict(grades), "rules": dict(rules), "org": org, "datasets": datasets}
     OUT.mkdir(exist_ok=True)
     (OUT / "findings.json").write_text(json.dumps(result, ensure_ascii=False, indent=1), encoding="utf-8")
