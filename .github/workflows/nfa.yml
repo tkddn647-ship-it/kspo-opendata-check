@@ -13,3 +13,4 @@ jobs:
       - run: python tools/probe_nfa.py
         env:
           DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+          DATA_GO_KR_KEY_2: ${{ secrets.DATA_GO_KR_KEY_2 }}
