@@ -69,6 +69,11 @@ def main():
             break
         no += 1
         time.sleep(15)
+    import gzip
+    with gzip.open(OUT.with_suffix(".raw.json.gz"), "wt", encoding="utf-8") as f:  # 응답 원본 (칸 이름 확인용)
+        json.dump(items, f, ensure_ascii=False)
+    print("첫 항목의 칸 이름:", sorted(items[0].keys()))
+    print("첫 항목:", json.dumps(items[0], ensure_ascii=False)[:600])
     with OUT.open("w", encoding="utf-8", newline="") as f:
         w = csv.writer(f)
         w.writerow(["ID", "일시", "제목"] + FIELDS + ["설명원문"])
