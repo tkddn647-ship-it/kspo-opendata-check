@@ -188,7 +188,7 @@ ds.forEach(d=>{
   b.setAttribute("role","listitem");
   b.setAttribute("aria-label", `${d.title}, ${d.grade}`);
   b.textContent = d.grade==="점검 필요"?"!":d.grade==="주의"?"△":"";
-  b.onmouseenter = e => { tip.style.display="block"; tip.textContent = `${d.title} (${d.kind}) — ${d.grade}`; };
+  b.onmouseenter = e => { tip.style.display="block"; tip.textContent = `${d.title} (${d.kind}): ${d.grade}`; };
   b.onmousemove = e => { tip.style.left = Math.min(e.clientX+12, innerWidth-300)+"px"; tip.style.top = (e.clientY+14)+"px"; };
   b.onmouseleave = () => tip.style.display="none";
   b.onclick = () => open(d.id, true);

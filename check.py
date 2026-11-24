@@ -222,7 +222,7 @@ def check_file(i: str, meta: dict, cat: dict, ref: dt.date) -> list[dict]:
     last = max(dates) if dates else None
     cyc = meta.get("cycle", "")
     if last and cyc in CYCLE_DAYS and (ref - last).days > CYCLE_DAYS[cyc]:
-        fs.append(F("warn", "최신성", f"마지막 자료 날짜 {last} — {(ref - last).days}일째 새 자료 없음 ('{cyc}' 갱신인데 주기를 두 번 넘게 건너뜀)",
+        fs.append(F("warn", "최신성", f"마지막 자료 날짜 {last}, {(ref - last).days}일째 새 자료 없음 ('{cyc}' 갱신인데 주기를 두 번 넘게 건너뜀)",
                     "최근 자료를 추가하거나, 더 이상 생기지 않는 자료라면 설명에 '○○년 운영 종료' 명시",
                     f"자료 날짜 범위 {min(dates)} ~ {last}"))
     elif last and cyc == "수시" and (ref - last).days > 365 * 5:
@@ -271,7 +271,7 @@ def check_file(i: str, meta: dict, cat: dict, ref: dt.date) -> list[dict]:
                 ph[(hdr[j], m.group(1))] += 1
     for (h, v), n in sorted(ph.items()):
         documented = v in desc
-        fs.append(F("info", "자리표시날짜", f"'{h}'에 {v} {n}건" + (" (설명에 뜻이 적혀 있음)" if documented else " — 설명에 뜻이 없음"),
+        fs.append(F("info", "자리표시날짜", f"'{h}'에 {v} {n}건" + (" (설명에 뜻이 적혀 있음)" if documented else " (설명에 뜻이 없음)"),
                     "" if documented else f"{v}가 '기간 없음'인지 '미입력'인지 설명에 적거나 빈칸으로 바꿈"))
     far = [c for r in body for c in r for y, m, d in DATE.findall(c)
            if (x := parse_date(f"{y}-{m}-{d}")) and x > ref + dt.timedelta(days=365 * 3) and not c.startswith("9999")]
@@ -343,7 +343,7 @@ def desc_title_mismatch(items: list[dict]) -> dict[str, dict]:
                 words = [re.sub(r"(데이터|정보)$", "", w) for w in re.split(r"[\s_()·,]+", short(a["title"]))]
                 words = [w for w in words if len(w) >= 2 and w not in GENERIC]
                 if words and not any(w in da for w in words):
-                    out[a["id"]] = F("error", "설명복사", f"설명이 '{short(b['title'])}' 설명과 같음 — 이 데이터('{short(a['title'])}')를 설명하지 않음",
+                    out[a["id"]] = F("error", "설명복사", f"설명이 '{short(b['title'])}' 설명과 같아서 이 데이터('{short(a['title'])}')를 설명하지 못함",
                                      f"'{short(a['title'])}' 내용(항목: 제목·시작일·종료일 등)에 맞는 설명으로 새로 씀",
                                      f"설명 첫머리: {da[:60]}…")
     return out
@@ -373,7 +373,7 @@ def check_catalog(cat: dict, open_list: list[dict], ref: dt.date) -> list[dict]:
     d, n = mods.most_common(1)[0]
     total = sum(mods.values())
     if n / total >= 0.5:
-        fs.append(F("warn", "수정일", f"{total}종 중 {n}종의 수정일이 {d} 하루에 몰려 있음 — 수정일만 보고는 자료가 언제 바뀌었는지 알 수 없음",
+        fs.append(F("warn", "수정일", f"{total}종 중 {n}종의 수정일이 {d} 하루에 몰려 있어 수정일만 보고는 자료가 언제 바뀌었는지 알 수 없음",
                     "설명에 '데이터 기준일'(자료의 마지막 날짜)을 따로 적음 (이 점검표의 '자료 기준일' 칸처럼)"))
     return fs
 

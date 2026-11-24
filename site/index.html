@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>공공스포츠센터 강좌 찾기 — 올림픽공원·일산·분당</title>
+<title>공공스포츠센터 강좌 찾기 (올림픽공원, 일산, 분당)</title>
 <meta name="description" content="한국체육산업개발 스포츠센터 4곳(올림픽수영장·올림픽스포츠센터·일산·분당) 강좌를 퇴근 후·주말·아이와·실버로 찾고, 올림픽공원 주차를 실시간으로 확인합니다.">
 <meta name="theme-color" content="#1B2623">
 <link rel="manifest" href="manifest.webmanifest">
@@ -264,7 +264,7 @@ function match(r, ignorePresetFresh){
   return true;
 }
 
-// 시간표(요일 × 시작 시각) — 한 색의 옅음→짙음으로 강좌 수 표시
+// 시간표(요일 × 시작 시각): 강좌가 많을수록 짙은 색
 const hmEl = document.getElementById("hm"), HRS = Array.from({length:16},(_,i)=>i+6);
 function drawGrid(){
   const o = {d:st.d, t:st.t, h:st.h}; st.d=new Set(); st.t=""; st.h="";
@@ -286,7 +286,7 @@ if (matchMedia("(min-width:721px)").matches) document.getElementById("gridBox").
 
 const presetEl = document.getElementById("presets");
 function drawPresets(){
-  presetEl.innerHTML = PRESETS.map(p=>`<button aria-pressed="${st.preset===p.k}" data-k="${p.k}">${p.label}<small>${p.sub?p.sub+" · ":""}${count(p)}개</small></button>`).join("");
+  presetEl.innerHTML = PRESETS.map(p=>`<button aria-pressed="${st.preset===p.k}" data-k="${p.k}">${p.label}<small>${p.sub?p.sub+", ":""}${count(p)}개</small></button>`).join("");
 }
 presetEl.addEventListener("click", e=>{
   const b=e.target.closest("button"); if(!b) return;
@@ -322,7 +322,7 @@ function parkLevel(r){
 }
 function park(r){ const p=parkLevel(r); if(!p) return ""; const n=nearLot(r);
   const late = n && r.t0!=null && ZS[n.z] && Math.floor(r.t0/60) >= ZS[n.z].hour && [...r.d].some(d=>"토일".includes(d));
-  return `<span class="tag park">주차 ${p.lv==="붐빔"?"붐비는 시간":p.lv==="보통"?"보통":"여유"}${n?` · 가까운 곳 ${n.z} (도보 ${n.walk})`:""}${late&&n.alt?` · 주말 오후는 자주 만차`:""}</span>`; }
+  return `<span class="tag park">주차 ${p.lv==="붐빔"?"붐비는 시간":p.lv==="보통"?"보통":"여유"}${n?`, 가까운 곳 ${n.z} (도보 ${n.walk})`:""}${late&&n.alt?`, 주말 오후는 자주 만차`:""}</span>`; }
 // 추천 순: 후기·평점 자료가 없어, 자료로 확인되는 세 가지만 점수로 쓴다 (이유를 강좌마다 표시)
 const MED = (()=>{ const m={}; R.forEach(r=>{ if(r.fr==="최근" && r.per) (m[r.s]=m[r.s]||[]).push(r.per); }); Object.keys(m).forEach(k=>{ const v=m[k].sort((a,b)=>a-b); m[k]= v.length>=5 ? v[Math.floor(v.length/2)] : null; }); return m; })();
 const _rc = new WeakMap();
@@ -353,7 +353,7 @@ function item(r, i){
   return `<li class="it">
     <div class="tm">${r.t0!=null?hm(r.t0):"—"}<span>${r.t1!=null?(long?"~"+hm(r.t1)+" 이용":"~"+hm(r.t1)):esc(r.tt)}</span></div>
     <div><div class="nm">${esc(r.n)}</div>
-      <div class="meta">${week(r)}${esc(r.c)} · ${esc(r.s)}${r.tg?` · ${esc(r.tg)}`:""}${r.cap?` · 정원 ${r.cap}명`:""}</div>
+      <div class="meta">${week(r)}${esc(r.c)} ${esc(r.s)}${r.tg?`, ${esc(r.tg)}`:""}${r.cap?`, 정원 ${r.cap}명`:""}</div>
       <div class="tags">${fr}${park(r)}${st.sort==="rec"?rec(r).why.map(w=>`<span class="tag" style="border-color:var(--ok);color:var(--ok)">${esc(w)}</span>`).join(""):""}${r.nd?`<span class="tag" title="강좌명에는 ${esc(r.nd)}로 적혀 있음">요일은 센터에 확인</span>`:""}</div></div>
     <div class="pr"><b>${won(r.fee)}</b>${r.per?`<span title="월 강습비를 주당 횟수로 나눈 대략값">1회 약 ${won(r.per)}꼴</span>`:""}<div class="acts"><a href="${esc(r.link)}" target="_blank" rel="noopener">센터 안내</a><a href="https://www.ksponco.or.kr/spm/index.do" target="_blank" rel="noopener">온라인 수강신청</a><a href="https://map.kakao.com/link/search/${encodeURIComponent(MAPQ[r.c]||r.c)}" target="_blank" rel="noopener">지도·길찾기</a>${r.d&&r.t0!=null&&r.t1!=null?`<button data-ics="${i}">내 캘린더에 넣기</button>`:""}</div></div>
   </li>`;
@@ -460,10 +460,10 @@ async function live(){
     const now = new Date(), u = usualAt(now);
     let cmp = "";
     const hh = now.getHours(), offd = now.getDay()%6===0;
-    if (P25 && (hh<9 || hh>=18)) cmp = ` · 밤·이른 아침에는 출차 기록이 없는 장기 주차 차량이 섞여 2025년 평균과 비교하지 않습니다`;
+    if (P25 && (hh<9 || hh>=18)) cmp = `. 밤과 이른 아침에는 출차 기록이 없는 장기 주차 차량이 섞여 2025년 평균과 비교하지 않습니다`;
     else if (P25){ const pr = P25.profiles[offd?"holiday":"weekday"], m = pr.mean[hh-6], r = n/m;
-      cmp = ` · 2025년 ${offd?"휴일":"평일"} 이 시각 평균 ${m.toLocaleString()}대 (보통 ${pr.p10[hh-6].toLocaleString()}~${pr.p90[hh-6].toLocaleString()}대) → <b style="font-size:inherit">${n>pr.p90[hh-6]?"평소보다 많음":n<pr.p10[hh-6]?"평소보다 적음":"평소 수준"}</b>`; }
-    else if (u){ const r = n/u.m; cmp = ` · 평소 이 시각(기록 ${u.n}회 중간값 ${u.m.toLocaleString()}대)보다 ${r>1.15?"많음":r<0.85?"적음":"비슷"}`; }
+      cmp = `. 2025년 ${offd?"휴일":"평일"} 이 시각 평균 ${m.toLocaleString()}대 (보통 ${pr.p10[hh-6].toLocaleString()}~${pr.p90[hh-6].toLocaleString()}대)와 비교하면 <b style="font-size:inherit">${n>pr.p90[hh-6]?"평소보다 많음":n<pr.p10[hh-6]?"평소보다 적음":"평소 수준"}</b>`; }
+    else if (u){ const r = n/u.m; cmp = `. 평소 이 시각(기록 ${u.n}회 중간값 ${u.m.toLocaleString()}대)보다 ${r>1.15?"많음":r<0.85?"적음":"비슷"}`; }
     liveEl.innerHTML = `<span>지금 올림픽공원 주차장(동2·남2·북2문)</span><b>${n.toLocaleString()}대</b><span>${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")} 기준${cmp}</span><a href="#parking" style="font-size:14px">시간대별·주차구역별 보기</a><span class="src">한국체육산업개발 실시간 주차 API. 출차 기록이 없는 장기 주차가 포함될 수 있음(기관 설명). 2025년 평균과의 비교는 같은 기관의 2025 입출차 기록으로 계산</span>`;
     liveEl.hidden = false;
   }catch(e){ liveEl.hidden = true; }
@@ -496,7 +496,7 @@ if (ZQ){
 if (P25){
   const PR = P25.profiles, FA = P25.forecast.A, FE = P25.forecast.E, H = P25.hours;
   document.getElementById("parkSub").innerHTML = `한국체육산업개발이 개방한 <b>올림픽공원 2025 입출차정보</b>(차 한 대마다 입·출차 시각, 기록이 온전한 ${P25.months.length}개월 ${P25.n_days}일)로 매시 30분에 주차장에 있던 차를 셌습니다. 같은 기관의 2025 공연 연계 데이터(공연 ${P25.n_performances}건)와 합쳐, <b>관람객 1만 명 이상 공연이 있던 날</b>(${P25.n_big_event_days}일)을 따로 그렸습니다. 강좌 목록의 ‘주차 한산·보통·붐빔’도 이 값으로 정합니다.`;
-  document.getElementById("fcNote").innerHTML = `<b>예측은 얼마나 맞나 — 직접 검증.</b> 하루를 빼고 나머지 날로 그 하루의 시각별 대수를 맞혀 봤습니다. 평일·휴일만 나눈 예측은 오차 중앙값 ${FA.all.median}%, 여기에 <b>공연 규모와 달을 더하면 ${FE.all.median}%</b>로 줄고 오차 15% 안에 든 날이 ${FA.all.within15}일 → ${FE.all.within15}일(${FE.all.n}일 중)로 늘었습니다. 공연 없는 날은 ${FE.normal.median}%로 잘 맞습니다. 공연 날은 ${FE.event.median}%로 여전히 어렵습니다. 공연 시각·관객 수에 따라 몰리는 시간이 달라지기 때문이라, 공연 날은 위쪽 ‘지금 주차’를 함께 보세요.`;
+  document.getElementById("fcNote").innerHTML = `<b>이 값으로 예측하면 얼마나 맞을까요?</b> 하루를 빼고 나머지 날로 그 하루의 시각별 대수를 맞혀 봤습니다. 평일·휴일만 나눈 예측은 오차 중앙값 ${FA.all.median}%, 여기에 <b>공연 규모와 달을 더하면 ${FE.all.median}%</b>로 줄고 오차 15% 안에 든 날이 ${FA.all.within15}일 → ${FE.all.within15}일(${FE.all.n}일 중)로 늘었습니다. 공연 없는 날은 ${FE.normal.median}%로 잘 맞습니다. 공연 날은 ${FE.event.median}%로 여전히 어렵습니다. 공연 시각·관객 수에 따라 몰리는 시간이 달라지기 때문이라, 공연 날은 위쪽 ‘지금 주차’를 함께 보세요.`;
   const Wd = 760, Ht = 290, L = 46, Rm = 16, T = 22, B = 28;
   const YM = Math.ceil(Math.max(...PR.bigevent.p90, ...PR.weekday.p90)/500)*500;
   const x = i => L + i*(Wd-L-Rm)/(H.length-1), y = v => T + (YM-v)*(Ht-T-B)/YM;
@@ -519,7 +519,7 @@ if (P25){
   const sv = box.querySelector("svg"), tt = document.getElementById("tt");
   const idx = e => { const r=sv.getBoundingClientRect(); const vx=(e.clientX-r.left)*Wd/r.width; return Math.max(0,Math.min(H.length-1,Math.round((vx-L)/((Wd-L-Rm)/(H.length-1))))); };
   sv.getElementById("hit").addEventListener("pointermove", e=>{ const i=idx(e), cx=x(i), c=sv.getElementById("cx"); c.setAttribute("x1",cx); c.setAttribute("x2",cx); c.setAttribute("visibility","visible");
-    tt.innerHTML = `<b>${H[i]}시 30분 평균</b><br>평일 ${PR.weekday.mean[i].toLocaleString()}대 · 휴일 ${PR.holiday.mean[i].toLocaleString()}대<br>대형 공연 날 ${PR.bigevent.mean[i].toLocaleString()}대`;
+    tt.innerHTML = `<b>${H[i]}시 30분 평균</b><br>평일 ${PR.weekday.mean[i].toLocaleString()}대, 휴일 ${PR.holiday.mean[i].toLocaleString()}대<br>대형 공연 날 ${PR.bigevent.mean[i].toLocaleString()}대`;
     const r = sv.getBoundingClientRect(), bx = box.getBoundingClientRect(); tt.style.display="block"; tt.style.left = Math.min(r.left-bx.left+cx*r.width/Wd+12, bx.width-tt.offsetWidth-6)+"px"; tt.style.top="40px"; });
   sv.getElementById("hit").addEventListener("pointerleave", ()=>{ tt.style.display="none"; sv.getElementById("cx").setAttribute("visibility","hidden"); });
   document.getElementById("ptab").innerHTML = `<thead><tr><th>시각 (평균 대수)</th>${H.map(h=>`<th>${h}시</th>`).join("")}</tr></thead><tbody>${[["평일","weekday"],["휴일","holiday"],["1만 명 이상 공연 날","bigevent"]].map(([n,k])=>`<tr><td>${n} (${PR[k].n}일)</td>${PR[k].mean.map(v=>`<td>${v.toLocaleString()}</td>`).join("")}</tr>`).join("")}</tbody>`;

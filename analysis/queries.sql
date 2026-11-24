@@ -127,7 +127,7 @@ SELECT 월, 기록수, 기록있는날, CAST(ROUND(1.0 * 기록수 / 기록있�
 FROM m ORDER BY 월;
 
 -- @id gates2025
--- @title 어느 문으로 들어오나 — 평일과 휴일
+-- @title 평일과 휴일, 어느 문으로 들어오나
 -- @question 2025년 기록이 온전한 달의 입구별 입차 비율 (10분 미만 통과 차량 제외), 토·일 기준
 WITH c AS (
   SELECT substr(in_gate, 1, instr(in_gate, '입구') - 1) AS 입구,
