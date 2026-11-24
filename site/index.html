@@ -331,6 +331,7 @@ function rec(r){
   if (r.nd) score -= 1; else if (r.d) score += 1;
   const o = {score, why}; _rc.set(r,o); return o;
 }
+const MAPQ = {"올림픽수영장":"올림픽수영장","올림픽스포츠센터":"올림픽공원 스포츠센터","일산":"일산올림픽스포츠센터","분당":"분당올림픽스포츠센터"};
 const week = r => `<span class="wk" aria-label="요일 ${esc(r.d||"정보 없음")}${r.o?", 괄호 표기 "+esc(r.o):""}">${[...W].map(d=>`<i class="${r.d.includes(d)?"on":r.o.includes(d)?"opt":""}">${d}</i>`).join("")}</span>`;
 function item(r, i){
   const fr = r.fr==="최근" ? `<span class="fr fr-ok">최근 변경 ${esc(r.last.slice(0,4))}.${+r.last.slice(5,7)}</span>`
@@ -342,7 +343,7 @@ function item(r, i){
     <div><div class="nm">${esc(r.n)}</div>
       <div class="meta">${week(r)}${esc(r.c)} · ${esc(r.s)}${r.tg?` · ${esc(r.tg)}`:""}${r.cap?` · 정원 ${r.cap}명`:""}</div>
       <div class="tags">${fr}${park(r)}${st.sort==="rec"?rec(r).why.map(w=>`<span class="tag" style="border-color:var(--ok);color:var(--ok)">${esc(w)}</span>`).join(""):""}${r.nd?`<span class="tag">강좌명에는 ${esc(r.nd)} · 강습 요일은 센터 확인</span>`:""}${r.o?`<span class="tag">괄호 요일(${esc(r.o)})은 자료에 뜻이 적혀 있지 않음</span>`:""}</div></div>
-    <div class="pr"><b>${won(r.fee)}</b>${r.per?`<span>1회 약 ${won(r.per)} (추정)</span>`:""}<div class="acts"><a href="${esc(r.link)}" target="_blank" rel="noopener">센터 안내</a><a href="https://www.ksponco.or.kr/spm/index.do" target="_blank" rel="noopener">온라인 수강신청</a>${r.d&&r.t0!=null&&r.t1!=null?`<button data-ics="${i}">내 캘린더에 넣기</button>`:""}</div></div>
+    <div class="pr"><b>${won(r.fee)}</b>${r.per?`<span>1회 약 ${won(r.per)} (추정)</span>`:""}<div class="acts"><a href="${esc(r.link)}" target="_blank" rel="noopener">센터 안내</a><a href="https://www.ksponco.or.kr/spm/index.do" target="_blank" rel="noopener">온라인 수강신청</a><a href="https://map.kakao.com/link/search/${encodeURIComponent(MAPQ[r.c]||r.c)}" target="_blank" rel="noopener">지도·길찾기</a>${r.d&&r.t0!=null&&r.t1!=null?`<button data-ics="${i}">내 캘린더에 넣기</button>`:""}</div></div>
   </li>`;
 }
 
