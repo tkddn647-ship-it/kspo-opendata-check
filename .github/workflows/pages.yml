@@ -43,5 +43,7 @@ jobs:
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with: { path: site }
+      # 올린 직후엔 배포 쪽에서 아티팩트가 안 보일 때가 있어 잠깐 기다림
+      - run: sleep 20
       - id: d
         uses: actions/deploy-pages@v4
