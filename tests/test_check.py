@@ -325,3 +325,30 @@ class Gap(unittest.TestCase):
             for b in c["bands"]:
                 self.assertLessEqual(b["own"], max(b["can"], b["own"]))
         self.assertTrue(all(x["slot"] in g["sense"][x["band"]] for x in g["cells"]))
+
+
+class Fit(unittest.TestCase):
+    def test_links_point_to_real_sports(self):
+        import fit, gap
+        sports = {r["s"] for r in gap.load_courses()["rows"]}
+        keys = [L["key"] for L in fit.LINK]
+        self.assertEqual(len(keys), len(set(keys)))
+        for L in fit.LINK[:6]:   # 앞의 여섯은 강좌가 실제로 있어야 함
+            self.assertTrue(set(L["sports"]) & sports, L["key"])
+
+    def test_output_shape(self):
+        import json as _j
+        root = Path(__file__).resolve().parents[1]
+        p = root / "out" / "fit_summary.json"
+        if not p.exists():
+            self.skipTest("fit_summary.json 없음")
+        s = _j.loads(p.read_text(encoding="utf-8"))
+        self.assertGreater(s["rows_used"], 100000)
+        js = (root / "site" / "fit.js").read_text(encoding="utf-8")
+        F = _j.loads(js[js.index("=") + 1:].rstrip().rstrip(";"))
+        import gap
+        self.assertEqual(len(F["ages"]), len(gap.load_courses()["rows"]))   # 강좌마다 대상 나이
+        for g in F["groups"].values():
+            for c in g.values():
+                self.assertGreaterEqual(c["note"], F["min_n"])
+                self.assertTrue(all(0 <= x[1] <= 100 for x in c["linked"]))

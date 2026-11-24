@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>내 체력에 맞는 강좌 (한국체육산업개발 스포츠센터 4곳)</title>
+<meta name="description" content="나이·성별·국민체력100 등급이 같은 사람들이 실제로 처방받은 운동을 보고, 그 운동을 올림픽공원·일산·분당 스포츠센터 강좌로 바로 찾습니다.">
+<meta name="theme-color" content="#1B2623">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="내 체력에 맞는 강좌">
+<meta property="og:description" content="올림픽공원·일산·분당 스포츠센터 강좌를 내 시간으로 한 번에. 로그인 없이, 실시간 주차까지.">
+<meta property="og:url" content="https://tkddn647-ship-it.github.io/kspo-opendata-check/">
+<meta property="og:image" content="https://tkddn647-ship-it.github.io/kspo-opendata-check/og.png">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{
+  --paper:#F6F8F7; --sheet:#FFFFFF; --ink:#1B2623; --ink2:#4A5A56; --line:#D9E1DE; --soft:#EEF3F1;
+  --ok:#2F6B4F; --ok-bg:#E6F0EA; --warn:#A86A12; --warn-bg:#FBF1DF; --bad:#B4321F; --muted:#6F7D79;
+  --r:6px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.6 "Pretendard Variable",Pretendard,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-feature-settings:"tnum"}
+a{color:var(--ok)}
+:focus-visible{outline:3px solid var(--ok);outline-offset:2px}
+.wrap{max-width:1040px;margin:0 auto;padding:40px 24px 80px}
+nav.top{display:flex;gap:4px;margin-bottom:24px;align-items:center}
+nav.top a:last-of-type{margin-right:auto}
+nav.top .big[hidden]{display:none}
+nav.top a{font-size:15px;font-weight:600;color:var(--ink2);text-decoration:none;padding:6px 12px;border-radius:var(--r)}
+nav.top a[aria-current]{background:var(--ink);color:#fff}
+nav.top a:hover:not([aria-current]){background:#E4EBE8}
+nav.top .big{margin-left:8px;font:inherit;font-size:15px;font-weight:700;border:2px solid var(--ink);background:var(--sheet);color:var(--ink);border-radius:var(--r);padding:4px 12px;cursor:pointer}
+nav.top .big[aria-pressed="true"]{background:var(--ink);color:#fff}
+body.bigtext .wrap{zoom:1.2}
+.share{font:inherit;font-size:14px;font-weight:700;border:1px solid var(--ok);background:var(--sheet);color:var(--ok);border-radius:var(--r);padding:4px 10px;cursor:pointer}
+.tag.park{border-color:#C9D4D0;background:#F4F7F6}
+.chart{background:var(--sheet);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px 10px;position:relative}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart .tt{position:absolute;pointer-events:none;background:var(--ink);color:#fff;font-size:13px;line-height:1.45;padding:6px 10px;border-radius:4px;display:none;white-space:nowrap}
+.legend{display:flex;gap:18px;font-size:14px;color:var(--ink2);margin-bottom:6px}
+.legend i{display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+details.tv{margin-top:8px;font-size:14px;color:var(--ink2)}
+details.tv table{margin-top:8px}
+header{border-bottom:2px solid var(--ink);padding-bottom:20px}
+h1{font-size:clamp(28px,4.2vw,44px);line-height:1.15;letter-spacing:-.02em;margin:0;font-weight:800}
+h1 small{display:block;font-size:.42em;font-weight:600;color:var(--ink2);letter-spacing:0;margin-bottom:10px}
+.lede{max-width:66ch;color:var(--ink2);margin:16px 0 0}
+
+/* 빠른 고르기 */
+.presets{display:flex;flex-wrap:wrap;gap:8px;margin:28px 0 0}
+.presets button{font:inherit;font-size:16px;font-weight:700;border:2px solid var(--ink);background:var(--sheet);color:var(--ink);border-radius:999px;padding:8px 16px;cursor:pointer}
+.presets button small{font-weight:500;color:var(--ink2);margin-left:6px;font-size:14px}
+.presets button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.presets button[aria-pressed="true"] small{color:#C9D4D0}
+
+/* 거르기 */
+.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px 20px;margin:22px 0 0;padding:16px 18px;background:var(--sheet);border:1px solid var(--line);border-radius:var(--r)}
+.filters label,.filters .lab{display:block;font-size:13px;color:var(--ink2);font-weight:600;margin-bottom:6px}
+.filters select{width:100%;font:inherit;font-size:15px;padding:7px 8px;border:1px solid var(--line);border-radius:var(--r);background:var(--sheet);color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chips button{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--sheet);color:var(--ink);border-radius:var(--r);padding:4px 9px;cursor:pointer}
+.chips button[aria-pressed="true"]{background:var(--ok);border-color:var(--ok);color:#fff}
+.chk{display:flex;gap:8px;align-items:flex-start;font-size:14px;color:var(--ink);font-weight:500}
+.chk input{margin-top:4px;accent-color:var(--ok)}
+.reset{font:inherit;font-size:14px;background:none;border:0;color:var(--ok);text-decoration:underline;cursor:pointer;padding:0}
+
+.resbar{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:baseline;margin:24px 0 10px}
+.resbar b{font-size:22px}
+.resbar .hid{font-size:14px;color:var(--muted)}
+
+/* 결과 */
+.list{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.it{display:grid;grid-template-columns:112px 1fr auto;gap:6px 20px;padding:14px 4px;border-bottom:1px solid var(--line);align-items:start}
+.tm{font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1.2}
+.tm span{display:block;font-size:13px;font-weight:500;color:var(--muted);letter-spacing:0}
+.nm{font-weight:700;line-height:1.4}
+.meta{font-size:14px;color:var(--ink2);margin-top:2px}
+.wk{display:inline-flex;gap:2px;vertical-align:middle;margin-right:8px}
+.wk i{font-style:normal;font-size:11px;width:19px;height:19px;display:inline-flex;align-items:center;justify-content:center;border-radius:3px;background:var(--soft);color:#A3B0AC}
+.wk i.on{background:var(--ink);color:#fff}
+.wk i.opt{background:var(--sheet);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink)}
+.tags{margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;font-size:12px}
+.tag{border:1px solid var(--line);border-radius:3px;padding:0 6px;color:var(--ink2)}
+.fr{font-weight:700;border-radius:3px;padding:0 6px}
+.fr-ok{background:var(--ok-bg);color:var(--ok)}
+.fr-old{background:var(--warn-bg);color:var(--warn)}
+.pr{text-align:right;white-space:nowrap}
+.pr b{font-size:17px}
+.pr span{display:block;font-size:13px;color:var(--muted)}
+.pr .acts a{display:inline}
+.more{display:block;margin:18px auto 0;font:inherit;font-size:15px;font-weight:700;border:2px solid var(--ink);background:var(--sheet);color:var(--ink);border-radius:var(--r);padding:8px 20px;cursor:pointer}
+.empty{padding:28px 4px;color:var(--ink2)}
+
+section{margin-top:56px}
+section>h2{font-size:22px;margin:0 0 6px;letter-spacing:-.01em}
+section>p.sub{margin:0 0 16px;color:var(--ink2);max-width:68ch}
+table{width:100%;border-collapse:collapse;background:var(--sheet);border:1px solid var(--line)}
+th,td{padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-size:15px;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-size:13px;color:var(--ink2);font-weight:600;background:var(--soft)}
+td.warn{color:var(--warn);font-weight:700}
+.scroll{overflow-x:auto}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.facts div{border-top:3px solid var(--ink);padding-top:10px}
+.facts h3{margin:0 0 4px;font-size:16px}
+.facts p{margin:0;font-size:15px;color:var(--ink2)}
+footer{margin-top:56px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+
+.grid{margin:22px 0 0}
+.grid>summary{cursor:pointer;font-weight:700;font-size:16px}
+.grid>summary span{font-weight:500;color:var(--ink2);font-size:14px;margin-left:8px}
+.hm{display:grid;grid-template-columns:34px repeat(16,1fr);gap:2px;margin-top:10px;font-size:12px}
+.hm .hh,.hm .dd{color:var(--muted);display:flex;align-items:center;justify-content:center}
+.hm button{font:inherit;font-size:12px;border:0;border-radius:3px;height:30px;cursor:pointer;color:var(--ink);padding:0}
+.hm button.dark{color:#fff}
+.hm button.z{background:var(--soft);color:#A3B0AC;cursor:default}
+.hm button[aria-pressed="true"]{outline:3px solid var(--ink);outline-offset:1px}
+.hmnote{font-size:13px;color:var(--muted);margin:6px 0 0}
+@media (max-width:720px){.hm{font-size:10px;grid-template-columns:22px repeat(16,1fr);gap:1px}.hm button{font-size:10px;height:26px}}
+.live{margin:20px 0 0;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;background:var(--sheet);border:1px solid var(--line);border-left:4px solid var(--ok);border-radius:var(--r);padding:10px 14px;font-size:15px}
+.live[hidden]{display:none}
+.live b{font-size:20px}
+.live .src{font-size:13px;color:var(--muted)}
+.search{margin:18px 0 0;display:flex;gap:8px}
+.search input{flex:1;font:inherit;font-size:17px;padding:10px 14px;border:2px solid var(--ink);border-radius:var(--r);background:var(--sheet);color:var(--ink);min-width:0}
+.ftoggle{display:none}
+.acts{display:flex;flex-wrap:wrap;gap:4px 10px;justify-content:flex-end;margin-top:4px}
+.acts a,.acts button{font:inherit;font-size:13px;color:var(--ok);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline}
+@media (max-width:720px){
+  .ftoggle{display:block;margin:12px 0 0;font:inherit;font-size:15px;font-weight:700;border:1px solid var(--ink);background:var(--sheet);color:var(--ink);border-radius:var(--r);padding:8px 12px;width:100%;cursor:pointer}
+  .filters:not(.open){display:none}
+  .acts{justify-content:flex-start}
+  .it{grid-template-columns:78px 1fr}
+  .tm{font-size:18px}
+  .pr{grid-column:2;text-align:left}
+  .pr span{display:inline;margin-left:8px}
+}
+
+.q{margin-top:44px}
+.q h2{font-size:21px;margin:0 0 2px}
+.q .ask{color:var(--ink2);margin:0 0 12px;font-size:15px}
+.q .say{margin:12px 0 0;max-width:72ch}
+.q .say b{background:var(--ok-bg);padding:0 3px}
+.q details{margin-top:10px;font-size:14px;color:var(--ink2)}
+.q pre{background:#17211E;color:#E6F0EA;padding:14px 16px;border-radius:var(--r);overflow-x:auto;font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;margin:8px 0 0}
+.meth{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:20px}
+.meth div{background:var(--sheet);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;font-size:14px;color:var(--ink2)}
+.meth b{display:block;font-size:20px;color:var(--ink)}
+.caveat{font-size:14px;color:var(--muted);margin-top:8px;max-width:72ch}
+@media (max-width:720px){nav.top{overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch}nav.top a{flex:none;font-size:14px;padding:6px 9px}}
+
+/* 체력 맞춤 */
+.ask{margin:26px 0 0;background:var(--sheet);border:2px solid var(--ink);border-radius:var(--r);padding:18px 20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px 22px;align-items:end}
+.ask label,.ask .lab{display:block;font-size:14px;font-weight:700;margin-bottom:6px}
+.ask input[type=number],.ask select{width:100%;font:inherit;font-size:19px;font-weight:700;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r);background:var(--sheet);color:var(--ink)}
+.seg{display:flex;gap:6px}
+.seg button{flex:1;font:inherit;font-size:17px;font-weight:700;border:1px solid var(--line);background:var(--sheet);color:var(--ink);border-radius:var(--r);padding:8px 0;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.ask .hint{grid-column:1/-1;font-size:14px;color:var(--ink2);margin:0}
+.who{margin:26px 0 0;font-size:18px;max-width:70ch}
+.who b{background:var(--ok-bg);padding:0 4px}
+.who small{display:block;font-size:14px;color:var(--muted);margin-top:4px}
+.rx{list-style:none;margin:14px 0 0;padding:0;border-top:1px solid var(--line)}
+.rx>li{border-bottom:1px solid var(--line);padding:14px 4px}
+.rx .hd{display:grid;grid-template-columns:150px 1fr auto;gap:8px 16px;align-items:center}
+.rx .nm{font-size:19px;font-weight:800}
+.rx .tr{height:14px;background:var(--soft);border-radius:2px;position:relative}
+.rx .tr i{position:absolute;left:0;top:0;bottom:0;background:var(--ink);border-radius:2px}
+.rx .pc{font-weight:800;font-size:18px;white-space:nowrap;text-align:right}
+.rx .pc span{font-size:13px;font-weight:500;color:var(--muted);margin-left:6px}
+.rx .sub2{font-size:14px;color:var(--ink2);margin:6px 0 0}
+.rx .open{font:inherit;font-size:15px;font-weight:700;border:1px solid var(--ok);background:var(--sheet);color:var(--ok);border-radius:var(--r);padding:5px 12px;cursor:pointer;margin-top:8px}
+.rx .open[aria-expanded="true"]{background:var(--ok);color:#fff}
+.cl{list-style:none;margin:10px 0 0;padding:0;border-top:1px dashed var(--line)}
+.cl li{display:grid;grid-template-columns:104px 1fr auto;gap:4px 14px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:15px;align-items:baseline}
+.cl .t{font-weight:800;font-size:17px}
+.cl .t span{display:block;font-size:12px;font-weight:500;color:var(--muted)}
+.cl .p{text-align:right;white-space:nowrap}
+.cl .p a{display:block;font-size:13px}
+.cl .m{font-size:13px;color:var(--ink2)}
+.tchips{display:flex;flex-wrap:wrap;gap:6px;margin:18px 0 0;align-items:center}
+.tchips .lab{font-size:14px;font-weight:700;margin-right:4px}
+.tchips button{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--sheet);color:var(--ink);border-radius:999px;padding:5px 12px;cursor:pointer}
+.tchips button[aria-pressed="true"]{background:var(--ok);border-color:var(--ok);color:#fff}
+.home{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px 22px;margin:8px 0 0;padding:0;list-style:none}
+.home li{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);padding:7px 0;font-size:15px}
+.home li span{color:var(--muted);white-space:nowrap}
+.next{margin:22px 0 0;background:var(--sheet);border:1px solid var(--line);border-left:4px solid var(--ok);border-radius:var(--r);padding:12px 16px;max-width:76ch;font-size:15px}
+@media (max-width:720px){.rx .hd{grid-template-columns:1fr auto}.rx .tr{grid-column:1/-1;order:3}.cl li{grid-template-columns:80px 1fr}.cl .p{grid-column:2;text-align:left}.cl .p a{display:inline;margin-left:8px}}
+@media (max-width:720px){nav.top{overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch}nav.top a{flex:none;font-size:14px;padding:6px 9px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="top" aria-label="화면 바꾸기"><a href="fit.html" aria-current="page">체력 맞춤 강좌</a><a href="index.html">강좌 찾기</a><a href="gap.html">강좌 공백 지도</a><a href="analysis.html">데이터 분석</a><a href="check.html">데이터 건강검진</a></nav>
+<header>
+  <h1><small>국민체력100 처방 기록과 스포츠센터 4곳 강좌</small>내 체력에 맞는 강좌</h1>
+  <p class="lede" id="lede"></p>
+</header>
+
+<form class="ask" id="ask" onsubmit="return false">
+  <div><label for="age">나이 (만)</label><input id="age" type="number" inputmode="numeric" min="4" max="100" value="45"></div>
+  <div><span class="lab">성별</span><div class="seg" id="sex"><button type="button" data-v="F" aria-pressed="true">여성</button><button type="button" data-v="M" aria-pressed="false">남성</button></div></div>
+  <div><label for="grade">국민체력100 등급</label><select id="grade"></select></div>
+  <p class="hint">등급은 체력인증센터에서 측정하면 받는 결과입니다. 측정한 적이 없으면 '모름'으로 두세요. 입력한 값은 이 기기 밖으로 나가지 않습니다.</p>
+</form>
+
+<p class="who" id="who"></p>
+
+<section style="margin-top:34px">
+  <h2>센터 강좌로 할 수 있는 운동</h2>
+  <p class="sub" id="rxsub"></p>
+  <div class="tchips" id="tchips" role="group" aria-label="갈 수 있는 시간"></div>
+  <div class="tchips" id="cchips" role="group" aria-label="센터"></div>
+  <ul class="rx" id="rx"></ul>
+</section>
+
+<section>
+  <h2>집이나 밖에서 하는 운동</h2>
+  <p class="sub">같은 조건의 사람들이 많이 처방받은 그 밖의 운동입니다. 영상이 있는 것은 국민체력100 운동 영상으로 이어집니다.</p>
+  <ul class="home" id="home"></ul>
+</section>
+
+<div class="next" id="next"></div>
+
+<section>
+  <h2>이 화면이 쓰는 자료와 한계</h2>
+  <div class="facts" id="how"></div>
+</section>
+<footer id="foot"></footer>
+</div>
+<script src="courses.js"></script>
+<script src="fit.js"></script>
+<script>
+(function(){
+const F = window.FIT, K = window.COURSES;
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const nf = n => Number(n).toLocaleString("ko-KR");
+const $ = id => document.getElementById(id);
+const STAGE = a => a<=6 ? "유아기" : a<=12 ? "유소년" : a<=18 ? "청소년" : a<=64 ? "성인" : "어르신";
+const SLOTS = [["아침","평일 아침 (~9시)",r=>wk(r)&&r.t0<540],["낮","평일 낮 (9~18시)",r=>wk(r)&&r.t0>=540&&r.t0<1080],["저녁","평일 저녁 (18시~)",r=>wk(r)&&r.t0>=1080],["주말","주말",r=>/[토일]/.test(r.d)]];
+function wk(r){ return /[월화수목금]/.test(r.d); }
+const st = {sex:"F", slot:new Set(), center:new Set(), open:null};
+const ym = s => s.slice(0,4)+"년 "+(+s.slice(4))+"월";
+
+$("lede").innerHTML = `국민체력100 체력인증센터에서 ${ym(F.months[0])}부터 ${ym(F.months[1])}까지 측정한 <b>${nf(F.rows_used)}명</b>의 기록에는, 건강운동관리사가 그 사람에게 내린 운동 처방이 함께 남아 있습니다. 나와 나이대·성별·등급이 같은 사람들이 실제로 어떤 운동을 처방받았는지 보고, 그 운동을 가까운 공공 스포츠센터 강좌로 바로 찾아보세요.`;
+
+// 묶음 찾기: 같은 구분·나이대·성별, 없으면 가까운 나이대
+function findGroup(age, sex){
+  const stage = STAGE(age), band = Math.floor(age/10)*10;
+  const keys = Object.keys(F.groups).filter(k=>k.endsWith("|"+sex));
+  let best = null, bd = 1e9;
+  for (const k of keys){ const [s,b] = k.split("|"); if (s!==stage) continue; const d = Math.abs(+b-band); if (d<bd){ bd=d; best=k; } }
+  if (!best) for (const k of keys){ const [,b] = k.split("|"); const d = Math.abs(+b-band)+50; if (d<bd){ bd=d; best=k; } }
+  return best;
+}
+function fillGrades(g){
+  const sel = $("grade"), cur = sel.value;
+  const gs = Object.keys(g).filter(x=>x!=="전체");
+  sel.innerHTML = `<option value="전체">모름 · 측정 안 해 봄</option>` + gs.map(x=>`<option value="${esc(x)}">${esc(x==="참가"?"참가 (등급 밖)":x)}</option>`).join("");
+  sel.value = gs.includes(cur) ? cur : "전체";
+}
+function courseList(link, age){
+  const sp = new Set(link.sports);
+  return K.rows.map((r,i)=>[r,F.ages[i]]).filter(([r,a])=> r.fr==="최근" && sp.has(r.s) && a[0]<=age && age<=a[1]
+    && (!st.center.size || st.center.has(r.c)) && (!st.slot.size || SLOTS.some(s=>st.slot.has(s[0]) && s[2](r))))
+    .map(x=>x[0]).sort((a,b)=>(a.t0??0)-(b.t0??0));
+}
+function render(){
+  const age = Math.max(4, Math.min(100, +$("age").value || 0));
+  const key = findGroup(age, st.sex);
+  if (!key){ $("who").textContent = "이 조건의 기록이 부족합니다."; $("rx").innerHTML = ""; $("home").innerHTML = ""; return; }
+  const G = F.groups[key]; fillGrades(G);
+  const grade = $("grade").value, c = G[grade] || G["전체"];
+  const [stage, band] = key.split("|");
+  const bandTxt = stage==="성인"||stage==="어르신" ? `${band}대` : `${stage}`;
+  $("who").innerHTML = `<b>${bandTxt} ${st.sex==="F"?"여성":"남성"}${grade!=="전체"?` · ${esc(grade)}`:""}</b> ${nf(c.note)}명의 처방 기록입니다.<small>${stage} 기준(${band}~${+band+9}세 측정자). 한 사람이 여러 운동을 처방받으므로 비율의 합은 100%를 넘습니다.</small>`;
+  const mx = Math.max(...c.linked.map(x=>x[1]), 1);
+  $("rxsub").textContent = `처방받은 운동 가운데 센터 4곳에 강좌가 있는 것입니다. 막대는 이 조건의 사람 중 그 운동을 처방받은 비율이고, 버튼을 누르면 ${age}세가 들을 수 있는 강좌만 보여 줍니다.`;
+  const links = Object.fromEntries(F.links.map(l=>[l.key,l]));
+  const rows = c.linked.filter(x=>links[x[0]] && links[x[0]].courses>0);
+  $("rx").innerHTML = rows.length ? rows.map(([k,p,n,ex])=>{
+    const cs = courseList(links[k], age), open = st.open===k;
+    return `<li><div class="hd"><div class="nm">${esc(k)}</div><div class="tr"><i style="width:${p/mx*100}%"></i></div><div class="pc">${p}%<span>${nf(n)}명</span></div></div>
+      <div class="sub2">처방 기록의 표기: '${esc(ex)}'. 들을 수 있는 강좌 ${cs.length}개.</div>
+      <button class="open" data-k="${esc(k)}" aria-expanded="${open}">${open?"강좌 접기":"강좌 "+cs.length+"개 보기"}</button>
+      ${open ? (cs.length ? `<ul class="cl">${cs.slice(0,40).map(r=>`<li><div class="t">${r.t0!=null?String(Math.floor(r.t0/60)).padStart(2,"0")+":"+String(r.t0%60).padStart(2,"0"):"-"}<span>${esc(r.d||"")}</span></div>
+        <div><b>${esc(r.n)}</b><div class="m">${esc(r.c)}, ${esc(r.s)}${r.cap?`, 정원 ${r.cap}명`:""}</div></div>
+        <div class="p">${r.fee?nf(r.fee)+"원":""}<a href="${esc(r.link)}" target="_blank" rel="noopener">센터 안내</a></div></li>`).join("")}</ul>${cs.length>40?`<p class="caveat">시간이나 센터를 고르면 줄어듭니다. 전체는 <a href="index.html">강좌 찾기</a>에서 볼 수 있습니다.</p>`:""}`
+        : `<p class="caveat">이 조건에 맞는 강좌가 없습니다. 시간이나 센터 선택을 풀어 보세요.</p>`) : ""}</li>`;
+  }).join("") : `<li class="empty">이 조건의 처방 가운데 센터 강좌와 이어지는 운동이 없습니다.</li>`;
+  $("home").innerHTML = c.top.map(([e,p])=>{ const v = (F.videos[e]||[])[0]; return `<li><div>${v?`<a href="${esc(v.u)}" target="_blank" rel="noopener">${esc(e)}</a>`:esc(e)}</div><span>${p}%</span></li>`; }).join("");
+  $("next").innerHTML = grade==="전체"
+    ? `<b>아직 측정해 보지 않았다면</b> 국민체력100 체력인증센터에서 무료로 측정하고 내 등급과 처방을 받을 수 있습니다. 올림픽공원 안에도 송파 체력인증센터가 있습니다. 예약: <a href="https://nfa.kspo.or.kr" target="_blank" rel="noopener">nfa.kspo.or.kr</a> · 1644-7110`
+    : `<b>이 화면은 진단이 아닙니다.</b> 내 처방은 측정 때 받은 결과지를 따르세요. 여기서는 같은 조건의 다른 사람들이 받은 처방을 참고해 강좌를 고를 수 있습니다.`;
+}
+function chips(el, items, set, lab){
+  el.innerHTML = `<span class="lab">${lab}</span>` + items.map(([v,t])=>`<button type="button" data-v="${esc(v)}" aria-pressed="${set.has(v)}">${esc(t)}</button>`).join("");
+  el.onclick = e => { const b = e.target.closest("button"); if (!b) return; set.has(b.dataset.v) ? set.delete(b.dataset.v) : set.add(b.dataset.v); b.setAttribute("aria-pressed", set.has(b.dataset.v)); render(); };
+}
+chips($("tchips"), SLOTS.map(s=>[s[0],s[1]]), st.slot, "갈 수 있는 시간");
+chips($("cchips"), K.centers.map(c=>[c.name,c.full]), st.center, "센터");
+$("age").addEventListener("input", render); $("grade").addEventListener("change", render);
+$("sex").onclick = e => { const b = e.target.closest("button"); if (!b) return; st.sex = b.dataset.v; [...$("sex").children].forEach(x=>x.setAttribute("aria-pressed", x===b)); render(); };
+$("rx").onclick = e => { const b = e.target.closest(".open"); if (!b) return; st.open = st.open===b.dataset.k ? null : b.dataset.k; render(); };
+const q = new URLSearchParams(location.search);
+if (q.get("age")) $("age").value = q.get("age");
+if (q.get("sex")==="M") { st.sex="M"; [...$("sex").children].forEach(x=>x.setAttribute("aria-pressed", x.dataset.v==="M")); }
+render();
+if (q.get("grade")) { $("grade").value = q.get("grade"); render(); }
+if (q.get("open")) { st.open = q.get("open"); render(); }
+
+$("how").innerHTML = `
+  <div><h3>처방 기록</h3><p>${esc(F.source)}. 전체 ${nf(F.total_api)}건 가운데 ${ym(F.months[0])} 이후 ${nf(F.rows_used)}건을 썼습니다. 원자료는 저장하지 않고 나이대·성별·등급별 집계만 씁니다.</p></div>
+  <div><h3>운동과 강좌의 연결</h3><p>처방 기록에 적힌 운동 이름과 강좌 종목이 같은 것만 이었습니다: ${F.links.filter(l=>l.courses).map(l=>esc(l.key)).join(", ")}. 테니스·골프처럼 처방 기록에 나오지 않는 종목은 여기 나오지 않지만, <a href="index.html">강좌 찾기</a>에서 볼 수 있습니다.</p></div>
+  <div><h3>비율의 뜻</h3><p>같은 조건으로 측정한 사람 중 그 운동을 처방받은 사람의 비율입니다. 사람 수가 ${F.min_n}명보다 적은 묶음은 보여 주지 않고 등급을 합친 값을 씁니다.</p></div>
+  <div><h3>들을 수 있는 강좌</h3><p>강좌명에 적힌 출생연도·나이와 수강대상 칸으로 대상 나이를 정해, 입력한 나이가 들어가는 강좌만 보여 줍니다. 최근 1년 안에 바뀐 기록이 있는 강좌만 씁니다.</p></div>
+  <div><h3>영상</h3><p>${esc(F.video_source)} ${F.n_videos}개 가운데 처방 운동과 이름이 같은 것을 연결했습니다.</p></div>
+  <div><h3>한계</h3><p>이 화면은 다른 사람들의 처방 통계이지 내 몸에 대한 진단이 아닙니다. 질환이 있거나 통증이 있으면 운동 전에 전문가와 상의하세요.</p></div>`;
+$("foot").innerHTML = `자료: ${esc(F.source)}(${esc(F.fetched)} 수집), ${esc(F.video_source)}, 공공데이터포털 한국체육산업개발 강좌정보 4종. 코드: <a href="https://github.com/tkddn647-ship-it/kspo-opendata-check/blob/main/fit.py">fit.py</a>`;
+})();
+</script>
+</body>
+</html>

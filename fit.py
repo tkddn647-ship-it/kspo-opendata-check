@@ -120,11 +120,30 @@ def build():
         if tot["note"]:
             stage_sum[st] = pack(tot)
 
+    # 기관용: 연령 구분별 처방 비율과, 그 연령대가 들을 수 있는 해당 종목 강좌 정원 (지역별)
+    GP = json.load(open(os.path.join(ROOT, "out", "gap.json"), encoding="utf-8"))
+    BAND_OF = {"청소년": "중고생", "성인": "청년·중년", "어르신": "어르신"}
+    AREAS = {"올림픽공원 2곳": ["올림픽수영장", "올림픽스포츠센터"], "일산": ["일산"], "분당": ["분당"]}
+    supply = []
+    for st, band in BAND_OF.items():
+        if st not in stage_sum:
+            continue
+        b = next(x for x in GP["bands"] if x["band"] == band)
+        share = {x[0]: x[1] for x in stage_sum[st]["linked"]}
+        for area, cs in AREAS.items():
+            pop = next(x for x in next(c for c in GP["centers"] if c["center"] == cs[0])["bands"] if x["band"] == band)["pop"]
+            for L in LINK:
+                rs = [r for r in K["rows"] if r["fr"] == "최근" and r["cap"] and r["c"] in cs and r["s"] in L["sports"]
+                      and gap.covers(*gap.age_range(r)[:2], b["lo"], b["hi"])]
+                seats = sum(r["cap"] for r in rs)
+                supply.append({"stage": st, "band": band, "area": area, "key": L["key"], "share": share.get(L["key"], 0),
+                               "courses": len(rs), "seats": seats, "pop": pop, "per1000": round(seats / pop * 1000, 2)})
+
     F = {
         "source": A["source"], "fetched": A["fetched"], "from": A["from"], "rows_used": A["rows_used"], "total_api": A["total_api"],
         "months": [min(A["by_month"]), max(A["by_month"])], "video_source": V["source"], "n_videos": len(V["videos"]),
         "min_n": MIN_N, "links": [{"key": L["key"], "ex": L["ex"], "sports": L["sports"], "courses": n_link[L["key"]]} for L in LINK],
-        "groups": groups, "ages": ages, "videos": videos, "stages": stage_sum,
+        "groups": groups, "ages": ages, "videos": videos, "stages": stage_sum, "supply": supply,
     }
     return F
 
@@ -133,7 +152,7 @@ def run():
     F = build()
     with open(os.path.join(ROOT, "site", "fit.js"), "w", encoding="utf-8") as f:
         f.write("window.FIT=" + json.dumps(F, ensure_ascii=False, separators=(",", ":")) + ";\n")
-    S = {k: F[k] for k in ("source", "fetched", "from", "rows_used", "total_api", "months", "n_videos", "links", "stages")}
+    S = {k: F[k] for k in ("source", "fetched", "from", "rows_used", "total_api", "months", "n_videos", "links", "stages", "supply")}
     S["n_groups"] = len(F["groups"])
     S["n_video_matched"] = len(F["videos"])
     json.dump(S, open(os.path.join(ROOT, "out", "fit_summary.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
@@ -143,6 +162,6 @@ def run():
 if __name__ == "__main__":
     F = run()
     print("쓴 기록", F["rows_used"], "기간", F["months"], "묶음", len(F["groups"]), "영상 연결", len(F["videos"]))
-    for st, c in F["stages"].items():
-        print(st, "n", c["n"], "처방", c["note"], "강좌 연결:", c["linked"][:6])
-        print("   그 밖:", c["top"][:8])
+    for x in F["supply"]:
+        if x["share"] >= 4:
+            print(f"  {x['stage']:4} {x['area']:8} {x['key']:8} 처방 {x['share']:>5}% 강좌 {x['courses']:>3} 정원 {x['seats']:>5} 1천명당 {x['per1000']}")

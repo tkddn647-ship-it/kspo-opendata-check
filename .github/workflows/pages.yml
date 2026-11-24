@@ -32,6 +32,9 @@ jobs:
           cp site/gap.js /tmp/gap.js.before
           python gap.py > /dev/null
           cmp site/gap.js /tmp/gap.js.before
+          cp site/fit.js /tmp/fit.js.before
+          python fit.py > /dev/null
+          cmp site/fit.js /tmp/fit.js.before
           cp site/analysis.js /tmp/analysis.js.before
           python analysis/run.py > /dev/null
           cmp site/analysis.js /tmp/analysis.js.before

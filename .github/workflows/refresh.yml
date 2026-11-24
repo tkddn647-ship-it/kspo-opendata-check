@@ -33,6 +33,7 @@ jobs:
         run: |
           python courses.py > /dev/null
           python gap.py > /dev/null
+          python fit.py > /dev/null
           python check.py > /dev/null
           python analysis/run.py > /dev/null
           python -m unittest discover -s tests
