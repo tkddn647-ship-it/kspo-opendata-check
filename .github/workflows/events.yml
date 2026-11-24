@@ -1,0 +1,32 @@
+# 올림픽공원 공연·행사 일정(누리집 일정안내)을 매일 받아 혼잡 예보에 쓴다.
+name: 공연 일정 갱신
+on:
+  schedule:
+    - cron: "23 20 * * *"   # 한국 시각 05:23
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: write
+jobs:
+  events:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: 받기
+        run: python tools/fetch_events.py 2025-01
+      - name: 화면 자료 다시 만들기
+        run: python courses.py > /dev/null
+      - name: 올리고 배포
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add raw/events.json site out
+          if git diff --cached --quiet; then echo "바뀐 것 없음"; exit 0; fi
+          git commit -qm "공연 일정 갱신 $(TZ=Asia/Seoul date +%Y-%m-%d)"
+          git pull -q --rebase && git push -q
+          gh workflow run pages.yml --ref main
