@@ -7,18 +7,14 @@ permissions:
 jobs:
   fetch:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 240
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - run: python tools/fetch_nfa.py
-        env:
-          DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
       - run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add out/nfa_agg.json
-          git diff --cached --quiet && exit 0
-          git commit -qm "국민체력100 처방 집계 $(TZ=Asia/Seoul date +%Y-%m-%d)"
-          git pull -q --rebase && git push -q
+          python tools/fetch_nfa.py
+        env:
+          DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
