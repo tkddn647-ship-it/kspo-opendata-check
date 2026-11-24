@@ -159,14 +159,14 @@ footer{margin-top:56px;font-size:13px;color:var(--muted);border-top:1px solid va
 <div class="wrap">
 <nav class="top" aria-label="화면 바꾸기"><a href="index.html">강좌 찾기</a><a href="analysis.html" aria-current="page">데이터 분석</a><a href="check.html">데이터 건강검진</a></nav>
 <header>
-  <h1><small>SQL과 통계로 본 한국체육산업개발 개방 데이터</small>강좌와 주차, 숫자로 확인한 8가지</h1>
+  <h1><small>SQL과 통계로 본 한국체육산업개발 개방 데이터</small>강좌와 주차, 숫자로 확인한 10가지</h1>
   <p class="lede">원본 파일을 SQLite 데이터베이스에 넣고, 질문마다 SQL 한 개로 답을 냈습니다. 아래 표는 모두 저장소의 <code>analysis/queries.sql</code>을 그대로 실행한 결과이고, 누구나 <code>python analysis/run.py</code>로 같은 숫자를 다시 얻을 수 있습니다. 해석에는 한계를 함께 적었습니다.</p>
   <div class="meth" id="meth"></div>
 </header>
 <main id="qs"></main>
 <section class="q" id="st1"></section>
 <section class="q" id="st2"></section>
-<footer>자료: 공공데이터포털 한국체육산업개발 강좌정보 4종(2026-11 수집), 올림픽공원 입출차 정보(2024년 7월), 자주 묻는 질문정보. 강좌는 최근 1년 안에 바뀐 기록이 있는 것만, 주차는 같은 행 반복을 한 번만 세고 출차가 입차보다 늦은 기록만 썼습니다. 코드: <a href="https://github.com/tkddn647-ship-it/kspo-opendata-check/tree/main/analysis">analysis/</a></footer>
+<footer>자료: 공공데이터포털 한국체육산업개발 강좌정보 4종(2026-11 수집), 올림픽공원 입출차 정보(2024년 7월), 올림픽공원 2025 입출차정보(문화공공데이터광장 API), 주차장 혼잡도 정보, 자주 묻는 질문정보. 강좌는 최근 1년 안에 바뀐 기록이 있는 것만, 주차는 같은 행 반복을 한 번만 세고 출차가 입차보다 늦은 기록만 썼습니다. 코드: <a href="https://github.com/tkddn647-ship-it/kspo-opendata-check/tree/main/analysis">analysis/</a></footer>
 </div>
 <script src="analysis.js"></script>
 <script>
@@ -175,7 +175,7 @@ const A = window.ANALYSIS, Q = Object.fromEntries(A.queries.map(q=>[q.id,q])), S
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const nf = v => typeof v === "number" ? v.toLocaleString("ko-KR") : esc(v ?? "—");
 const T = A.tables;
-document.getElementById("meth").innerHTML = [[T.courses_fresh,"최근 강좌 (전체 "+T.courses.toLocaleString()+")"],[T.parking,"입출차 기록 (2024년 7월)"],[T.parking_zone,"주차구역 혼잡 기록"],[T.faq,"자주 묻는 질문"],[A.queries.length,"SQL 질의"],[2,"통계 검정"]].map(([n,l])=>`<div><b>${n.toLocaleString()}</b>${l}</div>`).join("");
+document.getElementById("meth").innerHTML = [[T.courses_fresh,"최근 강좌 (전체 "+T.courses.toLocaleString()+")"],[T.parking,"입출차 기록 (2024년 7월)"],[T.inout2025,"2025 입출차 기록 (문화공공데이터광장)"],[T.parking_zone,"주차구역 혼잡 기록"],[T.faq,"자주 묻는 질문"],[A.queries.length,"SQL 질의"],[2,"통계 검정"]].map(([n,l])=>`<div><b>${n.toLocaleString()}</b>${l}</div>`).join("");
 const row = (id, f) => Q[id].rows.find(f);
 const col = (id, name) => Q[id].cols.indexOf(name);
 const SAY = {
@@ -193,6 +193,10 @@ const SAY = {
     return `31일 중 29일은 최고 850~1,150대 사이였는데, <b>${esc(t2[0].slice(5))}·${esc(t[0].slice(8))}일 주말만 ${nf(t2[2])}대·${nf(t[2])}대</b>로 평균의 약 두 배였습니다. 기관 공연정보에 7월 20일 날짜의 공연 2건이 있어 행사 영향으로 추정합니다(그 날짜 칸이 공연일인지는 자료 설명으로 확정하지 못함). 30분 간격 격자를 재귀 CTE로 만들어 입출차 기록과 조인했습니다. 강좌 찾기 화면의 그래프는 매시 30분만 세어 같은 날 최고가 2,025대로 조금 낮게 나옵니다.`; },
   zone_full: q => { const lo=q.rows.slice(0,3), hi=q.rows.slice(-3).reverse();
     return `혼잡도 기록이 있는 날(대부분 주말·행사일) 가운데 <b>${lo.map(x=>esc(x[0])).join("·")}</b>는 만차가 된 날이 ${lo[0][3]}~${lo[2][3]}%로 가장 적고, ${hi.map(x=>esc(x[0])).join("·")}은 ${hi[2][3]}~${hi[0][3]}%로 가장 많습니다. 만차는 보통 13~14시에 시작됩니다. 붐비는 날에는 13시 전에 도착하거나 덜 차는 구역부터 가 보는 것이 유리합니다. 한계: 기록은 상태가 바뀐 때만 남아 있어 한산한 날은 빠져 있고, 구역이 어느 시설과 가까운지는 공개 데이터에 없어, 강좌 찾기 화면에서는 올림픽공원 공식 주차 안내의 시설별 안내(올림픽수영장 → P4 등)를 함께 썼습니다. 또 이 파일의 시각은 분·초 자리에 월·일이 들어가 있어(건강검진 ‘시각형식’) 시 단위로만 분석했습니다.`; },
+  months2025: q => { const cut=q.rows.filter(x=>x[1]===65534);
+    return `기관이 문화공공데이터광장에 연 2025년 입출차 기록 ${nf(T.inout2025)}건을 달별로 셌습니다. <b>${cut.map(x=>+x[0].slice(5)+"월").join("·")}은 모두 정확히 65,534건</b>입니다. 8·9월은 하루 2,200건 안팎으로 다른 달(9,000~10,000건)의 4분의 1이고, 11·12월은 1~7일만 있습니다. 내보내기 한도(65,536행)에 걸린 것으로 보입니다. 또 <b>모든 달의 마지막 날 기록이 없습니다</b>. 그래서 주차 분석·예측에는 1~7월과 10월만 썼고, 이 내용은 건강검진에 기관 고칠 점으로 넣었습니다.`; },
+  gates2025: q => { const r=q.rows;
+    return `북2문(${r[0][1]}%)과 동2문(${r[1][1]}%)으로 들어오는 차가 평일의 60%입니다. 북2문은 공식 안내상 올림픽수영장과 가까운 P4·P5 쪽 입구입니다. 토·일에는 서2문 비율이 ${r.find(x=>x[0]==="서2문")[1]}% → ${r.find(x=>x[0]==="서2문")[2]}%로 절반이 되고 동2문이 늘어, 주말에는 공연장 쪽으로 차가 몰립니다.`; },
   faq: q => { const p=q.rows.find(x=>x[0]==="주차");
     return `자주 묻는 질문 ${T.faq}건 중 <b>${p[1]}건(${p[2]}%)이 주차</b>로, 한 가지 주제로는 가장 많습니다. 강좌·수강 질문은 이 목록에 따로 잡히지 않습니다(목록이 올림픽공원 시설 위주). 서비스에 ‘지금 주차’와 시각별 붐빔을 넣은 근거입니다. 주제는 제목·내용의 낱말로 나눈 것이라 정밀한 분류는 아닙니다.`; },
 };

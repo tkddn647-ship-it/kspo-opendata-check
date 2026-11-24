@@ -25,6 +25,7 @@ jobs:
           cp site/data.js /tmp/data.js.before
           python check.py
           cmp site/data.js /tmp/data.js.before
+          cp out/parking2025.json /tmp/p25.before && python parking2025.py > /dev/null && cmp out/parking2025.json /tmp/p25.before
           cp site/courses.js /tmp/courses.js.before
           python courses.py > /dev/null
           cmp site/courses.js /tmp/courses.js.before

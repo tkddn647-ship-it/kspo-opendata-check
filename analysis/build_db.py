@@ -3,6 +3,7 @@
 courses      : 센터 4곳 강좌를 한 형식으로 맞춘 결과 (site/courses.csv, courses.py가 만듦)
 parking_inout: 올림픽공원 입출차 정보 2024-07 (같은 행 반복은 한 번만)
 faq          : 자주 묻는 질문정보
+inout2025    : 올림픽공원 2025 입출차정보 (문화공공데이터광장 API, 차 한 대 = 한 행)
 parking_zone : 주차장 혼잡도 정보 (구역별 원활·혼잡·만차 기록, 2025-02 ~ 2026-08)
 """
 import csv, gzip, sqlite3
@@ -23,6 +24,7 @@ def build():
     CREATE TABLE parking_inout(base_date TEXT, in_at TEXT, out_at TEXT);
     CREATE TABLE faq(category TEXT, title TEXT, body TEXT);
     CREATE TABLE parking_zone(zone TEXT, status TEXT, d TEXT, hour INTEGER);
+    CREATE TABLE inout2025(in_at TEXT, out_at TEXT, in_gate TEXT, out_gate TEXT);
     """)
     with open(ROOT / "site" / "courses.csv", encoding="utf-8-sig", newline="") as f:
         rows = list(csv.reader(f))[1:]
@@ -38,6 +40,11 @@ def build():
     with open(ROOT / "raw" / "15164156.csv", encoding="utf-8", newline="") as f:
         con.executemany("INSERT INTO parking_zone VALUES(?,?,?,?)",
                         [(r["주차구역"], r["혼잡도"], r["등록일"], int(r["등록시간"][:2])) for r in csv.DictReader(f)])
+    p25 = ROOT / "raw" / "inout2025.csv.gz"
+    if p25.exists():  # 올림픽공원 2025 입출차정보 (문화공공데이터광장, 약 241만 건)
+        with gzip.open(p25, "rt", encoding="utf-8", newline="") as f:
+            rd = csv.reader(f); next(rd)
+            con.executemany("INSERT INTO inout2025 VALUES(?,?,?,?)", (r[:4] for r in rd))
     con.executescript("""
     CREATE INDEX ix_pk_in ON parking_inout(in_at);
     -- 분석용 뷰: 머문 시간(분), 요일 종류. 출차가 입차보다 앞서거나 같은 행은 뺀다.
@@ -57,5 +64,5 @@ def build():
 
 if __name__ == "__main__":
     c = build()
-    for t in ("courses", "courses_fresh", "parking_inout", "parking", "faq", "parking_zone"):
+    for t in ("courses", "courses_fresh", "parking_inout", "parking", "faq", "parking_zone", "inout2025"):
         print(t, c.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0])

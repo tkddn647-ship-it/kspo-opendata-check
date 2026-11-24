@@ -113,3 +113,30 @@ FROM tot t JOIN r ON r.zone = t.zone
 WHERE t.n_days >= 20
 GROUP BY t.zone
 ORDER BY 만차비율_pct, 처음만차_시_중앙값 DESC;
+
+-- @id months2025
+-- @title 2025 입출차 기록은 1년치가 다 있나
+-- @question 달별 기록 수, 기록이 있는 날 수, 하루 평균 기록 수, 그 달 마지막 날 기록 유무
+WITH m AS (
+  SELECT substr(in_at, 1, 7) AS 월, COUNT(*) AS 기록수, COUNT(DISTINCT substr(in_at, 1, 10)) AS 기록있는날,
+         MAX(substr(in_at, 1, 10)) AS 마지막기록일
+  FROM inout2025 WHERE in_at LIKE '2025-%' GROUP BY 1)
+SELECT 월, 기록수, 기록있는날, CAST(ROUND(1.0 * 기록수 / 기록있는날) AS INTEGER) AS 하루평균,
+       마지막기록일,
+       CASE WHEN 마지막기록일 = date(월 || '-01', '+1 month', '-1 day') THEN '있음' ELSE '없음' END AS 말일기록
+FROM m ORDER BY 월;
+
+-- @id gates2025
+-- @title 어느 문으로 들어오나 — 평일과 휴일
+-- @question 2025년 기록이 온전한 달의 입구별 입차 비율 (10분 미만 통과 차량 제외), 토·일 기준
+WITH c AS (
+  SELECT substr(in_gate, 1, instr(in_gate, '입구') - 1) AS 입구,
+         CASE WHEN strftime('%w', in_at) IN ('0','6') THEN '토·일' ELSE '평일' END AS 구분
+  FROM inout2025
+  WHERE substr(in_at, 1, 7) IN ('2025-01','2025-02','2025-03','2025-04','2025-05','2025-06','2025-07','2025-10')
+    AND julianday(out_at) - julianday(in_at) >= 10.0 / 1440)
+SELECT 입구,
+       ROUND(100.0 * SUM(구분 = '평일') / (SELECT COUNT(*) FROM c WHERE 구분 = '평일'), 1) AS 평일_pct,
+       ROUND(100.0 * SUM(구분 = '토·일') / (SELECT COUNT(*) FROM c WHERE 구분 = '토·일'), 1) AS 토일_pct,
+       COUNT(*) AS 입차수
+FROM c GROUP BY 입구 ORDER BY 입차수 DESC;

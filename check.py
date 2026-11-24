@@ -416,6 +416,18 @@ def run(ref: dt.date | None = None) -> dict:
     with (RAW / "15147873.csv").open(encoding="utf-8", newline="") as f:
         open_list = list(csv.DictReader(f))
     org = check_catalog(cat, open_list, ref)
+    p25 = ROOT / "out" / "parking2025.json"
+    if p25.exists():  # 문화공공데이터광장에 연 2025 API 2종 (parking2025.py 결과)
+        iss = json.loads(p25.read_text(encoding="utf-8"))["issues"]
+        if iss["capped_months"]:
+            org.append(F("error", "2025 입출차 API", f"올림픽공원 2025 입출차정보(문화공공데이터광장) {iss['rows']:,}건 중 {', '.join(m[5:].lstrip('0') + '월' for m in iss['capped_months'])}은 달마다 정확히 65,534건에서 잘림 "
+                         f"(8·9월은 하루 약 2,200건으로 듬성듬성, 11·12월은 1~7일만 있음). 모든 달의 마지막 날 기록이 없음. 같은 행 반복 {iss['dup_rows']:,}건, 출차가 입차보다 앞선 기록 {iss['out_before_in']:,}건",
+                         "내보내기 한도(65,536행)에 걸린 것으로 보임. 달별 파일을 나누거나 CSV로 다시 올리고, 말일까지 포함되는지 확인",
+                         "월별 건수: 1~7·10월 18만~30만 건, 그 밖의 달 65,534건"))
+        if iss["linked_desc_null"]:
+            org.append(F("error", "2025 연계 API", f"올림픽공원 2025 차량입출차·공연·날씨 연계 데이터(문화공공데이터광장) {iss['linked_rows']:,}건 모두 설명(DESCRIPTION) 칸이 비어 있음. "
+                         "안내 페이지 샘플에는 주차대수·방문객·기온·습도가 들어 있으나 실제 응답에는 공연명·관람객 수만 남음",
+                         "설명 칸(주차대수·날씨)을 다시 채워 올림. 샘플의 방문객 수가 모두 주차대수의 정확히 3배인 점도 함께 확인"))
     course_cols = set()
     for i in ("15101610", "15110953", "15114776", "15118652"):
         if (pth := csv_path(i)):

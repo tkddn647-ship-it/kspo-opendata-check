@@ -248,3 +248,24 @@ class TimeFmt(unittest.TestCase):
         hdr = ["구역", "등록일", "등록시간"]
         body = [["P1", f"2026-0{m}-1{d}", f"1{d}:3{d}:4{m}"] for m in range(1, 6) for d in range(5)]
         self.assertEqual(C.check_timefmt(hdr, body), [])
+
+
+class Parking2025(unittest.TestCase):
+    def test_result_shape(self):
+        import json as _j
+        p = Path(__file__).resolve().parents[1] / "out" / "parking2025.json"
+        if not p.exists():
+            self.skipTest("2025 자료 없음")
+        j = _j.loads(p.read_text(encoding="utf-8"))
+        for k in ("weekday", "holiday", "bigevent"):
+            pr = j["profiles"][k]
+            self.assertTrue(all(lo <= m <= hi for lo, m, hi in zip(pr["p10"], pr["mean"], pr["p90"])))
+        self.assertLess(j["forecast"]["E"]["all"]["median"], j["forecast"]["A"]["all"]["median"])  # 공연·달을 더하면 나아짐
+        self.assertEqual(j["issues"]["capped_months"], ["2025-08", "2025-09", "2025-11", "2025-12"])
+
+    def test_classes(self):
+        import parking2025 as P
+        self.assertEqual([P.size_class(n) for n in (0, 4999, 5000, 9999, 10000)], [0, 1, 2, 2, 3])
+        import datetime as _dt
+        self.assertTrue(P.is_off(_dt.date(2025, 10, 6)))   # 추석 연휴
+        self.assertFalse(P.is_off(_dt.date(2025, 10, 10)))

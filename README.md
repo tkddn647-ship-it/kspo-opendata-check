@@ -18,6 +18,7 @@
 - 강좌마다 '센터 안내', '온라인 수강신청' 링크와 **내 캘린더에 넣기**(.ics, 매주 반복 4주)
 - **지금 올림픽공원 주차**: 한국체육산업개발이 공개한 실시간 주차 API(`parkingorsApi.do`, 기관 누리집에 공개된 키)를 화면에서 직접 부름
 - 주차 기록: `.github/workflows/parking-log.yml` 이 예약 실행으로 같은 API를 자동으로 불러 `parking-log` 브랜치에 쌓고, 화면은 같은 요일 종류·시각 기록이 5회 넘게 모이면 '평소보다 많음/비슷/적음'을 보여 줌
+- **2025 주차·공연**: 문화공공데이터광장 API(올림픽공원 2025 입출차정보 241만 건, 2025 공연 연계 데이터)를 `tools/fetch_inout2025.py`·`tools/fetch_linked2025.py`로 받아(키는 Secrets `KCISA_KEY_008`·`KCISA_KEY`) 평일·휴일·대형 공연 날의 시각별 주차 대수와 예측 오차를 계산. 실시간 주차를 2025년 같은 시각 평균과 비교(9~18시만)
 - 자료 자동 갱신: `.github/workflows/refresh.yml` 이 매주 월요일 06:17(한국 시각) 포털의 강좌 파일 5종 수정일을 보고, 바뀌었으면 받아서 다시 만들고 배포 (`tools/refresh_courses.py`, 포털 내려받기 제한이 뜨면 멈추고 기존 자료 유지)
 - **시간표로 고르기**: 요일 × 시작 시각 표의 칸(강좌 수)을 눌러 그 시간 강좌만 보기
 - 정리된 강좌 자료 재공개: `site/courses.csv` (센터 4곳을 한 형식으로, 누구나 다시 사용)
@@ -73,8 +74,9 @@
 python tools/unpack.py ~/Downloads/kspo_opendata.json.gz   # raw/ 에 풀기
 python check.py                                            # out/findings.json, out/summary.csv, site/data.js
 python courses.py                                          # site/courses.js, out/courses_summary.json
+python parking2025.py                                      # out/parking2025.json (2025 입출차 241만 건 + 공연, 예측 검증)
 python analysis/run.py                                     # out/kspo.db, site/analysis.js, out/analysis.md
-python -m unittest discover -s tests                       # 테스트 28개
+python -m unittest discover -s tests                       # 테스트 30개
 ```
 
 외부 라이브러리 없이 Python 3.10+ 표준 라이브러리만 씁니다.

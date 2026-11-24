@@ -112,6 +112,56 @@
   "faq": {
    "total": 49,
    "parking": 10
+  },
+  "p25": {
+   "forecast": {
+    "A": {
+     "event": {
+      "n": 92,
+      "median": 20.5,
+      "mean": 27.4,
+      "within15": 18
+     },
+     "all": {
+      "n": 228,
+      "median": 12.3,
+      "mean": 19.2,
+      "within15": 128
+     },
+     "normal": {
+      "n": 136,
+      "median": 7.9,
+      "mean": 13.6,
+      "within15": 110
+     }
+    },
+    "E": {
+     "event": {
+      "n": 92,
+      "median": 19.0,
+      "mean": 26.4,
+      "within15": 29
+     },
+     "all": {
+      "n": 228,
+      "median": 9.6,
+      "mean": 16.0,
+      "within15": 148
+     },
+     "normal": {
+      "n": 136,
+      "median": 5.9,
+      "mean": 9.0,
+      "within15": 119
+     }
+    }
+   },
+   "n_days": 228,
+   "peaks": {
+    "weekday": 2195,
+    "holiday": 1927,
+    "bigevent": 2379
+   }
   }
  },
  "notes": {

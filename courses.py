@@ -307,7 +307,14 @@ def run():
     chk = os.path.join(RAW, "_courses_checked.txt")
     meta = json.load(open(os.path.join(RAW, "_meta.json"), encoding="utf-8"))
     checked = open(chk, encoding="utf-8").read().strip() if os.path.exists(chk) else meta["fetched_at"][:10]
-    payload = {"centers": centers, "rows": rows, "summary": summ, "notes": dict(notes), "parking": park, "checked": checked}
+    p25 = None
+    p25_path = os.path.join(ROOT, "out", "parking2025.json")
+    if os.path.exists(p25_path):  # parking2025.py 결과 (2025년 1년치 입출차 + 공연)
+        j = json.load(open(p25_path, encoding="utf-8"))
+        p25 = {k: j[k] for k in ("hours", "months", "n_days", "n_event_days", "n_big_event_days", "n_performances", "profiles", "forecast")}
+        p25["issues"] = {k: v for k, v in j["issues"].items() if k != "per_month"}
+    summ["p25"] = {"forecast": p25["forecast"], "n_days": p25["n_days"], "peaks": {k: v["peak_mean"] for k, v in p25["profiles"].items()}} if p25 else None
+    payload = {"centers": centers, "rows": rows, "summary": summ, "notes": dict(notes), "parking": park, "p25": p25, "checked": checked}
     os.makedirs(os.path.join(ROOT, "out"), exist_ok=True)
     with open(os.path.join(ROOT, "out", "courses_summary.json"), "w", encoding="utf-8") as f:
         json.dump({"centers": centers, "summary": summ, "notes": dict(notes), "parking": park, "checked": checked}, f, ensure_ascii=False, indent=1)

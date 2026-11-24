@@ -310,15 +310,16 @@ document.getElementById("fFresh").addEventListener("change",e=>{st.fresh=e.targe
 document.getElementById("fQ").addEventListener("input",e=>{st.q=e.target.value.trim(); render(true);});
 document.getElementById("reset").addEventListener("click",()=>{st.lv="";st.h="";st.q="";document.getElementById("fQ").value="";st.c=new Set();st.s="";st.d=new Set();st.t="";st.w="";st.sort="time";st.fresh=true;st.preset="";sync();render(true);});
 
-const PK = C.parking, PARKC = new Set(["올림픽수영장","올림픽스포츠센터"]);
+const PK = C.parking, P25 = C.p25, PARKC = new Set(["올림픽수영장","올림픽스포츠센터"]);
+const P25TOP = P25 ? Math.max(...Object.values(P25.profiles).map(p=>Math.max(...p.mean))) : 0;
 function parkLevel(r){
   if (!PK || !PARKC.has(r.c) || r.t0==null) return null;
   const wd = [...r.d].some(d=>"월화수목금".includes(d)) || !r.d;
   const h = Math.min(22, Math.max(6, Math.floor(r.t0/60)));
-  const v = PK[wd?"weekday":"weekend"][h-6];
+  const v = P25 ? Math.round(P25.profiles[wd?"weekday":"holiday"].mean[h-6]/P25TOP*100) : PK[wd?"weekday":"weekend"][h-6];
   return {wd, v, lv: v>=70?"붐빔":v>=40?"보통":"한산"};
 }
-function park(r){ const p=parkLevel(r); return p?`<span class="tag park">주차 ${p.wd?"평일":"주말"} 이 시각 ${p.lv} · 지수 ${p.v}</span>`:""; }
+function park(r){ const p=parkLevel(r); return p?`<span class="tag park">주차 ${p.wd?"평일":"휴일"} 이 시각 ${p.lv} · 지수 ${p.v}</span>`:""; }
 // 추천 순: 후기·평점 자료가 없어, 자료로 확인되는 세 가지만 점수로 쓴다 (이유를 강좌마다 표시)
 const MED = (()=>{ const m={}; R.forEach(r=>{ if(r.fr==="최근" && r.per) (m[r.s]=m[r.s]||[]).push(r.per); }); Object.keys(m).forEach(k=>{ const v=m[k].sort((a,b)=>a-b); m[k]= v.length>=5 ? v[Math.floor(v.length/2)] : null; }); return m; })();
 const _rc = new WeakMap();
@@ -455,8 +456,12 @@ async function live(){
     if (!Number.isFinite(n)) throw 0;
     const now = new Date(), u = usualAt(now);
     let cmp = "";
-    if (u){ const r = n/u.m; cmp = ` · 평소 이 시각(기록 ${u.n}회 중간값 ${u.m.toLocaleString()}대)보다 ${r>1.15?"많음":r<0.85?"적음":"비슷"}`; }
-    liveEl.innerHTML = `<span>지금 올림픽공원 주차장(동2·남2·북2문)</span><b>${n.toLocaleString()}대</b><span>${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")} 기준${cmp}</span><span class="src">한국체육산업개발 실시간 주차 API. 출차 기록이 없는 장기 주차가 포함되어 실제보다 많을 수 있음(기관 설명)</span>`;
+    const hh = now.getHours(), offd = now.getDay()%6===0;
+    if (P25 && (hh<9 || hh>=18)) cmp = ` · 밤·이른 아침에는 출차 기록이 없는 장기 주차 차량이 섞여 2025년 평균과 비교하지 않습니다`;
+    else if (P25){ const pr = P25.profiles[offd?"holiday":"weekday"], m = pr.mean[hh-6], r = n/m;
+      cmp = ` · 2025년 ${offd?"휴일":"평일"} 이 시각 평균 ${m.toLocaleString()}대 (보통 ${pr.p10[hh-6].toLocaleString()}~${pr.p90[hh-6].toLocaleString()}대) → <b style="font-size:inherit">${n>pr.p90[hh-6]?"평소보다 많음":n<pr.p10[hh-6]?"평소보다 적음":"평소 수준"}</b>`; }
+    else if (u){ const r = n/u.m; cmp = ` · 평소 이 시각(기록 ${u.n}회 중간값 ${u.m.toLocaleString()}대)보다 ${r>1.15?"많음":r<0.85?"적음":"비슷"}`; }
+    liveEl.innerHTML = `<span>지금 올림픽공원 주차장(동2·남2·북2문)</span><b>${n.toLocaleString()}대</b><span>${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")} 기준${cmp}</span><span class="src">한국체육산업개발 실시간 주차 API. 출차 기록이 없는 장기 주차가 포함될 수 있음(기관 설명). 2025년 평균과의 비교는 같은 기관의 2025 입출차 기록으로 계산</span>`;
     liveEl.hidden = false;
   }catch(e){ liveEl.hidden = true; }
   finally{ clearTimeout(to); }
@@ -485,7 +490,38 @@ if (ZQ){
     <tr><td>처음 만차가 된 시 (중앙값)</td>${z.map(x=>`<td>${x[4]}시</td>`).join("")}</tr></tbody></table></div>
    <p class="caveat" style="font-size:13px;color:var(--muted);margin-top:8px">가까운 시설·주차면수는 <a href="${GUIDE_URL}" target="_blank" rel="noopener">올림픽공원 공식 주차 안내</a>(2026-11-24 확인), 만차 비율은 주차장 혼잡도 정보(2025년 2월~2026년 8월, 구역별 ${Math.min(...z.map(x=>x[1]))}~${Math.max(...z.map(x=>x[1]))}일치 기록)를 분석한 값입니다. 기록은 상태가 바뀐 날만 남아 있어 한산한 날은 빠져 있습니다. P1A·P1B는 공식 안내의 P1(562면)을 나눈 구역입니다. 올림픽스포츠센터 건물의 가까운 주차장은 공식 안내에 없어 표시하지 않았습니다(테니스 강좌만 올림픽테니스경기장 기준 P11).</p>`;
 }
-if (PK){
+if (P25){
+  const PR = P25.profiles, FA = P25.forecast.A, FE = P25.forecast.E, H = P25.hours;
+  document.getElementById("parkSub").innerHTML = `한국체육산업개발이 개방한 <b>올림픽공원 2025 입출차정보</b>(차 한 대마다 입·출차 시각, 기록이 온전한 ${P25.months.length}개월 ${P25.n_days}일)로 매시 30분에 주차장에 있던 차를 셌습니다. 같은 기관의 2025 공연 연계 데이터(공연 ${P25.n_performances}건)와 합쳐, <b>관람객 1만 명 이상 공연이 있던 날</b>(${P25.n_big_event_days}일)을 따로 그렸습니다. 강좌 목록의 ‘주차 한산·보통·붐빔’도 이 값으로 정합니다.`;
+  document.getElementById("fcNote").innerHTML = `<b>예측은 얼마나 맞나 — 직접 검증.</b> 하루를 빼고 나머지 날로 그 하루의 시각별 대수를 맞혀 봤습니다. 평일·휴일만 나눈 예측은 오차 중앙값 ${FA.all.median}%, 여기에 <b>공연 규모와 달을 더하면 ${FE.all.median}%</b>로 줄고 오차 15% 안에 든 날이 ${FA.all.within15}일 → ${FE.all.within15}일(${FE.all.n}일 중)로 늘었습니다. 공연 없는 날은 ${FE.normal.median}%로 잘 맞습니다. 공연 날은 ${FE.event.median}%로 여전히 어렵습니다. 공연 시각·관객 수에 따라 몰리는 시간이 달라지기 때문이라, 공연 날은 위쪽 ‘지금 주차’를 함께 보세요.`;
+  const Wd = 760, Ht = 290, L = 46, Rm = 16, T = 22, B = 28;
+  const YM = Math.ceil(Math.max(...PR.bigevent.p90, ...PR.weekday.p90)/500)*500;
+  const x = i => L + i*(Wd-L-Rm)/(H.length-1), y = v => T + (YM-v)*(Ht-T-B)/YM;
+  const line = arr => arr.map((v,i)=>`${i?"L":"M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join("");
+  const band = `<path d="${PR.weekday.p90.map((v,i)=>`${i?"L":"M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join("")}${PR.weekday.p10.map((v,i)=>[x(i),y(v)]).reverse().map(([a,b])=>`L${a.toFixed(1)},${b.toFixed(1)}`).join("")}Z" fill="#237A4B" fill-opacity=".10"/>`;
+  const grid = Array.from({length:YM/500+1},(_,k)=>k*500).map(v=>`<line x1="${L}" x2="${Wd-Rm}" y1="${y(v)}" y2="${y(v)}" stroke="#E3E9E7"/><text x="${L-8}" y="${y(v)+4}" font-size="11" fill="#6F7D79" text-anchor="end">${v.toLocaleString()}</text>`).join("");
+  const xt = H.map((h,i)=> h%3===0?`<text x="${x(i)}" y="${Ht-8}" font-size="11" fill="#6F7D79" text-anchor="middle">${h}시</text>`:"").join("");
+  const svg = `<svg viewBox="0 0 ${Wd} ${Ht}" role="img" aria-label="올림픽공원 주차장 시각별 평균 주차 대수, 2025년 평일·휴일·대형 공연 날">
+    <rect x="${x(H.indexOf(19))}" y="${T}" width="${x(H.length-1)-x(H.indexOf(19))}" height="${Ht-T-B}" fill="#F2F6F4"/>
+    ${grid}${xt}<text x="${x(H.indexOf(19))+4}" y="${T+12}" font-size="11" fill="#4A5A56">퇴근 후 강좌 시간대</text>
+    ${band}
+    <path d="${line(PR.weekday.mean)}" fill="none" stroke="#237A4B" stroke-width="2"/>
+    <path d="${line(PR.holiday.mean)}" fill="none" stroke="#7A4FA8" stroke-width="2"/>
+    <path d="${line(PR.bigevent.mean)}" fill="none" stroke="#1B2623" stroke-width="2" stroke-dasharray="5 4"/>
+    <line id="cx" x1="0" x2="0" y1="${T}" y2="${Ht-B}" stroke="#1B2623" visibility="hidden"/>
+    <rect x="${L}" y="${T}" width="${Wd-L-Rm}" height="${Ht-T-B}" fill="transparent" id="hit"/></svg>`;
+  const box = document.getElementById("chart");
+  box.querySelector(".legend").innerHTML = `<span><i style="background:#237A4B"></i>평일 (띠: 보통 날 범위)</span><span><i style="background:#7A4FA8"></i>휴일</span><span><i style="background:repeating-linear-gradient(90deg,#1B2623 0 5px,transparent 5px 9px)"></i>1만 명 이상 공연 날</span>`;
+  box.insertAdjacentHTML("beforeend", svg);
+  const sv = box.querySelector("svg"), tt = document.getElementById("tt");
+  const idx = e => { const r=sv.getBoundingClientRect(); const vx=(e.clientX-r.left)*Wd/r.width; return Math.max(0,Math.min(H.length-1,Math.round((vx-L)/((Wd-L-Rm)/(H.length-1))))); };
+  sv.getElementById("hit").addEventListener("pointermove", e=>{ const i=idx(e), cx=x(i), c=sv.getElementById("cx"); c.setAttribute("x1",cx); c.setAttribute("x2",cx); c.setAttribute("visibility","visible");
+    tt.innerHTML = `<b>${H[i]}시 30분 평균</b><br>평일 ${PR.weekday.mean[i].toLocaleString()}대 · 휴일 ${PR.holiday.mean[i].toLocaleString()}대<br>대형 공연 날 ${PR.bigevent.mean[i].toLocaleString()}대`;
+    const r = sv.getBoundingClientRect(), bx = box.getBoundingClientRect(); tt.style.display="block"; tt.style.left = Math.min(r.left-bx.left+cx*r.width/Wd+12, bx.width-tt.offsetWidth-6)+"px"; tt.style.top="40px"; });
+  sv.getElementById("hit").addEventListener("pointerleave", ()=>{ tt.style.display="none"; sv.getElementById("cx").setAttribute("visibility","hidden"); });
+  document.getElementById("ptab").innerHTML = `<thead><tr><th>시각 (평균 대수)</th>${H.map(h=>`<th>${h}시</th>`).join("")}</tr></thead><tbody>${[["평일","weekday"],["휴일","holiday"],["1만 명 이상 공연 날","bigevent"]].map(([n,k])=>`<tr><td>${n} (${PR[k].n}일)</td>${PR[k].mean.map(v=>`<td>${v.toLocaleString()}</td>`).join("")}</tr>`).join("")}</tbody>`;
+}
+if (PK && !P25){
   document.getElementById("parkSub").textContent = `한국체육산업개발이 개방한 올림픽공원 입출차 정보(동2문·남2문·북2문 주차구역, ${PK.month.slice(0,4)}년 ${+PK.month.slice(5,7)}월, 평일 ${PK.n_days.weekday}일·주말 ${PK.n_days.weekend}일)로 매시 30분에 주차장에 있던 차량 수를 세어, 가장 많았던 때를 100으로 둔 지수입니다. 올림픽수영장·올림픽스포츠센터 강좌에는 같은 지수로 ‘한산(40 미만)·보통·붐빔(70 이상)’을 붙였습니다. 한 달치 기록이라 방학·공연이 있는 달은 다를 수 있습니다.`;
   const FC = PK.forecast;
   if (FC) document.getElementById("fcNote").innerHTML = `<b>이 그래프로 예측하면 얼마나 맞나.</b> 선은 평균, 옅은 띠는 그 달에 가장 적었던 날~가장 많았던 날입니다. 하루를 빼고 나머지 날의 평균으로 그 하루를 맞혀 보면 ${FC.n_days}일 중 ${FC.n_within_15}일은 오차 15% 안(오차 중앙값 ${FC.mape_median}%)이었습니다. 그러나 가장 붐빈 ${+FC.busiest_day.slice(5,7)}월 ${+FC.busiest_day.slice(8)}일은 최고 ${FC.busiest_peak.toLocaleString()}대로 보통 날 최고(${FC.median_peak.toLocaleString()}대)의 ${(FC.busiest_peak/FC.median_peak).toFixed(1)}배였습니다. 공연·행사가 있는 날은 요일만으로 예측할 수 없으니, 그런 날은 위쪽의 ‘지금 주차’ 값을 보세요.`;
