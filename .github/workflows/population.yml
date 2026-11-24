@@ -1,0 +1,22 @@
+# 센터 주변 연령별 인구(행정안전부 주민등록 인구) 받기. 손으로 실행.
+name: 주변 인구 받기
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: python tools/fetch_population.py
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add raw/population.csv raw/population_meta.json
+          git diff --cached --quiet && exit 0
+          git commit -qm "주변 연령별 인구 받기 $(TZ=Asia/Seoul date +%Y-%m-%d)"
+          git push -q
