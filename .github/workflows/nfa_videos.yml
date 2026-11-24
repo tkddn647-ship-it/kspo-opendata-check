@@ -1,0 +1,24 @@
+# 국민체력100 동영상 목록 받기 (손으로 실행). 키는 Secrets의 DATA_GO_KR_KEY.
+name: 국민체력100 동영상 목록
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: python tools/fetch_nfa_videos.py
+        env:
+          DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add raw/nfa_videos.json
+          git diff --cached --quiet && exit 0
+          git commit -qm "국민체력100 동영상 목록 $(TZ=Asia/Seoul date +%Y-%m-%d)"
+          git pull -q --rebase && git push -q
