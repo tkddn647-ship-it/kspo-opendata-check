@@ -1,11 +1,13 @@
 # 공공스포츠 강좌 찾기 + 공공데이터 건강검진표 — 한국체육산업개발 개방 데이터
 
-2026년도 한국체육산업개발 공공데이터 활용 경진대회 출품작. 화면 두 개가 같은 데이터·같은 코드에서 나옵니다.
+2026년도 한국체육산업개발 공공데이터 활용 경진대회 출품작. 화면 세 개가 같은 데이터·같은 코드에서 나옵니다.
 
 1. **강좌 찾기** (`site/index.html`, `courses.py`) — 시민용. 올림픽수영장·올림픽스포츠센터·일산·분당 강좌정보 파일 4종을
    한 형식으로 맞춰, 로그인 없이 요일·시작 시각·대상(퇴근 후·주말·어린이·청소년·실버)으로 찾습니다.
    강좌마다 자료에서 마지막으로 바뀐 달을 붙이고, 1년 넘게 바뀐 기록이 없는 강좌는 '운영 여부 센터 확인'으로 표시합니다.
-2. **데이터 건강검진** (`site/check.html`, `check.py`) — 기관용. 개방 데이터 58종(파일 30 · 오픈 API 28)을 같은 규칙으로 점검해
+2. **데이터 분석** (`site/analysis.html`, `analysis/`) — 원본을 SQLite에 넣고 질문마다 SQL 한 개(`analysis/queries.sql`, 창 함수·재귀 CTE)로 답을 내고,
+   순열 검정·부트스트랩 신뢰구간으로 확인. `python analysis/run.py` 로 같은 숫자가 다시 나옴 (표준 라이브러리만, 난수 씨앗 고정).
+3. **데이터 건강검진** (`site/check.html`, `check.py`) — 기관용. 개방 데이터 58종(파일 30 · 오픈 API 28)을 같은 규칙으로 점검해
    데이터마다 **판정 · 발견 사항 · 고치는 방법**을 보여 줍니다. 강좌 찾기를 만들며 걸린 문제(날짜 열에 기간이 든 것, 종료 처리 안 된 강좌,
    요일 칸에 강습일·자유이용일이 섞인 것, 신청에 필요한 항목 미개방)도 규칙으로 넣었습니다.
 
@@ -70,7 +72,8 @@
 python tools/unpack.py ~/Downloads/kspo_opendata.json.gz   # raw/ 에 풀기
 python check.py                                            # out/findings.json, out/summary.csv, site/data.js
 python courses.py                                          # site/courses.js, out/courses_summary.json
-python -m unittest discover -s tests                       # 규칙 테스트 23개
+python analysis/run.py                                     # out/kspo.db, site/analysis.js, out/analysis.md
+python -m unittest discover -s tests                       # 테스트 26개
 ```
 
 외부 라이브러리 없이 Python 3.10+ 표준 라이브러리만 씁니다.

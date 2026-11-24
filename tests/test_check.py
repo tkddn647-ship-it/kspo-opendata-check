@@ -208,3 +208,31 @@ class Export(unittest.TestCase):
             rows = list(_csv.reader(f))
         self.assertEqual(len(rows) - 1, len(p["rows"]))
         self.assertEqual(rows[0][0], "센터")
+
+
+class Analysis(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "analysis"))
+        import run as AR
+        cls.p = AR.run()
+        cls.q = {q["id"]: q for q in cls.p["queries"]}
+
+    def test_sql_matches_python(self):
+        # SQL로 센 최근 강좌 수 = courses.py가 센 수
+        fresh = sum(1 for r in CO.run()["rows"] if r["fr"] == "최근")
+        self.assertEqual(sum(r[1] for r in self.q["evening_share"]["rows"]), fresh)
+        self.assertEqual(self.p["tables"]["courses_fresh"], fresh)
+
+    def test_shares_sum_to_100(self):
+        self.assertAlmostEqual(sum(r[3] for r in self.q["seats_by_band"]["rows"]), 100, delta=0.3)
+        for r in self.q["stay"]["rows"]:
+            self.assertAlmostEqual(sum(r[3:7]), 100, delta=0.3)
+
+    def test_stats_reproducible(self):
+        import run as AR
+        import build_db
+        s2 = AR.extra_stats(build_db.build())
+        self.assertEqual(s2, self.p["stats"])            # 씨앗 고정 → 같은 값
+        lo, hi = self.p["stats"]["peak"]["diff"][1:]
+        self.assertLess(lo, hi)
