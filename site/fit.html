@@ -260,6 +260,11 @@ function findGroup(age, sex){
   if (!best) for (const k of keys){ const [,b] = k.split("|"); const d = Math.abs(+b-band)+50; if (d<bd){ bd=d; best=k; } }
   return best;
 }
+function rangeTxt(stage, band){
+  const R = {"유아기":[4,6],"유소년":[7,12],"청소년":[13,18],"성인":[19,64],"어르신":[65,120]}[stage];
+  const lo = Math.max(band, R[0]), hi = Math.min(band+9, R[1]);
+  return stage==="성인"||stage==="어르신" ? (hi>=100?`${lo}세 이상`:`${lo}~${hi}세`) : `${R[0]}~${R[1]}세`;
+}
 function fillGrades(g){
   const sel = $("grade"), cur = sel.value;
   const gs = Object.keys(g).filter(x=>x!=="전체");
@@ -280,7 +285,7 @@ function render(){
   const grade = $("grade").value, c = G[grade] || G["전체"];
   const [stage, band] = key.split("|");
   const bandTxt = stage==="성인"||stage==="어르신" ? `${band}대` : `${stage}`;
-  $("who").innerHTML = `<b>${bandTxt} ${st.sex==="F"?"여성":"남성"}${grade!=="전체"?` · ${esc(grade)}`:""}</b> ${nf(c.note)}명의 처방 기록입니다.<small>${stage} 기준(${band}~${+band+9}세 측정자). 한 사람이 여러 운동을 처방받으므로 비율의 합은 100%를 넘습니다.</small>`;
+  $("who").innerHTML = `<b>${bandTxt} ${st.sex==="F"?"여성":"남성"}${grade!=="전체"?` · ${esc(grade)}`:""}</b> ${nf(c.note)}명의 처방 기록입니다.<small>${stage} 기준(${rangeTxt(stage, +band)} 측정자). 한 사람이 여러 운동을 처방받으므로 비율의 합은 100%를 넘습니다.</small>`;
   const mx = Math.max(...c.linked.map(x=>x[1]), 1);
   $("rxsub").textContent = `처방받은 운동 가운데 센터 4곳에 강좌가 있는 것입니다. 막대는 이 조건의 사람 중 그 운동을 처방받은 비율이고, 버튼을 누르면 ${age}세가 들을 수 있는 강좌만 보여 줍니다.`;
   const links = Object.fromEntries(F.links.map(l=>[l.key,l]));
