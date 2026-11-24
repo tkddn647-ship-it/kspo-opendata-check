@@ -108,7 +108,7 @@ footer{margin-top:56px;font-size:13px;color:var(--muted);border-top:1px solid va
 <div class="wrap">
 <nav class="top" aria-label="화면 바꾸기"><a href="index.html">강좌 찾기</a><a href="analysis.html">데이터 분석</a><a href="check.html" aria-current="page">데이터 건강검진</a></nav>
 <header>
-  <h1><small>한국체육산업개발(주) 개방 공공데이터</small>공공데이터 건강검진표</h1>
+  <h1><small>한국체육산업개발(주) 개방 공공데이터 · 기관 담당자용</small>공공데이터 건강검진표</h1>
   <div class="stamp" id="stamp"></div>
   <p class="lede" id="lede"></p>
 </header>
@@ -123,8 +123,8 @@ footer{margin-top:56px;font-size:13px;color:var(--muted);border-top:1px solid va
 </div>
 
 <section>
-  <h2>기관 전체에서 보이는 문제</h2>
-  <p class="sub">데이터 한 개가 아니라 개방 목록과 관리 방식 전체에 걸친 발견 사항입니다.</p>
+  <h2>함께 보완하면 시민 화면이 더 정확해지는 것</h2>
+  <p class="sub">데이터 한 개가 아니라 개방 목록과 관리 방식 전체에 걸친 항목입니다. 대부분 내보내기 설정이나 목록 정리로 고칠 수 있습니다.</p>
   <ul class="org" id="org"></ul>
 </section>
 
@@ -178,7 +178,7 @@ const n = D.grades, total = D.datasets.length;
 document.getElementById("stamp").innerHTML = `점검일 <b>${esc(D.ref_date)}</b><br>파일 ${D.n_files}종 · API ${D.n_apis}종`;
 const nf = D.datasets.filter(d=>d.findings.some(f=>f.level!=="info")).length;
 document.getElementById("lede").textContent =
-  `공공데이터포털에 개방된 ${total}종을 같은 규칙으로 점검했습니다. 파일데이터 ${D.n_csv_checked}종은 파일 내용까지, 오픈 API는 인증키가 필요해 설명과 메타데이터만 봤습니다. ${nf}종에서 고칠 거리가 나왔고, 기관 전체에 걸친 문제가 ${D.org.filter(f=>f.level!=="info").length}건 있습니다.`;
+  `공공데이터포털에 개방된 ${total}종을 같은 규칙으로 점검했습니다. 파일데이터 ${D.n_csv_checked}종은 파일 내용까지, 오픈 API는 인증키가 필요해 설명과 메타데이터만 봤습니다. ${total-nf}종은 규칙상 문제가 없었고, ${nf}종과 기관 전체 ${D.org.filter(f=>f.level!=="info").length}건은 보완하면 시민 서비스(강좌 찾기)가 더 정확해지는 항목입니다. 항목마다 고치는 방법을 함께 적었습니다.`;
 document.getElementById("tally").innerHTML = ["점검 필요","주의","양호"].map(g=>`<span>${mark(G[g])}${g} <b>${n[g]||0}</b></span>`).join("");
 
 const strip = document.getElementById("strip"), tip = document.getElementById("tip");

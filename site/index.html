@@ -171,7 +171,7 @@ footer{margin-top:56px;font-size:13px;color:var(--muted);border-top:1px solid va
   <div><label for="fSort">정렬</label><select id="fSort">
     <option value="time">시작 시각 순</option><option value="rec">추천 순 (자료 최신·강습비·주차)</option><option value="per">1회 환산 강습비 낮은 순</option></select></div>
   <div style="grid-column:1/-1;display:flex;flex-wrap:wrap;gap:10px 24px;align-items:center">
-    <label class="chk"><input type="checkbox" id="fFresh" checked> 1년 넘게 바뀐 기록이 없는 강좌는 숨기기 <span style="color:var(--muted)">(운영 여부를 자료로 확인할 수 없음)</span></label>
+    <label class="chk"><input type="checkbox" id="fFresh" checked> 지금도 하는지 불확실한 강좌 숨기기 <span style="color:var(--muted)">(1년 넘게 정보가 바뀌지 않은 강좌 <span id="staleN"></span>)</span></label>
     <button class="reset" id="reset">조건 모두 지우기</button>
     <button class="share" id="share">이 조건으로 링크 복사</button><span id="shareMsg" role="status" style="font-size:14px;color:var(--ok)"></span>
   </div>
@@ -193,7 +193,7 @@ footer{margin-top:56px;font-size:13px;color:var(--muted);border-top:1px solid va
   <p class="sub" id="cnote" style="margin-top:10px;font-size:14px"></p>
 </section>
 
-<section>
+<section id="parking">
   <h2>올림픽공원 주차장, 언제 붐비나</h2>
   <p class="sub" id="parkSub"></p>
   <div class="chart" id="chart"><div class="legend"><span><i style="background:#237A4B"></i>평일</span><span><i style="background:#7A4FA8"></i>주말</span></div><div class="tt" id="tt" role="tooltip"></div></div>
@@ -207,7 +207,7 @@ footer{margin-top:56px;font-size:13px;color:var(--muted);border-top:1px solid va
   <div class="facts">
     <div><h3>보여 주는 것</h3><p>4개 센터 강좌를 한 번에, 로그인 없이, 요일·시작 시각·대상으로 거릅니다. 강좌마다 자료에서 마지막으로 바뀐 달을 붙여, 오래된 정보인지 바로 알 수 있게 했습니다.</p></div>
     <div><h3>추정이 들어간 것</h3><p>1회 환산 강습비는 월 강습비를 주당 횟수×4.345주로 나눈 값입니다. 센터 간 비교용이며 실제 회차와 다를 수 있습니다. 금액은 자료에 적힌 기본 금액이고 중고생·할인 요금은 자료에 없습니다.</p></div>
-    <div><h3>자료가 헷갈리게 적힌 것</h3><p>일부 강좌는 요일 칸에 강습일과 자유이용일이 함께 적혀 있습니다. 강좌명에 다른 요일이 적힌 강좌에는 표시를 붙였습니다. 올림픽수영장의 ‘(토)’처럼 괄호로 적힌 요일은 뜻이 자료에 없어, 요일로 찾을 때 넣지 않았습니다.</p></div>
+    <div><h3>자료가 헷갈리게 적힌 것</h3><p>일부 강좌는 요일 칸에 강습일과 자유이용일이 함께 적혀 있어 ‘요일은 센터에 확인’을 붙였습니다. 올림픽수영장의 ‘(토)’처럼 괄호로 적힌 요일은 뜻이 자료에 없어 요일로 찾을 때 넣지 않았습니다. 자세한 내용은 <a href="check.html">데이터 건강검진</a>에 있습니다.</p></div>
     <div><h3>자료에 없는 것</h3><p>수강 후기·평점은 공개 데이터에 없어 추천에 쓰지 않았습니다. ‘추천 순’은 자료 최신 여부, 같은 종목 대비 1회 강습비, 그 시각 주차 붐빔만으로 정하고 이유를 강좌마다 보여 줍니다. 남은 자리, 추첨·선착순 여부, 신청 기간은 공개 데이터에 없습니다. 신청 전에 센터 안내 페이지에서 확인하세요. 이 항목들을 개방해 달라는 제안이 건강검진 결과에 들어 있습니다.</p></div>
   </div>
 </section>
@@ -225,8 +225,9 @@ const won = n => n==null ? "—" : n.toLocaleString("ko-KR")+"원";
 const hm = m => m==null ? "" : String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0");
 const fresh = R.filter(r=>r.fr==="최근").length;
 
+document.getElementById("staleN").textContent = (R.length-fresh).toLocaleString()+"개";
 document.getElementById("lede").textContent =
-  `올림픽수영장·올림픽스포츠센터·일산·분당 올림픽스포츠센터의 운영 중 강좌 ${R.length.toLocaleString()}개를 한곳에 모았습니다. 이 가운데 최근 1년 안에 바뀐 기록이 있는 강좌는 ${fresh.toLocaleString()}개입니다. 자료는 공공데이터포털의 공개 파일이고, 신청은 각 센터 홈페이지에서 합니다.`;
+  `올림픽수영장·올림픽스포츠센터·일산·분당 센터 4곳의 강좌 ${fresh.toLocaleString()}개를 내 시간에 맞춰 한 번에 찾고, 신청 페이지와 지도로 바로 갑니다. 로그인은 필요 없습니다.`;
 
 // 상태
 const st = {c:new Set(), s:"", d:new Set(), t:"", w:"", sort:"time", fresh:true, preset:"", q:"", h:"", lv:""};
@@ -319,7 +320,9 @@ function parkLevel(r){
   const v = P25 ? Math.round(P25.profiles[wd?"weekday":"holiday"].mean[h-6]/P25TOP*100) : PK[wd?"weekday":"weekend"][h-6];
   return {wd, v, lv: v>=70?"붐빔":v>=40?"보통":"한산"};
 }
-function park(r){ const p=parkLevel(r); return p?`<span class="tag park">주차 ${p.wd?"평일":"휴일"} 이 시각 ${p.lv} · 지수 ${p.v}</span>`:""; }
+function park(r){ const p=parkLevel(r); if(!p) return ""; const n=nearLot(r);
+  const late = n && r.t0!=null && ZS[n.z] && Math.floor(r.t0/60) >= ZS[n.z].hour && [...r.d].some(d=>"토일".includes(d));
+  return `<span class="tag park">주차 ${p.lv==="붐빔"?"붐비는 시간":p.lv==="보통"?"보통":"여유"}${n?` · 가까운 곳 ${n.z} (도보 ${n.walk})`:""}${late&&n.alt?` · 주말 오후는 자주 만차`:""}</span>`; }
 // 추천 순: 후기·평점 자료가 없어, 자료로 확인되는 세 가지만 점수로 쓴다 (이유를 강좌마다 표시)
 const MED = (()=>{ const m={}; R.forEach(r=>{ if(r.fr==="최근" && r.per) (m[r.s]=m[r.s]||[]).push(r.per); }); Object.keys(m).forEach(k=>{ const v=m[k].sort((a,b)=>a-b); m[k]= v.length>=5 ? v[Math.floor(v.length/2)] : null; }); return m; })();
 const _rc = new WeakMap();
@@ -342,18 +345,17 @@ function lotTag(r){ const n = nearLot(r); if(!n) return ""; const z = ZS[n.z];
   return `<span class="tag park">가까운 주차장 ${n.z} (도보 ${n.walk}${LOTS[n.z].cap?`, ${LOTS[n.z].cap}면`:""})${late&&n.alt?` · 주말 이 시각엔 자주 만차, ${n.alt}도 확인`:""}</span>`; }
 // 카카오맵 검색 첫 결과가 해당 센터가 되는 검색어 (2026-11-24 확인. '올림픽수영장'만 쓰면 안산올림픽수영장이 먼저 나옴)
 const MAPQ = {"올림픽수영장":"송파 올림픽수영장","올림픽스포츠센터":"올림픽공원스포츠센터","일산":"일산올림픽스포츠센터","분당":"분당올림픽스포츠센터"};
-const week = r => `<span class="wk" aria-label="요일 ${esc(r.d||"정보 없음")}${r.o?", 괄호 표기 "+esc(r.o):""}">${[...W].map(d=>`<i class="${r.d.includes(d)?"on":r.o.includes(d)?"opt":""}">${d}</i>`).join("")}</span>`;
+const week = r => `<span class="wk" aria-label="요일 ${esc(r.d||"정보 없음")}">${[...W].map(d=>`<i class="${r.d.includes(d)?"on":""}">${d}</i>`).join("")}</span>`;
 function item(r, i){
-  const fr = r.fr==="최근" ? `<span class="fr fr-ok">최근 변경 ${esc(r.last.slice(0,4))}.${+r.last.slice(5,7)}</span>`
-           : r.fr==="미입력" ? `<span class="fr fr-old">시작일 미입력 · 센터 확인</span>`
-           : `<span class="fr fr-old">${esc(r.last.slice(0,4))}.${+r.last.slice(5,7)} 이후 변경 없음 · 운영 여부 센터 확인</span>`;
+  const fr = r.fr==="최근" ? ""
+           : `<span class="fr fr-old" title="${r.last?`${esc(r.last.slice(0,4))}년 ${+r.last.slice(5,7)}월 이후 정보가 바뀌지 않음`:"시작일이 비어 있음"}">지금도 하는지 센터 확인</span>`;
   const long = r.t0!=null && r.t1!=null && r.t1-r.t0>180;
   return `<li class="it">
     <div class="tm">${r.t0!=null?hm(r.t0):"—"}<span>${r.t1!=null?(long?"~"+hm(r.t1)+" 이용":"~"+hm(r.t1)):esc(r.tt)}</span></div>
     <div><div class="nm">${esc(r.n)}</div>
       <div class="meta">${week(r)}${esc(r.c)} · ${esc(r.s)}${r.tg?` · ${esc(r.tg)}`:""}${r.cap?` · 정원 ${r.cap}명`:""}</div>
-      <div class="tags">${fr}${park(r)}${lotTag(r)}${st.sort==="rec"?rec(r).why.map(w=>`<span class="tag" style="border-color:var(--ok);color:var(--ok)">${esc(w)}</span>`).join(""):""}${r.nd?`<span class="tag">강좌명에는 ${esc(r.nd)} · 강습 요일은 센터 확인</span>`:""}${r.o?`<span class="tag">괄호 요일(${esc(r.o)})은 자료에 뜻이 적혀 있지 않음</span>`:""}</div></div>
-    <div class="pr"><b>${won(r.fee)}</b>${r.per?`<span>1회 약 ${won(r.per)} (추정)</span>`:""}<div class="acts"><a href="${esc(r.link)}" target="_blank" rel="noopener">센터 안내</a><a href="https://www.ksponco.or.kr/spm/index.do" target="_blank" rel="noopener">온라인 수강신청</a><a href="https://map.kakao.com/link/search/${encodeURIComponent(MAPQ[r.c]||r.c)}" target="_blank" rel="noopener">지도·길찾기</a>${r.d&&r.t0!=null&&r.t1!=null?`<button data-ics="${i}">내 캘린더에 넣기</button>`:""}</div></div>
+      <div class="tags">${fr}${park(r)}${st.sort==="rec"?rec(r).why.map(w=>`<span class="tag" style="border-color:var(--ok);color:var(--ok)">${esc(w)}</span>`).join(""):""}${r.nd?`<span class="tag" title="강좌명에는 ${esc(r.nd)}로 적혀 있음">요일은 센터에 확인</span>`:""}</div></div>
+    <div class="pr"><b>${won(r.fee)}</b>${r.per?`<span title="월 강습비를 주당 횟수로 나눈 대략값">1회 약 ${won(r.per)}꼴</span>`:""}<div class="acts"><a href="${esc(r.link)}" target="_blank" rel="noopener">센터 안내</a><a href="https://www.ksponco.or.kr/spm/index.do" target="_blank" rel="noopener">온라인 수강신청</a><a href="https://map.kakao.com/link/search/${encodeURIComponent(MAPQ[r.c]||r.c)}" target="_blank" rel="noopener">지도·길찾기</a>${r.d&&r.t0!=null&&r.t1!=null?`<button data-ics="${i}">내 캘린더에 넣기</button>`:""}</div></div>
   </li>`;
 }
 
@@ -367,7 +369,7 @@ function render(reset){
   if (st.sort==="rec") all.sort((a,b)=>rec(b).score-rec(a).score || (a.t0??1e4)-(b.t0??1e4));
   else all.sort(st.sort==="per" ? (a,b)=>(a.per??1e9)-(b.per??1e9) || (a.t0??1e4)-(b.t0??1e4) : (a,b)=>(a.t0??1e4)-(b.t0??1e4) || a.c.localeCompare(b.c,"ko"));
   document.getElementById("n").textContent = all.length.toLocaleString();
-  document.getElementById("hid").textContent = hidden ? `조건에 맞지만 1년 넘게 바뀐 기록이 없어 숨긴 강좌 ${hidden.toLocaleString()}개` : "";
+  document.getElementById("hid").textContent = hidden ? `지금도 하는지 불확실해 숨긴 강좌 ${hidden.toLocaleString()}개` : "";
   cur = all;
   list.innerHTML = all.length ? all.slice(0, page*PER).map((r,i)=>item(r,i)).join("") : `<li class="empty">조건에 맞는 강좌가 없습니다. 요일이나 시작 시각 조건을 하나 빼 보세요.</li>`;
   more.hidden = all.length <= page*PER;
@@ -462,7 +464,7 @@ async function live(){
     else if (P25){ const pr = P25.profiles[offd?"holiday":"weekday"], m = pr.mean[hh-6], r = n/m;
       cmp = ` · 2025년 ${offd?"휴일":"평일"} 이 시각 평균 ${m.toLocaleString()}대 (보통 ${pr.p10[hh-6].toLocaleString()}~${pr.p90[hh-6].toLocaleString()}대) → <b style="font-size:inherit">${n>pr.p90[hh-6]?"평소보다 많음":n<pr.p10[hh-6]?"평소보다 적음":"평소 수준"}</b>`; }
     else if (u){ const r = n/u.m; cmp = ` · 평소 이 시각(기록 ${u.n}회 중간값 ${u.m.toLocaleString()}대)보다 ${r>1.15?"많음":r<0.85?"적음":"비슷"}`; }
-    liveEl.innerHTML = `<span>지금 올림픽공원 주차장(동2·남2·북2문)</span><b>${n.toLocaleString()}대</b><span>${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")} 기준${cmp}</span><span class="src">한국체육산업개발 실시간 주차 API. 출차 기록이 없는 장기 주차가 포함될 수 있음(기관 설명). 2025년 평균과의 비교는 같은 기관의 2025 입출차 기록으로 계산</span>`;
+    liveEl.innerHTML = `<span>지금 올림픽공원 주차장(동2·남2·북2문)</span><b>${n.toLocaleString()}대</b><span>${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")} 기준${cmp}</span><a href="#parking" style="font-size:14px">시간대별·주차구역별 보기</a><span class="src">한국체육산업개발 실시간 주차 API. 출차 기록이 없는 장기 주차가 포함될 수 있음(기관 설명). 2025년 평균과의 비교는 같은 기관의 2025 입출차 기록으로 계산</span>`;
     liveEl.hidden = false;
   }catch(e){ liveEl.hidden = true; }
   finally{ clearTimeout(to); }
