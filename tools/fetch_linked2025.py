@@ -10,6 +10,7 @@ import re
 import sys
 import time
 import urllib.parse
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -19,10 +20,22 @@ FIELDS = ["주차대수", "방문객", "기온", "풍향", "강수량", "습도"
 
 
 def page(key, no, rows=1000):
+    """요청이 잦다(429)거나 일시 오류(5xx)면 기다렸다가 다시 시도 (최대 8번, 10초→최대 2분)."""
     q = urllib.parse.urlencode({"serviceKey": key, "numOfRows": rows, "pageNo": no})
     r = urllib.request.Request(f"{URL}?{q}", headers={"accept": "application/json", "User-Agent": "kspo-course-finder"})
-    with urllib.request.urlopen(r, timeout=60) as f:
-        return json.loads(f.read().decode("utf-8"))
+    wait = 10
+    for attempt in range(8):
+        try:
+            with urllib.request.urlopen(r, timeout=90) as f:
+                return json.loads(f.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            if e.code not in (429, 500, 502, 503, 504) or attempt == 7:
+                raise
+            ra = e.headers.get("Retry-After")
+            w = int(ra) if ra and ra.isdigit() else wait
+            print(f"  {no}쪽: HTTP {e.code}, {w}초 뒤 다시 ({attempt + 1}/8)")
+            time.sleep(w)
+            wait = min(wait * 2, 120)
 
 
 def parse_desc(s):
@@ -55,7 +68,7 @@ def main():
         if total and len(items) >= total:
             break
         no += 1
-        time.sleep(1)
+        time.sleep(15)
     with OUT.open("w", encoding="utf-8", newline="") as f:
         w = csv.writer(f)
         w.writerow(["ID", "일시", "제목"] + FIELDS + ["설명원문"])
