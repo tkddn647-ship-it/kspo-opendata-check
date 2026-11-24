@@ -26,19 +26,13 @@ TOP = 14
 # 처방 운동 → 센터 강좌 종목. ex는 처방 기록에 적힌 운동 이름 그대로(공백 차이는 무시).
 LINK = [
     {"key": "수영", "ex": ["수영"], "sports": ["수영", "수영단기속성", "수영소수정예"]},
-    {"key": "아쿠아로빅", "ex": ["아쿠아로빅", "아쿠아로빅스", "아쿠아 에어로빅", "수중운동", "수중 걷기", "물속에서 걷기"],
+    {"key": "아쿠아로빅", "ex": ["아쿠아로빅", "아쿠아로빅 운동 프로그램 루틴", "물속에서 걷기"],
      "sports": ["아쿠아로빅", "아쿠아워킹", "아쿠아워킹&조깅", "아쿠아테크"]},
-    {"key": "요가·필라테스", "ex": ["요가 및 필라테스 루틴프로그램", "요가", "필라테스"],
+    {"key": "요가·필라테스", "ex": ["요가 및 필라테스 루틴프로그램"],
      "sports": ["요가", "필라테스", "기구필라테스", "기구필라테스(서킷 1:6)", "기구필라테스(1:1)"]},
-    {"key": "실내 자전거", "ex": ["실내 자전거타기", "고정식 자전거 타기"], "sports": ["스피닝바이크"]},
+    {"key": "자전거", "ex": ["실내 자전거타기", "고정식 자전거 타기", "자전거타기", "실외 자전거타기"], "sports": ["스피닝바이크", "로드사이클"]},
     {"key": "웨이트 트레이닝", "ex": ["웨이트 트레이닝 루틴프로그램"], "sports": ["헬스", "헬스PT"]},
     {"key": "달리기", "ex": ["달리기", "조깅"], "sports": ["러닝크루"]},
-    {"key": "에어로빅·댄스", "ex": ["에어로빅", "에어로빅 댄스", "댄스", "댄스스포츠", "라인댄스"],
-     "sports": ["에어로빅", "댄스스포츠", "라인댄스", "줌바댄스", "다이어트댄스", "댄스로빅"]},
-    {"key": "배드민턴", "ex": ["배드민턴"], "sports": ["배드민턴", "배드민턴 단기속성"]},
-    {"key": "탁구", "ex": ["탁구"], "sports": ["탁구", "탁구단기속성"]},
-    {"key": "테니스", "ex": ["테니스"], "sports": ["테니스"]},
-    {"key": "농구", "ex": ["농구"], "sports": ["농구"]},
 ]
 norm = lambda s: re.sub(r"\s+", "", s or "")
 STAGE_ORDER = ["유아기", "유소년", "청소년", "성인", "어르신"]
@@ -67,7 +61,7 @@ def build():
             link_of[norm(e)] = L["key"]
 
     # 묶음을 (구분, 나이대, 성별)로 다시 모으고 등급별·전체를 만든다
-    cells = collections.defaultdict(lambda: collections.defaultdict(lambda: {"n": 0, "note": 0, "ex": collections.Counter()}))
+    cells = collections.defaultdict(lambda: collections.defaultdict(lambda: {"n": 0, "note": 0, "ex": collections.Counter(), "link": collections.Counter()}))
     for k, g in A["groups"].items():
         stage, band, sex, grade = k.split("|")
         if stage not in STAGE_ORDER or sex not in ("M", "F") or band == "?":
@@ -78,6 +72,7 @@ def build():
             c["note"] += g["note"]
             for e, n in g["ex"].items():
                 c["ex"][norm(e)] += n
+            c["link"].update(g.get("link", {}))
     names = {}
     for e in A["exercises"]:
         names.setdefault(norm(e), e.strip())
@@ -86,9 +81,10 @@ def build():
         base = c["note"] or 1
         linked = []
         for L in LINK:
-            best = max(((c["ex"].get(norm(e), 0), e) for e in L["ex"]), default=(0, ""))
-            if best[0]:
-                linked.append([L["key"], round(best[0] / base * 100, 1), best[0], best[1]])
+            n = c["link"].get(L["key"], 0)
+            if n:
+                best = max(L["ex"], key=lambda e: c["ex"].get(norm(e), 0))
+                linked.append([L["key"], round(n / base * 100, 1), n, best])
         linked.sort(key=lambda x: -x[1])
         other = [[names.get(e, e), round(n / base * 100, 1)] for e, n in c["ex"].most_common(60) if e not in link_of][:TOP]
         return {"n": c["n"], "note": c["note"], "linked": linked, "top": other}
@@ -114,12 +110,13 @@ def build():
     # 단계별 요약 (기획서·기관 화면용): 처방 기록이 있는 사람 중 강좌로 이어지는 운동을 받은 비율
     stage_sum = {}
     for st in STAGE_ORDER:
-        tot = {"n": 0, "note": 0, "ex": collections.Counter()}
+        tot = {"n": 0, "note": 0, "ex": collections.Counter(), "link": collections.Counter()}
         for (s2, band, sex), gs in cells.items():
             if s2 == st:
                 tot["n"] += gs["전체"]["n"]
                 tot["note"] += gs["전체"]["note"]
                 tot["ex"].update(gs["전체"]["ex"])
+                tot["link"].update(gs["전체"]["link"])
         if tot["note"]:
             stage_sum[st] = pack(tot)
 

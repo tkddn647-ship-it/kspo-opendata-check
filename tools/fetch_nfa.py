@@ -80,7 +80,7 @@ def absorb(items):
         note = x.get("pres_note") or ""
         if note:
             g["note"] += 1
-            exs = {t.strip() for t in PRE.sub(",", note).split(",") if t.strip()}
+            exs = {t.strip(" /") for t in PRE.sub(",", note).split(",") if t.strip(" /")}
             for e in exs:
                 g["ex"][e] += 1
             for key_ in {LK[NORM(e)] for e in exs if NORM(e) in LK}:
