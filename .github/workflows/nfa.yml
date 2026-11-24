@@ -1,0 +1,15 @@
+# 국민체력100 공개 API 항목 확인 (손으로 실행). 키는 Secrets의 DATA_GO_KR_KEY.
+name: 국민체력100 API 확인
+on:
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: python tools/probe_nfa.py
+        env:
+          DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
