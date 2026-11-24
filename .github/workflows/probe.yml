@@ -1,0 +1,17 @@
+name: API 시험 호출
+on:
+  workflow_dispatch:
+    inputs:
+      api: { description: "API 이름", default: "API_CPM_008" }
+      rows: { description: "한 번에 받을 건수", default: "10000" }
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - env:
+          KCISA_KEY: ${{ secrets.KCISA_KEY }}
+        run: python3 tools/probe_kcisa.py "${{ inputs.api }}" "${{ inputs.rows }}"
