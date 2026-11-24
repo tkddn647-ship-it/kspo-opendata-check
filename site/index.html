@@ -340,7 +340,8 @@ const ZS = (()=>{ const q = window.ANALYSIS && window.ANALYSIS.queries.find(q=>q
 function lotTag(r){ const n = nearLot(r); if(!n) return ""; const z = ZS[n.z];
   const late = r.t0!=null && z && Math.floor(r.t0/60) >= z.hour && [...r.d].some(d=>"토일".includes(d));
   return `<span class="tag park">가까운 주차장 ${n.z} (도보 ${n.walk}${LOTS[n.z].cap?`, ${LOTS[n.z].cap}면`:""})${late&&n.alt?` · 주말 이 시각엔 자주 만차, ${n.alt}도 확인`:""}</span>`; }
-const MAPQ = {"올림픽수영장":"올림픽수영장","올림픽스포츠센터":"올림픽공원 스포츠센터","일산":"일산올림픽스포츠센터","분당":"분당올림픽스포츠센터"};
+// 카카오맵 검색 첫 결과가 해당 센터가 되는 검색어 (2026-11-24 확인. '올림픽수영장'만 쓰면 안산올림픽수영장이 먼저 나옴)
+const MAPQ = {"올림픽수영장":"송파 올림픽수영장","올림픽스포츠센터":"올림픽공원스포츠센터","일산":"일산올림픽스포츠센터","분당":"분당올림픽스포츠센터"};
 const week = r => `<span class="wk" aria-label="요일 ${esc(r.d||"정보 없음")}${r.o?", 괄호 표기 "+esc(r.o):""}">${[...W].map(d=>`<i class="${r.d.includes(d)?"on":r.o.includes(d)?"opt":""}">${d}</i>`).join("")}</span>`;
 function item(r, i){
   const fr = r.fr==="최근" ? `<span class="fr fr-ok">최근 변경 ${esc(r.last.slice(0,4))}.${+r.last.slice(5,7)}</span>`
