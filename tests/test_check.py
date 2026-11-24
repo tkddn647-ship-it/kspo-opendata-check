@@ -269,3 +269,24 @@ class Parking2025(unittest.TestCase):
         import datetime as _dt
         self.assertTrue(P.is_off(_dt.date(2025, 10, 6)))   # 추석 연휴
         self.assertFalse(P.is_off(_dt.date(2025, 10, 10)))
+
+    def test_venue_class(self):
+        import parking2025 as P
+        import datetime as _dt
+        d = _dt.date(2025, 5, 3)
+        ev = lambda c, s, e: {"venue_code": c, "begin": s, "end": e}
+        self.assertEqual(P.venue_class(d, []), 0)
+        self.assertEqual(P.venue_class(d, [ev("01", "2025-05-03", "2025-05-03")]), 1)
+        self.assertEqual(P.venue_class(d, [ev("02", "2025-05-02", "2025-05-04"), ev("01", "2025-05-03", "2025-05-03")]), 2)
+        self.assertEqual(P.venue_class(d, [ev("02", "2025-04-01", "2025-05-30")]), 0)  # 14일 넘는 장기 행사는 무시
+
+    def test_venue_model_shape(self):
+        import json as _j
+        p = Path(__file__).resolve().parents[1] / "out" / "parking2025.json"
+        if not p.exists():
+            self.skipTest("2025 자료 없음")
+        vm = _j.loads(p.read_text(encoding="utf-8")).get("venue_model")
+        self.assertIsNotNone(vm)
+        self.assertEqual(set(vm["profiles"]), {"w0", "w1", "w2", "h0", "h1", "h2"})
+        self.assertEqual(vm["big_days_caught"], vm["big_days"])
+        self.assertLess(vm["accuracy"]["V"]["all"]["median"], vm["accuracy"]["A"]["all"]["median"])

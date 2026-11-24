@@ -313,6 +313,16 @@ def run():
         j = json.load(open(p25_path, encoding="utf-8"))
         p25 = {k: j[k] for k in ("hours", "months", "n_days", "n_event_days", "n_big_event_days", "n_performances", "profiles", "forecast")}
         p25["issues"] = {k: v for k, v in j["issues"].items() if k != "per_month"}
+        if j.get("venue_model"):
+            vm = j["venue_model"]
+            p25["vm"] = {k: vm[k] for k in ("profiles", "month_factor", "accuracy", "big_days", "big_days_caught")}
+        ev_path = os.path.join(RAW, "events.json")
+        if os.path.exists(ev_path):  # 누리집 일정안내: 오늘 이후 일정만 화면에 넣음
+            evj = json.load(open(ev_path, encoding="utf-8"))
+            import datetime as _dt
+            today = str(_dt.date.fromisoformat(evj["fetched"][:10]) - _dt.timedelta(days=1))  # 실행한 날이 아니라 수집한 날 기준 (결과 재현)
+            p25["events"] = [{k: e[k] for k in ("title", "begin", "end", "venue_code", "venue", "times", "link")} for e in evj["events"] if e["end"] >= today]
+            p25["events_fetched"] = evj["fetched"]
     summ["p25"] = {"forecast": p25["forecast"], "n_days": p25["n_days"], "peaks": {k: v["peak_mean"] for k, v in p25["profiles"].items()}} if p25 else None
     payload = {"centers": centers, "rows": rows, "summary": summ, "notes": dict(notes), "parking": park, "p25": p25, "checked": checked}
     os.makedirs(os.path.join(ROOT, "out"), exist_ok=True)

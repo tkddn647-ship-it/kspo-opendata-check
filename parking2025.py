@@ -148,6 +148,79 @@ def profiles(days, V, ev):
             "bigevent": prof(lambda d: size_class(ev.get(d, 0)) == 3)}
 
 
+def load_events():
+    """누리집 일정안내(tools/fetch_events.py)에서 받은 공연 일정. 없으면 빈 목록."""
+    p = RAW / "events.json"
+    return json.loads(p.read_text(encoding="utf-8"))["events"] if p.exists() else []
+
+
+def venue_class(d, evs):
+    """그날 공연장 일정으로 정한 등급 (미리 알 수 있는 정보만 씀).
+    2 = KSPO DOME 또는 옥외 페스티벌, 1 = 올림픽홀·핸드볼경기장, 0 = 없음.
+    2주 넘게 이어지는 장기 공연(뮤지컬 등)은 매일 같아서 빼고 본다."""
+    c = 0
+    for e in evs:
+        b, en = dt.date.fromisoformat(e["begin"]), dt.date.fromisoformat(e["end"])
+        if b <= d <= en and (en - b).days <= 14:
+            if e["venue_code"] in ("02", "06"):
+                c = max(c, 2)
+            elif e["venue_code"] in ("01", "03"):
+                c = max(c, 1)
+    return c
+
+
+def venue_model(days, V, ev, evs):
+    """공연장 일정으로 예보: 평일/휴일 × 등급(0·1·2) 평균에 그 달 보정. 하루 빼고 맞혀 보기로 검증."""
+    if not evs:
+        return None
+    VC = {d: venue_class(d, evs) for d in days}
+    avg = lambda ds: [sum(V[x][i] for x in ds) / len(ds) for i in range(len(HOURS))]
+
+    def err(p, a):
+        e = [abs(x - y) / y for x, y in zip(p, a) if y >= 100]
+        return sum(e) / len(e)
+
+    def month_factor(o, off, mo):
+        nm = [x for x in o if is_off(x) == off and VC[x] == 0 and x.month == mo]
+        na = [x for x in o if is_off(x) == off and VC[x] == 0]
+        return (sum(sum(V[x]) for x in nm) / len(nm)) / (sum(sum(V[x]) for x in na) / len(na)) if len(nm) >= 3 and na else 1.0
+
+    res = collections.defaultdict(list)
+    for d in days:
+        o = [x for x in days if x != d]
+        A = avg([x for x in o if is_off(x) == is_off(d)])
+        g = [x for x in o if is_off(x) == is_off(d) and VC[x] == VC[d]]
+        P = [v * month_factor(o, is_off(d), d.month) for v in (avg(g) if len(g) >= 3 else A)]
+        kind = "event" if VC[d] else "normal"
+        for k, p in (("A", A), ("V", P)):
+            e = err(p, V[d])
+            res[(k, kind)].append(e)
+            res[(k, "all")].append(e)
+    acc = {}
+    for (k, kind), v in res.items():
+        acc.setdefault(k, {})[kind] = {"n": len(v), "median": round(st.median(v) * 100, 1), "within15": sum(x <= 0.15 for x in v)}
+    prof = {}
+    for off in (False, True):
+        for c in (0, 1, 2):
+            ds = [d for d in days if is_off(d) == off and VC[d] == c]
+            if len(ds) < 3:
+                ds = [d for d in days if is_off(d) == off]  # 표본이 적으면 평일/휴일 전체로
+            cols = [sorted(V[d][i] for d in ds) for i in range(len(HOURS))]
+            q = lambda col, p: col[min(len(col) - 1, int(p * (len(col) - 1) + 0.5))]
+            prof[f"{'h' if off else 'w'}{c}"] = {"n": len(ds), "mean": [round(st.mean(c_)) for c_ in cols],
+                                                   "p10": [q(c_, 0.1) for c_ in cols], "p90": [q(c_, 0.9) for c_ in cols]}
+    mf = {}
+    for off in (False, True):
+        for mo in range(1, 13):
+            f = month_factor(days, off, mo)
+            if f != 1.0:
+                mf[f"{'h' if off else 'w'}{mo}"] = round(f, 3)
+    big = [d for d in days if ev.get(d, 0) >= 10000]
+    return {"accuracy": acc, "profiles": prof, "month_factor": mf,
+            "big_days": len(big), "big_days_caught": sum(1 for d in big if VC[d] == 2),
+            "class_days": {f"{'h' if o else 'w'}{c}": sum(1 for d in days if is_off(d) == o and VC[d] == c) for o in (False, True) for c in (0, 1, 2)}}
+
+
 def run():
     rows, linked = load()
     issues = data_issues(rows, linked)
@@ -159,6 +232,7 @@ def run():
         "n_event_days": sum(1 for d in days if d in ev), "n_big_event_days": sum(1 for d in days if size_class(ev.get(d, 0)) == 3),
         "n_performances": len({re.sub(r"\s+", " ", x["TITLE"].split(",공연관람객수")[0]) for x in linked if "공연명:," not in x["TITLE"]}),
         "profiles": profiles(days, V, ev), "forecast": evaluate(days, V, ev), "issues": issues,
+        "venue_model": venue_model(days, V, ev, load_events()),
     }
     (ROOT / "out").mkdir(exist_ok=True)
     (ROOT / "out" / "parking2025.json").write_text(json.dumps(payload, ensure_ascii=False, indent=1), encoding="utf-8")
