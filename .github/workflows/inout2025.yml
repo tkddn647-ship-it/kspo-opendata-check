@@ -1,0 +1,25 @@
+# 올림픽공원 2025 입출차정보(약 241만 건)를 받아 raw/inout2025.csv.gz 로 저장 (수동 실행, 2시간 안팎)
+name: 2025 입출차 받기
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v4
+      - name: 받기
+        env:
+          KCISA_KEY: ${{ secrets.KCISA_KEY }}
+          KCISA_KEY_008: ${{ secrets.KCISA_KEY_008 }}
+        run: python3 tools/fetch_inout2025.py
+      - name: 올리기
+        run: |
+          ls -la raw/inout2025.csv.gz
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add raw/inout2025.csv.gz
+          git commit -qm "2025 입출차정보 받음 ($(zcat raw/inout2025.csv.gz | wc -l)행)"
+          git pull -q --rebase && git push -q
