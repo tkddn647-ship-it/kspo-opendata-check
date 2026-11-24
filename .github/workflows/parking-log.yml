@@ -1,4 +1,4 @@
-# 올림픽공원 실시간 주차 API(한국체육산업개발이 공개한 키)를 30분마다 불러 parking-log 브랜치에 쌓는다.
+# 올림픽공원 실시간 주차 API(한국체육산업개발이 공개한 키)를 예약 실행으로 불러 (30분 간격 요청, GitHub 사정으로 실제 간격은 더 길 수 있음) parking-log 브랜치에 쌓는다.
 # 강좌 찾기 화면은 이 기록으로 '평소 이 시각보다 많음/비슷/적음'을 보여 준다.
 name: 주차 기록
 on:
@@ -34,8 +34,8 @@ jobs:
           n=$(printf '%s' "$body" | python3 -c 'import sys,json; print(int(json.load(sys.stdin)[0]["parking_sum"]))') \
             || { echo "::warning::응답 형식이 다름: $body"; exit 0; }
           echo "$(TZ=Asia/Seoul date +%Y-%m-%dT%H:%M:%S+09:00),$(date +%s),$n" >> parking_log.csv
-          tail -n +2 parking_log.csv | tail -n 20000 > body.csv && { echo "time_kst,unix,parking_sum"; cat body.csv; } > parking_log.csv && rm body.csv
-          printf '# 올림픽공원 주차 기록\n\n한국체육산업개발 실시간 주차 API(동2·남2·북2문 주차대수)를 30분마다 기록. 출차 기록이 없는 장기 주차가 포함될 수 있음(기관 설명).\n' > README.md
+          tail -n +2 parking_log.csv | awk -F, '!seen[$2]++' | tail -n 20000 > body.csv && { echo "time_kst,unix,parking_sum"; cat body.csv; } > parking_log.csv && rm body.csv
+          printf '# 올림픽공원 주차 기록\n\n한국체육산업개발 실시간 주차 API(동2·남2·북2문 주차대수)를 자동 기록(30분 간격 요청, 실제 간격은 더 길 수 있음). 출차 기록이 없는 장기 주차가 포함될 수 있음(기관 설명).\n' > README.md
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -q --orphan new && git add parking_log.csv README.md
