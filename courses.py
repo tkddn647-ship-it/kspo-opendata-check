@@ -137,6 +137,9 @@ def build():
             if "학교단체" in name:
                 n_school += 1
                 continue
+            if re.search(r"폐강|일시중지", name):  # 강좌명에 운영 중지가 적힌 강좌
+                notes[f"{center}: 강좌명에 폐강·일시중지 표기"] += 1
+                continue
             sport = (x[c_sport] or "").strip() or "기타"
             base, opt = parse_days(x[c_day])
             a, b = parse_time(x[c_time])

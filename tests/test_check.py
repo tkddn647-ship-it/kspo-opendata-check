@@ -290,3 +290,38 @@ class Parking2025(unittest.TestCase):
         self.assertEqual(set(vm["profiles"]), {"w0", "w1", "w2", "h0", "h1", "h2"})
         self.assertEqual(vm["big_days_caught"], vm["big_days"])
         self.assertLess(vm["accuracy"]["V"]["all"]["median"], vm["accuracy"]["A"]["all"]["median"])
+
+
+class Gap(unittest.TestCase):
+    def r(self, n, tg="", g=None):
+        return {"n": n, "tg": tg, "g": g or []}
+
+    def test_age_from_name(self):
+        import gap as G
+        self.assertEqual(G.age_range(self.r("(폐강)21:00 청소년농구/월수/17년~08년생", "청소년"))[:2], (9, 18))
+        self.assertEqual(G.age_range(self.r("요가(월수금)[20세이상(06년생)]"))[:2], (20, 120))
+        self.assertEqual(G.age_range(self.r("월자유수영(실버반)", "성인남여"))[:2], (60, 120))
+        self.assertEqual(G.age_range(self.r("17시 어린이 신기초 화.목", "어린이"))[:2], (5, 12))
+        self.assertEqual(G.age_range(self.r("테니스 A반", ""))[2], "가정(대상 칸 비어 있음)")
+
+    def test_bands(self):
+        import gap as G
+        self.assertEqual(G.own_band(60, 120), "어르신")
+        self.assertEqual(G.own_band(19, 120), "청년·중년")
+        self.assertEqual(G.own_band(5, 12), "초등")
+        self.assertTrue(G.covers(19, 120, 65, 120))   # 성인 강좌는 어르신도 들을 수 있음
+        self.assertFalse(G.covers(60, 120, 19, 64))
+        self.assertEqual(G.slots({"d": "월화수목금토일", "t0": 6 * 60}), ["평일 새벽·아침", "주말"])
+
+    def test_output_shape(self):
+        import json as _j
+        p = Path(__file__).resolve().parents[1] / "out" / "gap.json"
+        if not p.exists():
+            self.skipTest("gap.json 없음")
+        g = _j.loads(p.read_text(encoding="utf-8"))
+        self.assertEqual([c["center"] for c in g["centers"]], ["올림픽수영장", "올림픽스포츠센터", "일산", "분당"])
+        for c in g["centers"]:
+            self.assertEqual(sum(b["own"] for b in c["bands"]), c["seats"])  # 전용 정원을 모두 더하면 전체 정원
+            for b in c["bands"]:
+                self.assertLessEqual(b["own"], max(b["can"], b["own"]))
+        self.assertTrue(all(x["slot"] in g["sense"][x["band"]] for x in g["cells"]))

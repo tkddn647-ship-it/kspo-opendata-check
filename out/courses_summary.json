@@ -18,7 +18,7 @@
    "data_month": "2026-06",
    "mod": "2026-09-21",
    "home": "https://www.ksponco.or.kr/sports/olparksports",
-   "n_current": 1344,
+   "n_current": 1337,
    "n_school": 0,
    "url": "https://www.data.go.kr/data/15110953/fileData.do"
   },
@@ -40,7 +40,7 @@
    "data_month": "2026-08",
    "mod": "2026-09-21",
    "home": "https://www.ksponco.or.kr/sports/bundangsports",
-   "n_current": 303,
+   "n_current": 302,
    "n_school": 12,
    "url": "https://www.data.go.kr/data/15118652/fileData.do"
   }
@@ -59,8 +59,8 @@
     "swim_n": 152
    },
    "올림픽스포츠센터": {
-    "n": 1344,
-    "evening": 130,
+    "n": 1337,
+    "evening": 129,
     "weekend": 619,
     "kids": 21,
     "senior": 2,
@@ -81,33 +81,33 @@
     "swim_n": 97
    },
    "분당": {
-    "n": 303,
-    "evening": 34,
+    "n": 302,
+    "evening": 33,
     "weekend": 93,
     "kids": 5,
     "senior": 2,
     "stale": 48,
     "daymis": 1,
     "swim_per_median": 5000,
-    "swim_n": 84
+    "swim_n": 83
    }
   },
-  "total": 2303,
-  "evening": 310,
+  "total": 2295,
+  "evening": 308,
   "weekend": 894,
   "kids": 76,
   "senior": 11,
   "stale": 1012,
   "scenarios": {
-   "직장인_올림픽공원_19시이후": 123,
-   "직장인_4곳_19시이후": 228,
-   "직장인_4곳_19시이후_수영": 56,
+   "직장인_올림픽공원_19시이후": 122,
+   "직장인_4곳_19시이후": 226,
+   "직장인_4곳_19시이후_수영": 55,
    "어린이_4곳": 58,
    "어린이_수영_4곳": 40,
    "실버_4곳": 9,
-   "청소년_4곳": 603,
+   "청소년_4곳": 602,
    "주말_4곳": 366,
-   "최근": 1291
+   "최근": 1283
   },
   "faq": {
    "total": 49,
@@ -166,6 +166,8 @@
  },
  "notes": {
   "올림픽스포츠센터: 시작일 미입력·잘못된 연도": 24,
+  "올림픽스포츠센터: 강좌명에 폐강·일시중지 표기": 7,
+  "분당올림픽스포츠센터: 강좌명에 폐강·일시중지 표기": 1,
   "분당올림픽스포츠센터: 시작일 미입력·잘못된 연도": 1
  },
  "parking": {

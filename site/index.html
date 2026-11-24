@@ -123,19 +123,6 @@ footer{margin-top:56px;font-size:13px;color:var(--muted);border-top:1px solid va
 .hm button[aria-pressed="true"]{outline:3px solid var(--ink);outline-offset:1px}
 .hmnote{font-size:13px;color:var(--muted);margin:6px 0 0}
 @media (max-width:720px){.hm{font-size:10px;grid-template-columns:22px repeat(16,1fr);gap:1px}.hm button{font-size:10px;height:26px}}
-.fc{margin:12px 0 0;background:var(--sheet);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
-.fc[hidden]{display:none}
-.fc .row{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
-.fc h2{font-size:17px;margin:0}
-.fc input[type=date]{font:inherit;font-size:15px;padding:5px 8px;border:1px solid var(--line);border-radius:var(--r)}
-.fc .chk{font-size:14px}
-.fcbar{display:grid;grid-template-columns:repeat(17,1fr);gap:2px;margin:10px 0 2px}
-.fcbar span{height:26px;border-radius:3px}
-.fchr{display:grid;grid-template-columns:repeat(17,1fr);gap:2px;font-size:11px;color:var(--muted);text-align:center}
-.fclg{display:flex;flex-wrap:wrap;gap:12px;font-size:13px;color:var(--ink2);margin-top:6px}
-.fclg i{display:inline-block;width:12px;height:12px;border-radius:2px;vertical-align:-1px;margin-right:4px}
-.fc p{margin:8px 0 0;font-size:15px}
-.fc .ev{font-size:14px;color:var(--ink2)}
 .live{margin:20px 0 0;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;background:var(--sheet);border:1px solid var(--line);border-left:4px solid var(--ok);border-radius:var(--r);padding:10px 14px;font-size:15px}
 .live[hidden]{display:none}
 .live b{font-size:20px}
@@ -158,22 +145,13 @@ footer{margin-top:56px;font-size:13px;color:var(--muted);border-top:1px solid va
 </head>
 <body>
 <div class="wrap">
-<nav class="top" aria-label="화면 바꾸기"><a href="index.html" aria-current="page">강좌 찾기</a><a href="analysis.html">데이터 분석</a><a href="check.html">데이터 건강검진</a><button class="big" id="installBtn" hidden>홈 화면에 추가</button><button class="big" id="bigBtn" aria-pressed="false">글자 크게</button></nav>
+<nav class="top" aria-label="화면 바꾸기"><a href="gap.html">강좌 공백 지도</a><a href="index.html" aria-current="page">강좌 찾기</a><a href="analysis.html">데이터 분석</a><a href="check.html">데이터 건강검진</a><button class="big" id="installBtn" hidden>홈 화면에 추가</button><button class="big" id="bigBtn" aria-pressed="false">글자 크게</button></nav>
 <header>
   <h1><small>한국체육산업개발 스포츠센터 4곳</small>내 시간에 맞는 공공스포츠 강좌 찾기</h1>
   <p class="lede" id="lede"></p>
 </header>
 
 <div class="live" id="live" hidden></div>
-<section class="fc" id="fc" hidden aria-labelledby="fcTitle">
-  <div class="row"><h2 id="fcTitle">올림픽공원 방문 혼잡 예보</h2>
-    <label class="chk" style="align-items:center"><input type="date" id="fcDate"></label>
-    <label class="chk"><input type="checkbox" id="fcHol"> 휴일로 보기</label></div>
-  <div class="ev" id="fcEv"></div>
-  <div class="fcbar" id="fcBar" role="img"></div><div class="fchr" id="fcHr"></div>
-  <div class="fclg"><span><i style="background:#DCEBE2"></i>여유</span><span><i style="background:#A9CDB8"></i>보통</span><span><i style="background:#E9C98F"></i>붐빔</span><span><i style="background:#D98F7E"></i>매우 붐빔</span></div>
-  <p id="fcSay"></p>
-</section>
 <div class="search"><input id="fQ" type="search" placeholder="강좌 이름으로 찾기 (예: 자유수영, 초급, 필라테스)" aria-label="강좌 이름으로 찾기"></div>
 
 <div class="presets" role="group" aria-label="빠르게 고르기" id="presets"></div>
@@ -499,39 +477,6 @@ let deferredInstall = null; const ib = document.getElementById("installBtn");
 addEventListener("beforeinstallprompt", e=>{ e.preventDefault(); deferredInstall = e; ib.hidden = false; });
 ib.addEventListener("click", async ()=>{ if (!deferredInstall) return; deferredInstall.prompt(); await deferredInstall.userChoice; deferredInstall = null; ib.hidden = true; });
 
-
-// 올림픽공원 방문 혼잡 예보: 요일 + 누리집 공연 일정(공연장) + 달로 2025년 같은 조건의 날을 찾아 시각별 주차를 예보
-const VM = P25 && P25.vm, EVS = (P25 && P25.events) || [];
-const KNOWN_HOL = new Set(["2026-12-25","2027-01-01","2027-03-01"]);
-function ymd(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
-function fcRender(){
-  const v = document.getElementById("fcDate").value; if (!v) return;
-  const d = new Date(v+"T12:00:00"), off = document.getElementById("fcHol").checked;
-  const todays = EVS.filter(e=>e.begin<=v && v<=e.end);
-  const short = todays.filter(e=>(new Date(e.end)-new Date(e.begin))/864e5<=14);
-  const vc = short.some(e=>e.venue_code==="02"||e.venue_code==="06") ? 2 : short.some(e=>e.venue_code==="01"||e.venue_code==="03") ? 1 : 0;
-  const pr = VM.profiles[(off?"h":"w")+vc], f = VM.month_factor[(off?"h":"w")+(d.getMonth()+1)] || 1;
-  const m = pr.mean.map(x=>Math.round(x*f)), lo = pr.p10.map(x=>Math.round(x*f)), hi = pr.p90.map(x=>Math.round(x*f));
-  const lv = x => x/P25TOP >= .9 ? 3 : x/P25TOP >= .7 ? 2 : x/P25TOP >= .4 ? 1 : 0;
-  const COL = ["#DCEBE2","#A9CDB8","#E9C98F","#D98F7E"], NAME = ["여유","보통","붐빔","매우 붐빔"];
-  const H = P25.hours;
-  document.getElementById("fcBar").innerHTML = m.map((x,i)=>`<span style="background:${COL[lv(x)]}" title="${H[i]}시 30분: 약 ${lo[i].toLocaleString()}~${hi[i].toLocaleString()}대 (${NAME[lv(x)]})"></span>`).join("");
-  document.getElementById("fcBar").setAttribute("aria-label", H.map((h,i)=>`${h}시 ${NAME[lv(m[i])]}`).join(", "));
-  document.getElementById("fcHr").innerHTML = H.map(h=>`<span>${h%3===0?h+"시":""}</span>`).join("");
-  document.getElementById("fcEv").innerHTML = todays.length ? "이날 올림픽공원 공연·행사: " + todays.slice(0,4).map(e=>`<a href="${esc(e.link)}" target="_blank" rel="noopener">${esc(e.title)}</a> (${esc(e.venue)})`).join(", ") + (todays.length>4?` 외 ${todays.length-4}건`:"") : "이날 누리집에 등록된 공연·행사가 없습니다.";
-  const pk = m.indexOf(Math.max(...m)), calm = H.map((h,i)=>[h,m[i]]).filter(([h])=>h>=9&&h<=21).sort((a,b)=>a[1]-b[1]).slice(0,2).map(x=>x[0]+"시").sort();
-  const big = vc===2, ref = VM.profiles[(off?"h":"w")+"0"].mean[13]*f;
-  document.getElementById("fcSay").innerHTML = `${off?"휴일":"평일"}${big?", 대형 공연(KSPO DOME·야외 페스티벌)이 있는 날":vc===1?", 중형 공연장 공연이 있는 날":""}로 보고 2025년 같은 조건의 날(${pr.n}일) 기록으로 예보했습니다. 가장 붐비는 때는 <b>${H[pk]}시 무렵(약 ${m[pk].toLocaleString()}대)</b>이고, 9~21시 중 비교적 여유 있는 때는 ${calm.join("·")} 무렵입니다.`
-    + (big ? ` 저녁 7시 반 주차는 공연 없는 ${off?"휴일":"평일"}(약 ${Math.round(ref).toLocaleString()}대)보다 많은 <b>약 ${m[13].toLocaleString()}대</b>로 예상됩니다. 이날 저녁 강좌라면 지하철(5·9호선 올림픽공원역)을 권하고, 차로 온다면 덜 차는 P1A·P1B·P10 구역을 먼저 보세요.` : "")
-    + ` <span style="color:var(--muted);font-size:13px">예보 오차는 공연 없는 날 중앙값 ${VM.accuracy.V.normal.median}%, 공연 날 ${VM.accuracy.V.event.median}%입니다(2025년 ${VM.accuracy.V.all.n}일 검증). 공연 일정은 누리집 일정안내(${esc(P25.events_fetched)} 수집) 기준이며, 명절 연휴는 ‘휴일로 보기’를 직접 켜 주세요.</span>`;
-}
-if (VM){
-  const t = new Date(), max = new Date(Date.now()+120*864e5), di = document.getElementById("fcDate"), hol = document.getElementById("fcHol");
-  di.value = ymd(t); di.min = ymd(t); di.max = ymd(max);
-  const setHol = () => { const d = new Date(di.value+"T12:00:00"); hol.checked = d.getDay()%6===0 || KNOWN_HOL.has(di.value); };
-  setHol(); di.addEventListener("change", ()=>{ setHol(); fcRender(); }); hol.addEventListener("change", fcRender);
-  document.getElementById("fc").hidden = false; fcRender();
-}
 
 if (location.hash.length>1) fromHash();
 sync(); render(true);

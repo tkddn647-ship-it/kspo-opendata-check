@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>강좌 공백 지도 (한국체육산업개발 스포츠센터 4곳)</title>
+<meta name="description" content="스포츠센터 4곳의 강좌 정원을 연령대와 시간대로 나눠 주변 주민 수와 비교합니다. 강좌 편성 담당자를 위한 화면입니다.">
+<meta name="theme-color" content="#1B2623">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="내 시간에 맞는 공공스포츠 강좌 찾기">
+<meta property="og:description" content="올림픽공원·일산·분당 스포츠센터 강좌를 내 시간으로 한 번에. 로그인 없이, 실시간 주차까지.">
+<meta property="og:url" content="https://tkddn647-ship-it.github.io/kspo-opendata-check/">
+<meta property="og:image" content="https://tkddn647-ship-it.github.io/kspo-opendata-check/og.png">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{
+  --paper:#F6F8F7; --sheet:#FFFFFF; --ink:#1B2623; --ink2:#4A5A56; --line:#D9E1DE; --soft:#EEF3F1;
+  --ok:#2F6B4F; --ok-bg:#E6F0EA; --warn:#A86A12; --warn-bg:#FBF1DF; --bad:#B4321F; --muted:#6F7D79;
+  --r:6px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.6 "Pretendard Variable",Pretendard,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-feature-settings:"tnum"}
+a{color:var(--ok)}
+:focus-visible{outline:3px solid var(--ok);outline-offset:2px}
+.wrap{max-width:1040px;margin:0 auto;padding:40px 24px 80px}
+nav.top{display:flex;gap:4px;margin-bottom:24px;align-items:center}
+nav.top a:last-of-type{margin-right:auto}
+nav.top .big[hidden]{display:none}
+nav.top a{font-size:15px;font-weight:600;color:var(--ink2);text-decoration:none;padding:6px 12px;border-radius:var(--r)}
+nav.top a[aria-current]{background:var(--ink);color:#fff}
+nav.top a:hover:not([aria-current]){background:#E4EBE8}
+nav.top .big{margin-left:8px;font:inherit;font-size:15px;font-weight:700;border:2px solid var(--ink);background:var(--sheet);color:var(--ink);border-radius:var(--r);padding:4px 12px;cursor:pointer}
+nav.top .big[aria-pressed="true"]{background:var(--ink);color:#fff}
+body.bigtext .wrap{zoom:1.2}
+.share{font:inherit;font-size:14px;font-weight:700;border:1px solid var(--ok);background:var(--sheet);color:var(--ok);border-radius:var(--r);padding:4px 10px;cursor:pointer}
+.tag.park{border-color:#C9D4D0;background:#F4F7F6}
+.chart{background:var(--sheet);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px 10px;position:relative}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart .tt{position:absolute;pointer-events:none;background:var(--ink);color:#fff;font-size:13px;line-height:1.45;padding:6px 10px;border-radius:4px;display:none;white-space:nowrap}
+.legend{display:flex;gap:18px;font-size:14px;color:var(--ink2);margin-bottom:6px}
+.legend i{display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+details.tv{margin-top:8px;font-size:14px;color:var(--ink2)}
+details.tv table{margin-top:8px}
+header{border-bottom:2px solid var(--ink);padding-bottom:20px}
+h1{font-size:clamp(28px,4.2vw,44px);line-height:1.15;letter-spacing:-.02em;margin:0;font-weight:800}
+h1 small{display:block;font-size:.42em;font-weight:600;color:var(--ink2);letter-spacing:0;margin-bottom:10px}
+.lede{max-width:66ch;color:var(--ink2);margin:16px 0 0}
+
+/* 빠른 고르기 */
+.presets{display:flex;flex-wrap:wrap;gap:8px;margin:28px 0 0}
+.presets button{font:inherit;font-size:16px;font-weight:700;border:2px solid var(--ink);background:var(--sheet);color:var(--ink);border-radius:999px;padding:8px 16px;cursor:pointer}
+.presets button small{font-weight:500;color:var(--ink2);margin-left:6px;font-size:14px}
+.presets button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.presets button[aria-pressed="true"] small{color:#C9D4D0}
+
+/* 거르기 */
+.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px 20px;margin:22px 0 0;padding:16px 18px;background:var(--sheet);border:1px solid var(--line);border-radius:var(--r)}
+.filters label,.filters .lab{display:block;font-size:13px;color:var(--ink2);font-weight:600;margin-bottom:6px}
+.filters select{width:100%;font:inherit;font-size:15px;padding:7px 8px;border:1px solid var(--line);border-radius:var(--r);background:var(--sheet);color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chips button{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--sheet);color:var(--ink);border-radius:var(--r);padding:4px 9px;cursor:pointer}
+.chips button[aria-pressed="true"]{background:var(--ok);border-color:var(--ok);color:#fff}
+.chk{display:flex;gap:8px;align-items:flex-start;font-size:14px;color:var(--ink);font-weight:500}
+.chk input{margin-top:4px;accent-color:var(--ok)}
+.reset{font:inherit;font-size:14px;background:none;border:0;color:var(--ok);text-decoration:underline;cursor:pointer;padding:0}
+
+.resbar{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:baseline;margin:24px 0 10px}
+.resbar b{font-size:22px}
+.resbar .hid{font-size:14px;color:var(--muted)}
+
+/* 결과 */
+.list{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.it{display:grid;grid-template-columns:112px 1fr auto;gap:6px 20px;padding:14px 4px;border-bottom:1px solid var(--line);align-items:start}
+.tm{font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1.2}
+.tm span{display:block;font-size:13px;font-weight:500;color:var(--muted);letter-spacing:0}
+.nm{font-weight:700;line-height:1.4}
+.meta{font-size:14px;color:var(--ink2);margin-top:2px}
+.wk{display:inline-flex;gap:2px;vertical-align:middle;margin-right:8px}
+.wk i{font-style:normal;font-size:11px;width:19px;height:19px;display:inline-flex;align-items:center;justify-content:center;border-radius:3px;background:var(--soft);color:#A3B0AC}
+.wk i.on{background:var(--ink);color:#fff}
+.wk i.opt{background:var(--sheet);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink)}
+.tags{margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;font-size:12px}
+.tag{border:1px solid var(--line);border-radius:3px;padding:0 6px;color:var(--ink2)}
+.fr{font-weight:700;border-radius:3px;padding:0 6px}
+.fr-ok{background:var(--ok-bg);color:var(--ok)}
+.fr-old{background:var(--warn-bg);color:var(--warn)}
+.pr{text-align:right;white-space:nowrap}
+.pr b{font-size:17px}
+.pr span{display:block;font-size:13px;color:var(--muted)}
+.pr .acts a{display:inline}
+.more{display:block;margin:18px auto 0;font:inherit;font-size:15px;font-weight:700;border:2px solid var(--ink);background:var(--sheet);color:var(--ink);border-radius:var(--r);padding:8px 20px;cursor:pointer}
+.empty{padding:28px 4px;color:var(--ink2)}
+
+section{margin-top:56px}
+section>h2{font-size:22px;margin:0 0 6px;letter-spacing:-.01em}
+section>p.sub{margin:0 0 16px;color:var(--ink2);max-width:68ch}
+table{width:100%;border-collapse:collapse;background:var(--sheet);border:1px solid var(--line)}
+th,td{padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-size:15px;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-size:13px;color:var(--ink2);font-weight:600;background:var(--soft)}
+td.warn{color:var(--warn);font-weight:700}
+.scroll{overflow-x:auto}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.facts div{border-top:3px solid var(--ink);padding-top:10px}
+.facts h3{margin:0 0 4px;font-size:16px}
+.facts p{margin:0;font-size:15px;color:var(--ink2)}
+footer{margin-top:56px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+
+.grid{margin:22px 0 0}
+.grid>summary{cursor:pointer;font-weight:700;font-size:16px}
+.grid>summary span{font-weight:500;color:var(--ink2);font-size:14px;margin-left:8px}
+.hm{display:grid;grid-template-columns:34px repeat(16,1fr);gap:2px;margin-top:10px;font-size:12px}
+.hm .hh,.hm .dd{color:var(--muted);display:flex;align-items:center;justify-content:center}
+.hm button{font:inherit;font-size:12px;border:0;border-radius:3px;height:30px;cursor:pointer;color:var(--ink);padding:0}
+.hm button.dark{color:#fff}
+.hm button.z{background:var(--soft);color:#A3B0AC;cursor:default}
+.hm button[aria-pressed="true"]{outline:3px solid var(--ink);outline-offset:1px}
+.hmnote{font-size:13px;color:var(--muted);margin:6px 0 0}
+@media (max-width:720px){.hm{font-size:10px;grid-template-columns:22px repeat(16,1fr);gap:1px}.hm button{font-size:10px;height:26px}}
+.live{margin:20px 0 0;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;background:var(--sheet);border:1px solid var(--line);border-left:4px solid var(--ok);border-radius:var(--r);padding:10px 14px;font-size:15px}
+.live[hidden]{display:none}
+.live b{font-size:20px}
+.live .src{font-size:13px;color:var(--muted)}
+.search{margin:18px 0 0;display:flex;gap:8px}
+.search input{flex:1;font:inherit;font-size:17px;padding:10px 14px;border:2px solid var(--ink);border-radius:var(--r);background:var(--sheet);color:var(--ink);min-width:0}
+.ftoggle{display:none}
+.acts{display:flex;flex-wrap:wrap;gap:4px 10px;justify-content:flex-end;margin-top:4px}
+.acts a,.acts button{font:inherit;font-size:13px;color:var(--ok);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline}
+@media (max-width:720px){
+  .ftoggle{display:block;margin:12px 0 0;font:inherit;font-size:15px;font-weight:700;border:1px solid var(--ink);background:var(--sheet);color:var(--ink);border-radius:var(--r);padding:8px 12px;width:100%;cursor:pointer}
+  .filters:not(.open){display:none}
+  .acts{justify-content:flex-start}
+  .it{grid-template-columns:78px 1fr}
+  .tm{font-size:18px}
+  .pr{grid-column:2;text-align:left}
+  .pr span{display:inline;margin-left:8px}
+}
+
+.q{margin-top:44px}
+.q h2{font-size:21px;margin:0 0 2px}
+.q .ask{color:var(--ink2);margin:0 0 12px;font-size:15px}
+.q .say{margin:12px 0 0;max-width:72ch}
+.q .say b{background:var(--ok-bg);padding:0 3px}
+.q details{margin-top:10px;font-size:14px;color:var(--ink2)}
+.q pre{background:#17211E;color:#E6F0EA;padding:14px 16px;border-radius:var(--r);overflow-x:auto;font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;margin:8px 0 0}
+.meth{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:20px}
+.meth div{background:var(--sheet);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;font-size:14px;color:var(--ink2)}
+.meth b{display:block;font-size:20px;color:var(--ink)}
+.caveat{font-size:14px;color:var(--muted);margin-top:8px;max-width:72ch}
+
+/* 공백 지도 */
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:28px 0 0}
+.tabs button{font:inherit;font-size:16px;font-weight:700;border:2px solid var(--ink);background:var(--sheet);color:var(--ink);border-radius:999px;padding:7px 16px;cursor:pointer}
+.tabs button small{font-weight:500;color:var(--ink2);margin-left:6px;font-size:13px}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.tabs button[aria-pressed="true"] small{color:#C9D4D0}
+table.gm td{text-align:center;font-size:15px;vertical-align:middle}
+table.gm td:first-child{text-align:left}
+table.gm td.c{min-width:92px}
+table.gm td.c b{display:block;font-size:18px}
+table.gm td.c span{display:block;font-size:12px;color:var(--ink2)}
+table.gm td.off{background:repeating-linear-gradient(135deg,#F4F7F6 0 6px,#EAF0ED 6px 7px);color:#9AA7A3}
+table.gm td.off b{font-weight:500}
+table.gm td.zero{box-shadow:inset 0 0 0 2px var(--bad)}
+table.gm td.zero b{color:var(--bad)}
+.who b{display:block}
+.who span{font-size:13px;color:var(--ink2)}
+.bars{display:grid;gap:12px;margin-top:6px}
+.bar{display:grid;grid-template-columns:120px 1fr;gap:4px 14px;align-items:center;font-size:14px}
+.bar .lab{font-weight:700}
+.bar .tr{position:relative;height:14px;background:var(--soft);border-radius:2px}
+.bar .tr i{position:absolute;left:0;top:0;bottom:0;border-radius:2px}
+.bar .tr.p i{background:#8FA39C}
+.bar .tr.s i{background:var(--ink)}
+.bar .num{grid-column:2;font-size:13px;color:var(--ink2);margin-top:-2px}
+.gaps{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.gaps li{padding:14px 4px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:1fr auto;gap:4px 18px}
+.gaps .w{font-weight:800;font-size:17px}
+.gaps .why{font-size:14px;color:var(--ink2);grid-column:1/-1;max-width:76ch}
+.gaps .n{text-align:right;white-space:nowrap}
+.gaps .n b{font-size:20px;color:var(--bad)}
+.gaps .n span{display:block;font-size:12px;color:var(--muted)}
+.keynote{margin:22px 0 0;background:var(--sheet);border:1px solid var(--line);border-left:4px solid var(--ink);border-radius:var(--r);padding:14px 16px;max-width:80ch}
+.keynote p{margin:0 0 6px}
+.keynote p:last-child{margin:0}
+.dl{font:inherit;font-size:14px;font-weight:700;border:1px solid var(--ok);background:var(--sheet);color:var(--ok);border-radius:var(--r);padding:6px 12px;cursor:pointer}
+@media (max-width:720px){.bar{grid-template-columns:84px 1fr}table.gm td.c{min-width:70px}table.gm td.c b{font-size:16px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="top" aria-label="화면 바꾸기"><a href="gap.html" aria-current="page">강좌 공백 지도</a><a href="index.html">강좌 찾기</a><a href="analysis.html">데이터 분석</a><a href="check.html">데이터 건강검진</a></nav>
+<header>
+  <h1><small>강좌를 새로 열거나 옮길 때 보는 화면</small>강좌 공백 지도</h1>
+  <p class="lede" id="lede"></p>
+  <div class="meth" id="meth"></div>
+</header>
+
+<div class="tabs" id="tabs" role="group" aria-label="지역 고르기"></div>
+<div class="keynote" id="key"></div>
+
+<section>
+  <h2>누가, 언제 들을 수 있나</h2>
+  <p class="sub">칸의 큰 숫자는 그 연령대가 들을 수 있는 강좌 정원을 <b>주민 1,000명당</b>으로 나눈 값이고, 작은 글씨는 그 연령대만을 위해 연 강좌의 정원입니다. 빗금 칸은 학교나 직장에 있을 시간이라 비교에서 뺐습니다. 빨간 테두리는 정원이 0인 칸입니다.</p>
+  <div class="scroll"><table class="gm" id="gm"></table></div>
+  <p class="caveat" id="gmnote"></p>
+</section>
+
+<section>
+  <h2>주민 구성과 강좌 구성</h2>
+  <p class="sub">위쪽 막대는 그 지역 주민(4세 이상) 중 각 연령대의 비중, 아래쪽 막대는 그 연령대만을 위해 연 강좌의 정원이 전체 정원에서 차지하는 비중입니다. 성인 강좌에 어르신도 다닐 수 있으므로, 아래 막대는 '그 연령대에 맞춘 강좌가 얼마나 있나'를 보여 줍니다.</p>
+  <div class="bars" id="bars"></div>
+</section>
+
+<section>
+  <h2>먼저 검토해 볼 칸</h2>
+  <p class="sub">다닐 수 있는 시간대 가운데 주민 1,000명당 정원이 가장 적은 칸입니다. 연령대마다 가장 비어 있는 칸 하나씩, 1,000명당 10명 미만인 것만 보여 줍니다. 수요를 확인한 것이 아니라 편성을 다시 볼 후보입니다.</p>
+  <ul class="gaps" id="gaps"></ul>
+  <p style="margin-top:14px"><button class="dl" id="dl">전체 칸 CSV로 받기</button></p>
+</section>
+
+<section>
+  <h2>어떻게 셌나</h2>
+  <div class="facts" id="how"></div>
+</section>
+
+<footer id="foot"></footer>
+</div>
+<script src="gap.js"></script>
+<script>
+(function(){
+const G = window.GAP;
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const nf = n => Number(n).toLocaleString("ko-KR");
+const AREAS = {"올림픽공원 2곳":["올림픽수영장","올림픽스포츠센터"],"일산":["일산"],"분당":["분당"]};
+const BAND_LABEL = b => `${b.band} <span>${b.lo}~${b.hi>=120?"":b.hi}세${b.hi>=120?" 이상":""}</span>`;
+const fromName = Object.entries(G.basis).filter(([k])=>/강좌명/.test(k)).reduce((a,[,v])=>a+v,0);
+const assumed = Object.entries(G.basis).filter(([k])=>/가정/.test(k)).reduce((a,[,v])=>a+v,0);
+
+document.getElementById("lede").innerHTML = `센터 4곳에서 지금 운영 중인 강좌 ${nf(G.n_courses)}개의 정원을 <b>누가(연령대)</b>, <b>언제(시간대)</b> 들을 수 있는지로 나누고, 센터가 있는 구의 연령별 주민 수와 나란히 놓았습니다. 주민 수에 비해 정원이 유난히 적은 칸이 '공백'입니다. 평가가 아니라 비교이고, 기준은 맨 아래에 모두 적었습니다.`;
+document.getElementById("meth").innerHTML = [
+  [nf(G.n_courses)+"개", "운영 중 강좌 (최근 1년 안에 바뀐 기록)"],
+  [nf(G.n_seats)+"명", "정원 합계"],
+  [G.base_month, "주민등록 인구 기준일"],
+  [Math.round(fromName/G.n_courses*100)+"%", "강좌명의 출생연도·나이로 대상 연령을 읽은 강좌"],
+].map(([b,t])=>`<div><b>${b}</b>${t}</div>`).join("");
+
+let area = new URLSearchParams(location.search).get("area");
+if (!AREAS[area]) area = "올림픽공원 2곳";
+const tabs = document.getElementById("tabs");
+tabs.innerHTML = Object.keys(AREAS).map(a=>{
+  const c = G.centers.find(x=>x.center===AREAS[a][0]);
+  return `<button data-a="${a}" aria-pressed="${a===area}">${a}<small>${esc(c.area)}</small></button>`;
+}).join("");
+tabs.onclick = e => { const b = e.target.closest("button"); if (!b) return; area = b.dataset.a; history.replaceState(null,"","?area="+encodeURIComponent(area)); draw(); };
+
+function merged(a){
+  const cs = G.centers.filter(c=>AREAS[a].includes(c.center));
+  return G.bands.map((B,i)=>{
+    const xs = cs.map(c=>c.bands[i]);
+    const sum = k => xs.reduce((s,x)=>s+x[k],0);
+    const slots = k => Object.fromEntries(G.slots.map(s=>[s, xs.reduce((t,x)=>t+x[k][s],0)]));
+    return {...B, pop: xs[0].pop, pop_share: xs[0].pop_share, active: xs[0].active,
+      own: sum("own"), can: sum("can"), own_slots: slots("own_slots"), can_slots: slots("can_slots"),
+      total: cs.reduce((t,c)=>t+c.seats,0)};
+  });
+}
+
+function draw(){
+  [...tabs.children].forEach(b=>b.setAttribute("aria-pressed", b.dataset.a===area));
+  const M = merged(area), cs = AREAS[area];
+  const tot = M[0].total;
+  // 표
+  const gm = document.getElementById("gm");
+  gm.innerHTML = `<thead><tr><th>연령대 · 주민</th>${G.slots.map(s=>`<th>${s}</th>`).join("")}</tr></thead><tbody>` +
+    M.map(b=>`<tr><td class="who"><b>${BAND_LABEL(b)}</b><span>주민 ${nf(b.pop)}명${b.active!=null?` · 규칙 운동 추정 ${nf(b.active)}명`:""}</span></td>` +
+      G.slots.map(s=>{
+        const on = G.sense[b.band].includes(s);
+        const per = b.can_slots[s]/b.pop*1000;
+        const cls = !on ? "c off" : (b.can_slots[s]===0 ? "c zero" : "c");
+        return `<td class="${cls}"><b>${per<10?per.toFixed(1):Math.round(per)}</b><span>${on?"":"(비교 제외) "}전용 ${nf(b.own_slots[s])}</span></td>`;
+      }).join("") + `</tr>`).join("") + `</tbody>`;
+  document.getElementById("gmnote").textContent = `${cs.join("·")} 정원 ${nf(tot)}명 기준. 평일과 주말에 모두 열리는 강좌는 양쪽 칸에 함께 셌습니다. 평일 칸은 시작 시각으로 나눴습니다(새벽·아침 ~9시, 낮 9~15시, 오후 15~18시, 저녁 18시~).`;
+  // 막대
+  const mx = Math.max(...M.map(b=>Math.max(b.pop_share, b.own/tot*100)));
+  document.getElementById("bars").innerHTML = M.map(b=>{
+    const s = b.own/tot*100;
+    return `<div class="bar"><div class="lab">${b.band}</div><div><div class="tr p"><i style="width:${b.pop_share/mx*100}%"></i></div><div class="tr s" style="margin-top:3px"><i style="width:${s/mx*100}%"></i></div></div>
+      <div class="num">주민 ${b.pop_share}% · 전용 정원 ${s.toFixed(1)}% (${nf(b.own)}명)</div></div>`;
+  }).join("");
+  // 핵심 문장
+  const sr = M.find(b=>b.band==="어르신"), ad = M.find(b=>b.band==="청년·중년"), kid = M.find(b=>b.band==="유아");
+  const adTot = Object.values(ad.own_slots).reduce((a,b)=>a+b,0);
+  const day = Math.round(ad.own_slots["평일 낮"]/adTot*100), eve = Math.round(ad.own_slots["평일 저녁"]/adTot*100);
+  document.getElementById("key").innerHTML = `<p><b>${area}</b>: 주민의 ${sr.pop_share}%가 65세 이상인데, 어르신만을 위해 연 강좌 정원은 전체의 ${(sr.own/tot*100).toFixed(1)}%(${nf(sr.own)}명)입니다.</p>
+    <p>청년·중년 강좌 정원은 평일 낮(9~15시)이 ${day}%, 평일 저녁이 ${eve}%입니다. 50대 이하는 운동을 못 하는 가장 큰 이유로 시간 부족을 꼽았습니다(2025 국민생활체육조사).</p>
+    <p>유아(4~6세) 주민 ${nf(kid.pop)}명에게 열린 정원은 ${nf(kid.can)}명입니다.</p>`;
+  // 후보
+  const cells = G.cells.filter(c=>c.where===area).slice().sort((a,b)=>a.per1000-b.per1000 || b.pop-a.pop);
+  const seen = new Set(), pick = [];
+  for (const c of cells) { if (!seen.has(c.band) && c.per1000 < 10) { seen.add(c.band); pick.push(c); } }
+  const why = c => {
+    if (c.band==="어르신") return `성인 강좌까지 세면 ${nf(c.can)}명이 들을 수 있지만 어르신만을 위한 정원은 ${nf(c.own)}명입니다. 70대 이상의 규칙적 운동 참여율은 ${G.part["70대 이상"]}%로 성인 가운데 가장 낮고, 운동을 못 하는 이유로 건강 문제를 가장 많이 꼽았습니다(2025 국민생활체육조사).`;
+    if (c.band==="중고생") return `학교가 끝난 뒤에 열리는 정원입니다. 10대는 규칙적 운동 참여율이 ${G.part["10대"]}%로 모든 연령대 중 가장 낮습니다(2025 국민생활체육조사).`;
+    if (c.band==="청년·중년") return `일하는 시간을 피한 칸입니다. 같은 연령대 정원이 평일 낮에 더 많이 몰려 있는지 위 표와 함께 보세요.`;
+    if (c.band==="유아") return `만 4~6세가 다닐 수 있는 강좌입니다. 대상 칸에 '유아'가 있거나 강좌명의 출생연도가 이 나이를 포함하는 강좌만 셌습니다.`;
+    return `학교가 끝난 뒤나 주말에 열리는 정원입니다.`;
+  };
+  document.getElementById("gaps").innerHTML = pick.map(c=>`<li><div class="w">${esc(c.band)} · ${esc(c.slot)}</div>
+    <div class="n"><b style="color:${c.can===0?'var(--bad)':'var(--ink)'}">${nf(c.can)}명</b><span>주민 ${nf(c.pop)}명 · 1천 명당 ${c.per1000}</span></div><div class="why">${why(c)}</div></li>`).join("");
+}
+draw();
+
+document.getElementById("dl").onclick = () => {
+  const rows = [["지역","시군구","연령대","시간대","들을 수 있는 정원","그 연령대 전용 정원","주민 수","주민 1천명당 정원"],
+    ...G.cells.map(c=>[c.where,c.area,c.band,c.slot,c.can,c.own,c.pop,c.per1000])];
+  const csv = "\ufeff" + rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\r\n");
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv],{type:"text/csv"})); a.download = "강좌공백지도.csv"; a.click();
+};
+
+const basisRows = Object.entries(G.basis).map(([k,v])=>{ const [c,w]=k.split("|"); return `${esc(c)} ${esc(w)} ${v}개`; }).join(", ");
+document.getElementById("how").innerHTML = `
+  <div><h3>강좌의 대상 연령</h3><p>강좌명에 적힌 출생연도('17년~08년생')나 나이('20세이상'), '초등'·'실버' 같은 말을 먼저 읽고, 없으면 수강대상 칸('성인남여', '청소년')으로 정했습니다. 대상 칸이 비어 있는 강좌는 성인 강좌로 봤습니다(${assumed}개, 대부분 올림픽스포츠센터 테니스). 강좌별 근거: ${basisRows}.</p></div>
+  <div><h3>주민 수</h3><p>${esc(G.pop_source)}, ${G.base_month} 기준. 올림픽공원 두 센터는 공원이 맞닿은 송파구·강동구, 일산은 일산동구·일산서구, 분당은 분당구 주민입니다. 실제 이용자가 사는 곳과는 다를 수 있습니다.</p></div>
+  <div><h3>다닐 수 있는 시간대</h3><p>초등은 평일 오후·저녁·주말, 중고생은 평일 저녁·주말, 청년·중년은 평일 새벽·아침·저녁·주말, 어르신은 평일 새벽·아침·낮·오후를 비교했습니다. 학교·직장 시간을 뺀 기본값이며, 표에는 모든 칸을 함께 보여 줍니다.</p></div>
+  <div><h3>정원의 뜻과 한계</h3><p>정원은 한 반의 최대 인원입니다. 실제 등록 인원과 대기 인원은 개방되어 있지 않아 쓰지 못했습니다. 그래서 '정원이 적다'는 것이 곧 '수요가 넘친다'는 뜻은 아닙니다. 등록 인원이 개방되면 같은 표에 채워 넣을 수 있습니다.</p></div>
+  <div><h3>규칙 운동 추정</h3><p>${esc(G.part_source)}(10대 ${G.part["10대"]}%, 70대 이상 ${G.part["70대 이상"]}% 등)을 나이마다 곱한 값입니다. 10세 미만은 조사 대상이 아니라 비워 두었습니다.</p></div>
+  <div><h3>다시 계산하기</h3><p>저장소에서 <code>python gap.py</code>를 실행하면 같은 숫자가 나옵니다. 강좌 파일이 갱신되면 매주 자동으로 다시 만듭니다.</p></div>`;
+document.getElementById("foot").innerHTML = `자료: 공공데이터포털 한국체육산업개발 강좌정보 4종, ${esc(G.pop_source)}, 2025 국민생활체육조사. 코드: <a href="https://github.com/tkddn647-ship-it/kspo-opendata-check/blob/main/gap.py">gap.py</a>`;
+})();
+</script>
+</body>
+</html>
