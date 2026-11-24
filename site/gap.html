@@ -190,7 +190,8 @@ table.gm td.zero b{color:var(--bad)}
 .keynote p{margin:0 0 6px}
 .keynote p:last-child{margin:0}
 .dl{font:inherit;font-size:14px;font-weight:700;border:1px solid var(--ok);background:var(--sheet);color:var(--ok);border-radius:var(--r);padding:6px 12px;cursor:pointer}
-@media (max-width:720px){.bar{grid-template-columns:84px 1fr}table.gm td.c{min-width:70px}table.gm td.c b{font-size:16px}}
+@media (max-width:720px){table.gm td.who{white-space:normal;min-width:120px}table.gm td.who span{display:block}.bar{grid-template-columns:84px 1fr}table.gm td.c{min-width:70px}table.gm td.c b{font-size:16px}}
+@media (max-width:720px){nav.top{overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch}nav.top a{flex:none;font-size:14px;padding:6px 9px}}
 </style>
 </head>
 <body>
@@ -239,7 +240,7 @@ const G = window.GAP;
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const nf = n => Number(n).toLocaleString("ko-KR");
 const AREAS = {"올림픽공원 2곳":["올림픽수영장","올림픽스포츠센터"],"일산":["일산"],"분당":["분당"]};
-const BAND_LABEL = b => `${b.band} <span>${b.lo}~${b.hi>=120?"":b.hi}세${b.hi>=120?" 이상":""}</span>`;
+const BAND_LABEL = b => `${b.band} <span>${b.hi>=120?b.lo+"세 이상":b.lo+"~"+b.hi+"세"}</span>`;
 const fromName = Object.entries(G.basis).filter(([k])=>/강좌명/.test(k)).reduce((a,[,v])=>a+v,0);
 const assumed = Object.entries(G.basis).filter(([k])=>/가정/.test(k)).reduce((a,[,v])=>a+v,0);
 
