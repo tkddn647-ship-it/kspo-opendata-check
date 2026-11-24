@@ -14,4 +14,5 @@ jobs:
       - uses: actions/checkout@v4
       - env:
           KCISA_KEY: ${{ secrets.KCISA_KEY }}
+          KCISA_KEY_008: ${{ secrets.KCISA_KEY_008 }}
         run: python3 tools/probe_kcisa.py "${{ inputs.api }}" "${{ inputs.rows }}"
