@@ -5,6 +5,8 @@
 - ex: 그 묶음에서 각 운동을 처방받은 사람 수 (한 사람이 같은 운동을 여러 번 받아도 1)
 - items: 측정 항목(item_fNNN)별 값 분포 (0.5 단위로 묶은 도수)
 python tools/fetch_nfa.py   (키: DATA_GO_KR_KEY)
+- year_groups: 묶음(나이대·성별·등급)×측정 연도별 처방 (연도별 일관성 확인)
+- fields: 응답에 나온 항목 이름(item_f 제외)
 - fat_groups: 체지방률(item_f003) 5%p 구간별 처방 (청소년·성인·어르신)
 환경변수 OUT(출력 파일, 기본 out/nfa_agg.json), END_PAGE(이 쪽까지만 받음: 예전 집계와 같은 기록으로 맞출 때)
 """
@@ -63,6 +65,8 @@ LK = {NORM(e): L["key"] for L in LINK for e in L["ex"]}
 G = collections.defaultdict(lambda: {"n": 0, "note": 0, "ex": collections.Counter(), "link": collections.Counter()})
 B = collections.defaultdict(lambda: {"n": 0, "note": 0, "ex": collections.Counter(), "link": collections.Counter()})  # 체질량지수 구간별 (성인·어르신)
 F = collections.defaultdict(lambda: {"n": 0, "note": 0, "ex": collections.Counter(), "link": collections.Counter()})  # 체지방률 구간별
+Y = collections.defaultdict(lambda: {"n": 0, "note": 0, "ex": collections.Counter(), "link": collections.Counter()})  # 묶음×연도
+FIELDS = collections.Counter()
 BMI_CHK = {"n": 0, "match": 0}  # item_f018이 몸무게(f002)/키(f001)^2 와 같은지 확인한 건수
 
 
@@ -101,7 +105,8 @@ def absorb(items):
         except (TypeError, ValueError):
             age = -1
         k = "|".join([str(x.get("age_gbn")), str(age // 10 * 10 if age >= 0 else "?"), str(x.get("test_sex")), str(x.get("cert_gbn"))])
-        targets = [G[k]]
+        targets = [G[k], Y[k + "|" + m[:4]]]
+        FIELDS.update(c for c in x if not c.startswith("item_f"))
         h, w, bmi = num(x, "item_f001"), num(x, "item_f002"), num(x, "item_f018")
         if h and w and bmi and 100 < h < 220 and 20 < w < 250:
             BMI_CHK["n"] += 1
@@ -143,6 +148,8 @@ def save(done, final):
         "groups": {k: {"n": g["n"], "note": g["note"], "link": dict(g["link"]), "ex": {e: c for e, c in g["ex"].most_common() if e in keep}} for k, g in sorted(G.items())},
         "bmi_check": BMI_CHK,
         "bmi_groups": {k: {"n": g["n"], "note": g["note"], "link": dict(g["link"]), "ex": {e: c for e, c in g["ex"].most_common(80) if e in keep}} for k, g in sorted(B.items())},
+        "year_groups": {k: {"n": g["n"], "note": g["note"], "link": dict(g["link"])} for k, g in sorted(Y.items())},
+        "fields": dict(FIELDS),
         "fat_groups": {k: {"n": g["n"], "note": g["note"], "link": dict(g["link"])} for k, g in sorted(F.items())},
         "items": {k: {c: {str(b): n for b, n in sorted(h.items())} for c, h in sorted(v.items())} for k, v in sorted(IT.items()) if G[k]["n"] >= 30},
     }
