@@ -2,6 +2,13 @@
 name: 국민체력100 처방 집계
 on:
   workflow_dispatch:
+    inputs:
+      out:
+        description: "출력 파일"
+        default: "out/nfa_agg.json"
+      end_page:
+        description: "이 쪽까지만 받기 (비우면 끝까지)"
+        default: ""
 permissions:
   contents: write
 jobs:
@@ -18,3 +25,5 @@ jobs:
           python tools/fetch_nfa.py
         env:
           DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+          OUT: ${{ inputs.out }}
+          END_PAGE: ${{ inputs.end_page }}

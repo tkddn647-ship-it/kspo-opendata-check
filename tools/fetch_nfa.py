@@ -5,6 +5,8 @@
 - ex: 그 묶음에서 각 운동을 처방받은 사람 수 (한 사람이 같은 운동을 여러 번 받아도 1)
 - items: 측정 항목(item_fNNN)별 값 분포 (0.5 단위로 묶은 도수)
 python tools/fetch_nfa.py   (키: DATA_GO_KR_KEY)
+- fat_groups: 체지방률(item_f003) 5%p 구간별 처방 (청소년·성인·어르신)
+환경변수 OUT(출력 파일, 기본 out/nfa_agg.json), END_PAGE(이 쪽까지만 받음: 예전 집계와 같은 기록으로 맞출 때)
 """
 import collections, json, os, re, subprocess, sys, time, urllib.parse, urllib.request
 from concurrent.futures import ThreadPoolExecutor
@@ -36,6 +38,9 @@ def get(page):
 
 total, first = get(1)
 pages = (total + N - 1) // N
+if os.environ.get("END_PAGE"):
+    pages = min(pages, int(os.environ["END_PAGE"]))
+OUT = os.environ.get("OUT") or "out/nfa_agg.json"
 lo, hi = 1, pages  # 측정 연월 순으로 쌓여 있다고 보고, FROM 이후가 처음 나오는 쪽을 찾음
 while lo < hi:
     mid = (lo + hi) // 2
@@ -57,11 +62,19 @@ NORM = lambda t: re.sub(r"\s+", "", t)
 LK = {NORM(e): L["key"] for L in LINK for e in L["ex"]}
 G = collections.defaultdict(lambda: {"n": 0, "note": 0, "ex": collections.Counter(), "link": collections.Counter()})
 B = collections.defaultdict(lambda: {"n": 0, "note": 0, "ex": collections.Counter(), "link": collections.Counter()})  # 체질량지수 구간별 (성인·어르신)
+F = collections.defaultdict(lambda: {"n": 0, "note": 0, "ex": collections.Counter(), "link": collections.Counter()})  # 체지방률 구간별
 BMI_CHK = {"n": 0, "match": 0}  # item_f018이 몸무게(f002)/키(f001)^2 와 같은지 확인한 건수
 
 
 def bmi_class(v):
     return "18.5 미만" if v < 18.5 else "18.5~23" if v < 23 else "23~25" if v < 25 else "25~30" if v < 30 else "30 이상"
+
+
+def fat_class(v):
+    for b in (15, 20, 25, 30, 35):
+        if v < b:
+            return f"{b - 5}~{b}" if b > 15 else "15 미만"
+    return "35 이상"
 
 
 def num(x, c):
@@ -96,6 +109,9 @@ def absorb(items):
                 BMI_CHK["match"] += 1
         if str(x.get("age_gbn")) in ("성인", "어르신") and age >= 19 and h and w and 100 < h < 220 and 20 < w < 250:
             targets.append(B["|".join([str(x.get("age_gbn")), str(age // 10 * 10), str(x.get("test_sex")), bmi_class(w / (h / 100) ** 2)])])
+        fat = num(x, "item_f003")
+        if str(x.get("age_gbn")) in ("청소년", "성인", "어르신") and age >= 0 and fat and 3 <= fat <= 60:
+            targets.append(F["|".join([str(x.get("age_gbn")), str(age // 10 * 10), str(x.get("test_sex")), fat_class(fat)])])
         note = x.get("pres_note") or ""
         exs = {t.strip(" /") for t in PRE.sub(",", note).split(",") if t.strip(" /")} if note else set()
         lks = {LK[NORM(e)] for e in exs if NORM(e) in LK}
@@ -127,12 +143,13 @@ def save(done, final):
         "groups": {k: {"n": g["n"], "note": g["note"], "link": dict(g["link"]), "ex": {e: c for e, c in g["ex"].most_common() if e in keep}} for k, g in sorted(G.items())},
         "bmi_check": BMI_CHK,
         "bmi_groups": {k: {"n": g["n"], "note": g["note"], "link": dict(g["link"]), "ex": {e: c for e, c in g["ex"].most_common(80) if e in keep}} for k, g in sorted(B.items())},
+        "fat_groups": {k: {"n": g["n"], "note": g["note"], "link": dict(g["link"])} for k, g in sorted(F.items())},
         "items": {k: {c: {str(b): n for b, n in sorted(h.items())} for c, h in sorted(v.items())} for k, v in sorted(IT.items()) if G[k]["n"] >= 30},
     }
     (ROOT / "out").mkdir(exist_ok=True)
-    (ROOT / "out" / "nfa_agg.json").write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    (ROOT / OUT).write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     msg = f"국민체력100 처방 집계 {'완료' if final else '중간'} {done}/{pages}"
-    subprocess.run("git add out/nfa_agg.json && git commit -qm '%s' && git pull -q --rebase && git push -q" % msg, shell=True, cwd=ROOT)
+    subprocess.run("git add %s && git commit -qm '%s' && git pull -q --rebase && git push -q" % (OUT, msg), shell=True, cwd=ROOT)
     print(msg, "쓴 행", used, "실패 쪽", failed, flush=True)
 
 
