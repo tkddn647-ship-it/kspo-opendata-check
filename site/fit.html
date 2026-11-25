@@ -156,6 +156,12 @@ footer{margin-top:56px;font-size:13px;color:var(--muted);border-top:1px solid va
 @media (max-width:720px){nav.top{overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch}nav.top a{flex:none;font-size:14px;padding:6px 9px}}
 
 /* 체력 맞춤 */
+html.big{font-size:20px}
+html.big body{font-size:20px}
+html.big .cl li,html.big .rx .sub2,html.big .home li,html.big .ask .hint,html.big .who small,html.big .sub{font-size:18px}
+.bigbtn{font:inherit;font-size:15px;font-weight:700;border:1px solid var(--ink);background:var(--sheet);color:var(--ink);border-radius:999px;padding:5px 14px;cursor:pointer}
+.bigbtn[aria-pressed="true"]{background:var(--ink);color:#fff}
+.ask .seg input{flex:1;min-width:0;font:inherit;font-size:17px;font-weight:700;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r);background:var(--sheet);color:var(--ink)}
 .ask{margin:26px 0 0;background:var(--sheet);border:2px solid var(--ink);border-radius:var(--r);padding:18px 20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px 22px;align-items:end}
 .ask label,.ask .lab{display:block;font-size:14px;font-weight:700;margin-bottom:6px}
 .ask input[type=number],.ask select{width:100%;font:inherit;font-size:19px;font-weight:700;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r);background:var(--sheet);color:var(--ink)}
@@ -202,13 +208,15 @@ footer{margin-top:56px;font-size:13px;color:var(--muted);border-top:1px solid va
 <header>
   <h1><small>국민체력100 처방 기록과 스포츠센터 4곳 강좌</small>내 체력에 맞는 강좌</h1>
   <p class="lede" id="lede"></p>
+  <p style="margin:12px 0 0"><button type="button" class="bigbtn" id="big" aria-pressed="false">글자 크게</button></p>
 </header>
 
 <form class="ask" id="ask" onsubmit="return false">
   <div><label for="age">나이 (만)</label><input id="age" type="number" inputmode="numeric" min="4" max="100" value="45"></div>
   <div><span class="lab">성별</span><div class="seg" id="sex"><button type="button" data-v="F" aria-pressed="true">여성</button><button type="button" data-v="M" aria-pressed="false">남성</button></div></div>
   <div><label for="grade">국민체력100 등급</label><select id="grade"></select></div>
-  <p class="hint">등급은 체력인증센터에서 측정하면 받는 결과입니다. 측정한 적이 없으면 '모름'으로 두세요. 입력한 값은 이 기기 밖으로 나가지 않습니다.</p>
+  <div id="hwbox"><span class="lab">등급을 모르면: 키와 몸무게 (선택)</span><div class="seg"><input id="ht" type="number" inputmode="decimal" min="120" max="210" placeholder="키 cm" aria-label="키 (cm)"><input id="wt" type="number" inputmode="decimal" min="30" max="200" placeholder="몸무게 kg" aria-label="몸무게 (kg)"></div></div>
+  <p class="hint">등급은 체력인증센터에서 측정하면 받는 결과입니다. 측정한 적이 없으면 '모름'으로 두고, 키와 몸무게를 넣으면 체격이 비슷한 측정자의 처방을 봅니다(19세 이상). 입력한 값은 이 기기 밖으로 나가지 않습니다.</p>
 </form>
 
 <p class="who" id="who"></p>
@@ -282,10 +290,18 @@ function render(){
   const key = findGroup(age, st.sex);
   if (!key){ $("who").textContent = "이 조건의 기록이 부족합니다."; $("rx").innerHTML = ""; $("home").innerHTML = ""; return; }
   const G = F.groups[key]; fillGrades(G);
-  const grade = $("grade").value, c = G[grade] || G["전체"];
+  const grade = $("grade").value;
+  let c = G[grade] || G["전체"], bmiTxt = "";
+  const h = +$("ht").value, w = +$("wt").value, canBmi = !!(F.bmi && F.bmi[key]);
+  $("hwbox").style.display = canBmi && grade==="전체" ? "" : "none";
+  if (grade==="전체" && canBmi && h>=120 && h<=210 && w>=30 && w<=200){
+    const v = w/((h/100)**2), cls = v<18.5?"18.5 미만":v<23?"18.5~23":v<25?"23~25":v<30?"25~30":"30 이상";
+    if (F.bmi[key][cls]) { c = F.bmi[key][cls]; bmiTxt = ` · 체질량지수 ${cls}`; }
+    else bmiTxt = "";
+  }
   const [stage, band] = key.split("|");
   const bandTxt = stage==="성인"||stage==="어르신" ? `${band}대` : `${stage}`;
-  $("who").innerHTML = `<b>${bandTxt} ${st.sex==="F"?"여성":"남성"}${grade!=="전체"?` · ${esc(grade)}`:""}</b> ${nf(c.note)}명의 처방 기록입니다.<small>${stage} 기준(${rangeTxt(stage, +band)} 측정자). 한 사람이 여러 운동을 처방받으므로 비율의 합은 100%를 넘습니다.</small>`;
+  $("who").innerHTML = `<b>${bandTxt} ${st.sex==="F"?"여성":"남성"}${grade!=="전체"?` · ${esc(grade)}`:""}${bmiTxt}</b> ${nf(c.note)}명의 처방 기록입니다.<small>${stage} 기준(${rangeTxt(stage, +band)} 측정자). 한 사람이 여러 운동을 처방받으므로 비율의 합은 100%를 넘습니다.</small>`;
   const mx = Math.max(...c.linked.map(x=>x[1]), 1);
   $("rxsub").textContent = `처방받은 운동 가운데 센터 4곳에 강좌가 있는 것입니다. 막대는 이 조건의 사람 중 그 운동을 처방받은 비율이고, 버튼을 누르면 ${age}세가 들을 수 있는 강좌만 보여 줍니다.`;
   const links = Object.fromEntries(F.links.map(l=>[l.key,l]));
@@ -312,6 +328,9 @@ function chips(el, items, set, lab){
 chips($("tchips"), SLOTS.map(s=>[s[0],s[1]]), st.slot, "갈 수 있는 시간");
 chips($("cchips"), K.centers.map(c=>[c.name,c.full]), st.center, "센터");
 $("age").addEventListener("input", render); $("grade").addEventListener("change", render);
+$("ht").addEventListener("input", render); $("wt").addEventListener("input", render);
+$("big").onclick = () => { const on = document.documentElement.classList.toggle("big"); $("big").setAttribute("aria-pressed", on); try { localStorage.setItem("kspo-big", on ? "1" : ""); } catch (e) {} };
+try { if (localStorage.getItem("kspo-big")) { document.documentElement.classList.add("big"); $("big").setAttribute("aria-pressed", "true"); } } catch (e) {}
 $("sex").onclick = e => { const b = e.target.closest("button"); if (!b) return; st.sex = b.dataset.v; [...$("sex").children].forEach(x=>x.setAttribute("aria-pressed", x===b)); render(); };
 $("rx").onclick = e => { const b = e.target.closest(".open"); if (!b) return; st.open = st.open===b.dataset.k ? null : b.dataset.k; render(); };
 const q = new URLSearchParams(location.search);
@@ -324,6 +343,7 @@ if (q.get("open")) { st.open = q.get("open"); render(); }
 $("how").innerHTML = `
   <div><h3>처방 기록</h3><p>${esc(F.source)}. 전체 ${nf(F.total_api)}건 가운데 ${ym(F.months[0])} 이후 ${nf(F.rows_used)}건을 썼습니다. 원자료는 저장하지 않고 나이대·성별·등급별 집계만 씁니다.</p></div>
   <div><h3>운동과 강좌의 연결</h3><p>처방 기록에 적힌 운동 이름과 강좌 종목이 같은 것만 이었습니다: ${F.links.filter(l=>l.courses).map(l=>esc(l.key)).join(", ")}. 테니스·골프처럼 처방 기록에 나오지 않는 종목은 여기 나오지 않지만, <a href="index.html">강좌 찾기</a>에서 볼 수 있습니다.</p></div>
+  <div><h3>키·몸무게로 보기</h3><p>키와 몸무게로 체질량지수(몸무게÷키²)를 계산해 18.5 미만, 18.5~23, 23~25, 25~30, 30 이상 다섯 구간으로 나누고, 같은 나이대·성별·구간 측정자의 처방을 보여 줍니다. 몸 상태를 평가하는 것이 아니라 비슷한 체격의 사람들이 받은 처방을 찾는 기준입니다.</p></div>
   <div><h3>비율의 뜻</h3><p>같은 조건으로 측정한 사람 중 그 운동을 처방받은 사람의 비율입니다. 사람 수가 ${F.min_n}명보다 적은 묶음은 보여 주지 않고 등급을 합친 값을 씁니다.</p></div>
   <div><h3>들을 수 있는 강좌</h3><p>강좌명에 적힌 출생연도·나이와 수강대상 칸으로 대상 나이를 정해, 입력한 나이가 들어가는 강좌만 보여 줍니다. 최근 1년 안에 바뀐 기록이 있는 강좌만 씁니다.</p></div>
   <div><h3>영상</h3><p>${esc(F.video_source)} ${F.n_videos}개 가운데 처방 운동과 이름이 같은 것을 연결했습니다.</p></div>

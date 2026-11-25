@@ -344,6 +344,7 @@ class Fit(unittest.TestCase):
             self.skipTest("fit_summary.json 없음")
         s = _j.loads(p.read_text(encoding="utf-8"))
         self.assertGreater(s["rows_used"], 100000)
+        self.assertGreater(s["bmi_check"]["match"] / s["bmi_check"]["n"], 0.99)   # item_f018 = 몸무게/키^2 임을 자료로 확인
         js = (root / "site" / "fit.js").read_text(encoding="utf-8")
         F = _j.loads(js[js.index("=") + 1:].rstrip().rstrip(";"))
         import gap

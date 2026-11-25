@@ -99,6 +99,36 @@ def build():
                 out[gr] = pack(gs[gr])
         groups[f"{stage}|{band}|{sex}"] = out
 
+    # 체질량지수 구간별 묶음 (성인·어르신). 등급을 모르는 사람이 키·몸무게로 보는 기준.
+    BMI_ORDER = ["18.5 미만", "18.5~23", "23~25", "25~30", "30 이상"]
+    bcells = collections.defaultdict(dict)
+    for k, g in A.get("bmi_groups", {}).items():
+        stage, band, sex, cls = k.split("|")
+        c = {"n": g["n"], "note": g["note"], "ex": collections.Counter({norm(e): n for e, n in g["ex"].items()}), "link": collections.Counter(g.get("link", {}))}
+        bcells[f"{stage}|{band}|{sex}"][cls] = c
+    bmi = {}
+    for k, cs in bcells.items():
+        if k in groups:
+            out = {cls: pack(cs[cls]) for cls in BMI_ORDER if cls in cs and cs[cls]["note"] >= MIN_N}
+            if out:
+                bmi[k] = out
+
+    # 조건에 따라 처방이 얼마나 달라지나 (성인 전체에서 등급별·체질량지수 구간별 비율의 최소~최대)
+    def spread(pick):
+        tot = collections.defaultdict(lambda: {"note": 0, "link": collections.Counter()})
+        for key, c in pick:
+            tot[key]["note"] += c["note"]
+            tot[key]["link"].update(c["link"])
+        res = {}
+        for L in LINK:
+            vals = {key: round(t["link"].get(L["key"], 0) / t["note"] * 100, 1) for key, t in tot.items() if t["note"] >= 1000}
+            if vals:
+                lo, hi = min(vals, key=vals.get), max(vals, key=vals.get)
+                res[L["key"]] = {"min": [lo, vals[lo]], "max": [hi, vals[hi]], "all": vals}
+        return res
+    by_grade = spread((gr, c) for (st, band, sex), gs in cells.items() if st == "성인" for gr, c in gs.items() if gr != "전체")
+    by_bmi = spread((cls, c) for k, cs in bcells.items() if k.startswith("성인|") for cls, c in cs.items())
+
     # 강좌마다 대상 나이 (courses.js의 rows와 같은 순서)
     ages = [list(gap.age_range(r)[:2]) for r in K["rows"]]
     sport_link = {s: L["key"] for L in LINK for s in L["sports"]}
@@ -143,7 +173,7 @@ def build():
         "source": A["source"], "fetched": A["fetched"], "from": A["from"], "rows_used": A["rows_used"], "total_api": A["total_api"],
         "months": [min(A["by_month"]), max(A["by_month"])], "video_source": V["source"], "n_videos": len(V["videos"]),
         "min_n": MIN_N, "links": [{"key": L["key"], "ex": L["ex"], "sports": L["sports"], "courses": n_link[L["key"]]} for L in LINK],
-        "groups": groups, "ages": ages, "videos": videos, "stages": stage_sum, "supply": supply,
+        "groups": groups, "bmi": bmi, "bmi_order": BMI_ORDER, "bmi_check": A.get("bmi_check"), "spread": {"grade": by_grade, "bmi": by_bmi}, "ages": ages, "videos": videos, "stages": stage_sum, "supply": supply,
     }
     return F
 
@@ -152,7 +182,7 @@ def run():
     F = build()
     with open(os.path.join(ROOT, "site", "fit.js"), "w", encoding="utf-8") as f:
         f.write("window.FIT=" + json.dumps(F, ensure_ascii=False, separators=(",", ":")) + ";\n")
-    S = {k: F[k] for k in ("source", "fetched", "from", "rows_used", "total_api", "months", "n_videos", "links", "stages", "supply")}
+    S = {k: F[k] for k in ("source", "fetched", "from", "rows_used", "total_api", "months", "n_videos", "links", "stages", "supply", "spread", "bmi_check")}
     S["n_groups"] = len(F["groups"])
     S["n_video_matched"] = len(F["videos"])
     json.dump(S, open(os.path.join(ROOT, "out", "fit_summary.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
@@ -162,6 +192,9 @@ def run():
 if __name__ == "__main__":
     F = run()
     print("쓴 기록", F["rows_used"], "기간", F["months"], "묶음", len(F["groups"]), "영상 연결", len(F["videos"]))
-    for x in F["supply"]:
+    print("체질량지수 확인", F["bmi_check"], "묶음", len(F["bmi"]))
+    for kind, sp in F["spread"].items():
+        print(kind, {k: (v["min"], v["max"]) for k, v in sp.items()})
+    for x in F["supply"][:0]:
         if x["share"] >= 4:
             print(f"  {x['stage']:4} {x['area']:8} {x['key']:8} 처방 {x['share']:>5}% 강좌 {x['courses']:>3} 정원 {x['seats']:>5} 1천명당 {x['per1000']}")
