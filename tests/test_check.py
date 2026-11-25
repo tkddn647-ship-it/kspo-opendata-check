@@ -304,6 +304,17 @@ class Gap(unittest.TestCase):
         self.assertEqual(G.age_range(self.r("17시 어린이 신기초 화.목", "어린이"))[:2], (5, 12))
         self.assertEqual(G.age_range(self.r("테니스 A반", ""))[2], "가정(대상 칸 비어 있음)")
 
+    def test_olympic_official_target(self):
+        import gap as G
+        r = dict(self.r("요가 주3일 06:00", ""), c="올림픽스포츠센터", s="요가")
+        self.assertEqual(G.age_range(r), (13, 120, "공식 누리집 종목 안내"))
+        r = dict(self.r("농구 토 10:30", ""), c="올림픽스포츠센터", s="농구")
+        self.assertEqual(G.age_range(r)[:2], (8, 18))
+        r = dict(self.r("테니스 A반", ""), c="올림픽스포츠센터", s="테니스")
+        self.assertEqual(G.age_range(r)[2], "가정(대상 칸 비어 있음)")
+        r = dict(self.r("13세이상 요가", ""), c="올림픽스포츠센터", s="요가")
+        self.assertEqual(G.age_range(r)[2], "강좌명 나이")
+
     def test_bands(self):
         import gap as G
         self.assertEqual(G.own_band(60, 120), "어르신")
