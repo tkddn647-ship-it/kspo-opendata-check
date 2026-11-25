@@ -200,6 +200,17 @@ html.big .cl li,html.big .rx .sub2,html.big .home li,html.big .ask .hint,html.bi
 .next{margin:22px 0 0;background:var(--sheet);border:1px solid var(--line);border-left:4px solid var(--ok);border-radius:var(--r);padding:12px 16px;max-width:76ch;font-size:15px}
 @media (max-width:720px){.rx .hd{grid-template-columns:1fr auto}.rx .tr{grid-column:1/-1;order:3}.cl li{grid-template-columns:80px 1fr}.cl .p{grid-column:2;text-align:left}.cl .p a{display:inline;margin-left:8px}}
 @media (max-width:720px){nav.top{overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch}nav.top a{flex:none;font-size:14px;padding:6px 9px}}
+
+/* 누르는 곳은 44px 이상, 글자는 13px 이상 (tools/audit_ui.py로 확인) */
+nav.top a{min-height:44px;display:inline-flex;align-items:center}
+.bigbtn,.tchips button,.rx .open,.seg button,.ask input,.ask select{min-height:44px}
+.cl .p a{display:inline-flex;align-items:center;min-height:44px;padding:0 10px;margin-top:4px;border:1px solid var(--line);border-radius:var(--r);font-size:14px;font-weight:700;text-decoration:none}
+.cl .t span,.rx .pc span,.cl .m,.who small{font-size:13px}
+.home li{min-height:44px;align-items:center}
+.home li a{display:inline-flex;align-items:center;min-height:44px}
+.next a{display:inline-flex;align-items:center;min-height:44px;font-weight:700}
+.cl .t span{font-size:13px}.rx .pc span{font-size:13px}
+h1 small{font-size:13px}
 </style>
 </head>
 <body>
