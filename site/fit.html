@@ -320,7 +320,7 @@ function render(){
   $("rx").innerHTML = rows.length ? rows.map(([k,p,n,ex])=>{
     const cs = courseList(links[k], age), open = st.open===k;
     return `<li><div class="hd"><div class="nm">${esc(k)}</div><div class="tr"><i style="width:${p/mx*100}%"></i></div><div class="pc">${p}%<span>${nf(n)}명</span></div></div>
-      <div class="sub2">처방 기록의 표기: '${esc(ex)}'. 들을 수 있는 강좌 ${cs.length}개.</div>
+      <div class="sub2">처방 기록의 표기: '${esc(ex)}'. 들을 수 있는 관련 종목 강좌 ${cs.length}개.</div>
       <button class="open" data-k="${esc(k)}" aria-expanded="${open}">${open?"강좌 접기":"강좌 "+cs.length+"개 보기"}</button>
       ${open ? `<p class="caveat">강좌의 운동 강도는 공공데이터에 없어 종목 이름으로만 이었습니다.${k==="자전거"?" 로드사이클·스피닝은 강도가 높을 수 있습니다.":k==="달리기"?" 러닝크루는 달리기 모임이라 걷기보다 강도가 높습니다.":""} 처음이거나 몸이 걱정되면 등록 전에 센터에 수준을 확인하세요.</p>` : ""}
       ${open ? (cs.length ? `<ul class="cl">${cs.slice(0,40).map(r=>`<li><div class="t">${r.t0!=null?String(Math.floor(r.t0/60)).padStart(2,"0")+":"+String(r.t0%60).padStart(2,"0"):"-"}<span>${esc(r.d||"")}</span></div>
