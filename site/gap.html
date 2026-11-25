@@ -333,7 +333,7 @@ draw();
 function drawRx(){
   const F = window.FIT; if (!F) return;
   const ym = x => x.slice(0,4)+"년 "+(+x.slice(4))+"월";
-  document.getElementById("rxsub").innerHTML = `국민체력100 체력인증센터에서 ${ym(F.months[0])} 이후 측정한 ${nf(F.rows_used)}명에게 건강운동관리사가 내린 운동 처방을 연령 구분별로 모으고, 그 운동을 이 지역 센터에서 그 연령대가 들을 수 있는 강좌 정원과 나란히 놓았습니다. 처방 비율 4% 이상인 운동만 보여 줍니다. 개인별 처방은 <a href="fit.html">체력 맞춤 강좌</a> 화면에서 봅니다.`;
+  document.getElementById("rxsub").innerHTML = `국민체력100 체력인증센터에서 ${ym(F.months[0])} 이후 측정한 기록 ${nf(F.rows_used)}건의 운동처방을 전국 기준으로 연령 구분별로 모으고, 그 운동을 이 지역 센터에서 그 연령대가 들을 수 있는 강좌 정원과 나란히 놓았습니다. 처방 비율 4% 이상인 운동만 보여 줍니다. 개인별 처방은 <a href="fit.html">체력 맞춤 강좌</a> 화면에서 봅니다.`;
   const rows = F.supply.filter(x=>x.area===area && x.share>=4).sort((a,b)=>["청소년","성인","어르신"].indexOf(a.stage)-["청소년","성인","어르신"].indexOf(b.stage) || b.share-a.share);
   document.getElementById("rxt").innerHTML = `<thead><tr><th>연령 구분</th><th>처방된 운동</th><th>처방받은 비율</th><th>이 지역 강좌</th><th>정원</th><th>주민 1천 명당</th></tr></thead><tbody>` +
     rows.map(x=>`<tr><td>${esc(x.stage)}</td><td style="text-align:left"><b>${esc(x.key)}</b></td><td>${x.share}%</td><td${x.courses===0?' class="warn"':''}>${x.courses}개</td><td${x.seats===0?' class="warn"':''}>${nf(x.seats)}명</td><td>${x.per1000}</td></tr>`).join("") + `</tbody>`;
