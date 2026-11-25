@@ -7,6 +7,7 @@
 python tools/fetch_nfa.py   (키: DATA_GO_KR_KEY)
 - year_groups: 묶음(나이대·성별·등급)×측정 연도별 처방 (연도별 일관성 확인)
 - fields: 응답에 나온 항목 이름(item_f 제외)
+- coverage: 나이 구분별로 처방 운동 중 하나 이상이 강좌·영상과 이어지는 기록 수, unlinked: 어느 쪽에도 안 이어지는 운동 상위
 - fat_groups: 체지방률(item_f003) 5%p 구간별 처방 (청소년·성인·어르신)
 환경변수 OUT(출력 파일, 기본 out/nfa_agg.json), END_PAGE(이 쪽까지만 받음: 예전 집계와 같은 기록으로 맞출 때)
 """
@@ -67,6 +68,13 @@ B = collections.defaultdict(lambda: {"n": 0, "note": 0, "ex": collections.Counte
 F = collections.defaultdict(lambda: {"n": 0, "note": 0, "ex": collections.Counter(), "link": collections.Counter()})  # 체지방률 구간별
 Y = collections.defaultdict(lambda: {"n": 0, "note": 0, "ex": collections.Counter(), "link": collections.Counter()})  # 묶음×연도
 FIELDS = collections.Counter()
+COV = collections.defaultdict(collections.Counter)
+UNL = collections.Counter()
+try:
+    _V = json.load(open(Path(__file__).resolve().parents[1] / "raw" / "nfa_videos.json", encoding="utf-8"))["videos"]
+    VID = {NORM(n) for v in _V for n in (v.get("title") or "", v.get("name") or "") if n}
+except FileNotFoundError:
+    VID = set()
 BMI_CHK = {"n": 0, "match": 0}  # item_f018이 몸무게(f002)/키(f001)^2 와 같은지 확인한 건수
 
 
@@ -120,6 +128,13 @@ def absorb(items):
         note = x.get("pres_note") or ""
         exs = {t.strip(" /") for t in PRE.sub(",", note).split(",") if t.strip(" /")} if note else set()
         lks = {LK[NORM(e)] for e in exs if NORM(e) in LK}
+        if note:
+            cv = COV[str(x.get("age_gbn"))]
+            vids = {e for e in exs if NORM(e) in VID}
+            cv["note"] += 1; cv["course"] += bool(lks); cv["video"] += bool(vids); cv["either"] += bool(lks or vids)
+            for e in exs:
+                if NORM(e) not in LK and NORM(e) not in VID:
+                    UNL[e] += 1
         for g in targets:
             g["n"] += 1
             if note:
@@ -150,6 +165,9 @@ def save(done, final):
         "bmi_groups": {k: {"n": g["n"], "note": g["note"], "link": dict(g["link"]), "ex": {e: c for e, c in g["ex"].most_common(80) if e in keep}} for k, g in sorted(B.items())},
         "year_groups": {k: {"n": g["n"], "note": g["note"], "link": dict(g["link"])} for k, g in sorted(Y.items())},
         "fields": dict(FIELDS),
+        "coverage": {k: dict(v) for k, v in COV.items()},
+        "unlinked": UNL.most_common(40),
+        "n_video_names": len(VID),
         "fat_groups": {k: {"n": g["n"], "note": g["note"], "link": dict(g["link"])} for k, g in sorted(F.items())},
         "items": {k: {c: {str(b): n for b, n in sorted(h.items())} for c, h in sorted(v.items())} for k, v in sorted(IT.items()) if G[k]["n"] >= 30},
     }
