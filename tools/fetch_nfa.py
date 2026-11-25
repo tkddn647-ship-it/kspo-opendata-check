@@ -56,6 +56,19 @@ except Exception:
 NORM = lambda t: re.sub(r"\s+", "", t)
 LK = {NORM(e): L["key"] for L in LINK for e in L["ex"]}
 G = collections.defaultdict(lambda: {"n": 0, "note": 0, "ex": collections.Counter(), "link": collections.Counter()})
+B = collections.defaultdict(lambda: {"n": 0, "note": 0, "ex": collections.Counter(), "link": collections.Counter()})  # 체질량지수 구간별 (성인·어르신)
+BMI_CHK = {"n": 0, "match": 0}  # item_f018이 몸무게(f002)/키(f001)^2 와 같은지 확인한 건수
+
+
+def bmi_class(v):
+    return "18.5 미만" if v < 18.5 else "18.5~23" if v < 23 else "23~25" if v < 25 else "25~30" if v < 30 else "30 이상"
+
+
+def num(x, c):
+    try:
+        return float(x.get(c))
+    except (TypeError, ValueError):
+        return None
 IT = collections.defaultdict(lambda: collections.defaultdict(collections.Counter))
 ym = collections.Counter()
 used = failed = 0
@@ -75,16 +88,25 @@ def absorb(items):
         except (TypeError, ValueError):
             age = -1
         k = "|".join([str(x.get("age_gbn")), str(age // 10 * 10 if age >= 0 else "?"), str(x.get("test_sex")), str(x.get("cert_gbn"))])
-        g = G[k]
-        g["n"] += 1
+        targets = [G[k]]
+        h, w, bmi = num(x, "item_f001"), num(x, "item_f002"), num(x, "item_f018")
+        if h and w and bmi and 100 < h < 220 and 20 < w < 250:
+            BMI_CHK["n"] += 1
+            if abs(w / (h / 100) ** 2 - bmi) < 0.15:
+                BMI_CHK["match"] += 1
+        if str(x.get("age_gbn")) in ("성인", "어르신") and age >= 19 and h and w and 100 < h < 220 and 20 < w < 250:
+            targets.append(B["|".join([str(x.get("age_gbn")), str(age // 10 * 10), str(x.get("test_sex")), bmi_class(w / (h / 100) ** 2)])])
         note = x.get("pres_note") or ""
-        if note:
-            g["note"] += 1
-            exs = {t.strip(" /") for t in PRE.sub(",", note).split(",") if t.strip(" /")}
-            for e in exs:
-                g["ex"][e] += 1
-            for key_ in {LK[NORM(e)] for e in exs if NORM(e) in LK}:
-                g["link"][key_] += 1
+        exs = {t.strip(" /") for t in PRE.sub(",", note).split(",") if t.strip(" /")} if note else set()
+        lks = {LK[NORM(e)] for e in exs if NORM(e) in LK}
+        for g in targets:
+            g["n"] += 1
+            if note:
+                g["note"] += 1
+                for e in exs:
+                    g["ex"][e] += 1
+                for key_ in lks:
+                    g["link"][key_] += 1
         for c, v in x.items():
             if c.startswith("item_f") and v not in (None, ""):
                 try:
@@ -103,6 +125,8 @@ def save(done, final):
         "from": FROM, "total_api": total, "rows_used": used, "pages": [start, done, pages], "complete": final, "pages_failed": failed, "by_month": dict(sorted(ym.items())),
         "exercises": dict(tot_ex.most_common(3000)),
         "groups": {k: {"n": g["n"], "note": g["note"], "link": dict(g["link"]), "ex": {e: c for e, c in g["ex"].most_common() if e in keep}} for k, g in sorted(G.items())},
+        "bmi_check": BMI_CHK,
+        "bmi_groups": {k: {"n": g["n"], "note": g["note"], "link": dict(g["link"]), "ex": {e: c for e, c in g["ex"].most_common(80) if e in keep}} for k, g in sorted(B.items())},
         "items": {k: {c: {str(b): n for b, n in sorted(h.items())} for c, h in sorted(v.items())} for k, v in sorted(IT.items()) if G[k]["n"] >= 30},
     }
     (ROOT / "out").mkdir(exist_ok=True)
