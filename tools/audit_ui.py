@@ -38,4 +38,4 @@ def main(pages):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:] or ["fit.html?open=수영", "gap.html"])
+    main(sys.argv[1:] or ["index.html", "fit.html?open=수영", "gap.html"])

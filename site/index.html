@@ -143,6 +143,15 @@ footer{margin-top:56px;font-size:13px;color:var(--muted);border-top:1px solid va
 }
 @media (max-width:720px){nav.top{overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch}nav.top a{flex:none;font-size:14px;padding:6px 9px}}
 .fitlink{margin:14px 0 0}.fitlink a{display:inline-block;background:var(--sheet);border:1px solid var(--line);border-left:4px solid var(--ok);border-radius:var(--r);padding:9px 14px;color:var(--ink);text-decoration:none;font-size:15px}.fitlink a b{margin-right:6px}
+/* 누르는 곳은 44px 이상, 글자는 13px 이상 (tools/audit_ui.py로 확인). 휴대폰에서 시간표는 옆으로 밀어 봄 */
+nav.top a{min-height:44px;display:inline-flex;align-items:center}
+.presets button,.chips button,.more,.ftoggle,.big{min-height:44px}
+.pr .acts a,.acts a,.acts button{display:inline-flex;align-items:center;min-height:44px;padding:0 10px;border:1px solid var(--line);border-radius:var(--r);font-size:14px;font-weight:700;text-decoration:none}
+.wk i{font-size:13px;width:22px;height:22px}
+.tags{font-size:13px}
+h1 small{font-size:max(13px,.42em)}
+td a{display:inline-flex;align-items:center;min-height:44px}
+@media (max-width:720px){#gridBox{overflow-x:auto;-webkit-overflow-scrolling:touch}.hm{min-width:660px;font-size:13px;grid-template-columns:30px repeat(16,minmax(38px,1fr));gap:2px}.hm button{font-size:13px;height:44px}}
 </style>
 </head>
 <body>
@@ -216,6 +225,7 @@ footer{margin-top:56px;font-size:13px;color:var(--muted);border-top:1px solid va
 </section>
 
 <footer id="foot"></footer>
+<p class="unofficial" style="font-size:13px;color:var(--muted);margin-top:8px">이 사이트는 2026년도 한국체육산업개발(주) 공공데이터 활용 경진대회 출품작입니다. 한국체육산업개발이 운영하거나 보증하는 공식 서비스가 아니며, 강좌 신청·요금·운영 여부는 각 센터 누리집에서 확인하세요.</p>
 </div>
 <script src="courses.js"></script>
 <script src="analysis.js"></script>
@@ -506,11 +516,11 @@ if (P25){
   const x = i => L + i*(Wd-L-Rm)/(H.length-1), y = v => T + (YM-v)*(Ht-T-B)/YM;
   const line = arr => arr.map((v,i)=>`${i?"L":"M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join("");
   const band = `<path d="${PR.weekday.p90.map((v,i)=>`${i?"L":"M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join("")}${PR.weekday.p10.map((v,i)=>[x(i),y(v)]).reverse().map(([a,b])=>`L${a.toFixed(1)},${b.toFixed(1)}`).join("")}Z" fill="#237A4B" fill-opacity=".10"/>`;
-  const grid = Array.from({length:YM/500+1},(_,k)=>k*500).map(v=>`<line x1="${L}" x2="${Wd-Rm}" y1="${y(v)}" y2="${y(v)}" stroke="#E3E9E7"/><text x="${L-8}" y="${y(v)+4}" font-size="11" fill="#6F7D79" text-anchor="end">${v.toLocaleString()}</text>`).join("");
-  const xt = H.map((h,i)=> h%3===0?`<text x="${x(i)}" y="${Ht-8}" font-size="11" fill="#6F7D79" text-anchor="middle">${h}시</text>`:"").join("");
+  const grid = Array.from({length:YM/500+1},(_,k)=>k*500).map(v=>`<line x1="${L}" x2="${Wd-Rm}" y1="${y(v)}" y2="${y(v)}" stroke="#E3E9E7"/><text x="${L-8}" y="${y(v)+4}" font-size="13" fill="#6F7D79" text-anchor="end">${v.toLocaleString()}</text>`).join("");
+  const xt = H.map((h,i)=> h%3===0?`<text x="${x(i)}" y="${Ht-8}" font-size="13" fill="#6F7D79" text-anchor="middle">${h}시</text>`:"").join("");
   const svg = `<svg viewBox="0 0 ${Wd} ${Ht}" role="img" aria-label="올림픽공원 주차장 시각별 평균 주차 대수, 2025년 평일·휴일·대형 공연 날">
     <rect x="${x(H.indexOf(19))}" y="${T}" width="${x(H.length-1)-x(H.indexOf(19))}" height="${Ht-T-B}" fill="#F2F6F4"/>
-    ${grid}${xt}<text x="${x(H.indexOf(19))+4}" y="${T+12}" font-size="11" fill="#4A5A56">퇴근 후 강좌 시간대</text>
+    ${grid}${xt}<text x="${x(H.indexOf(19))+4}" y="${T+12}" font-size="13" fill="#4A5A56">퇴근 후 강좌 시간대</text>
     ${band}
     <path d="${line(PR.weekday.mean)}" fill="none" stroke="#237A4B" stroke-width="2"/>
     <path d="${line(PR.holiday.mean)}" fill="none" stroke="#7A4FA8" stroke-width="2"/>
@@ -536,13 +546,13 @@ if (PK && !P25){
   const x = i => L + i*(Wd-L-Rm)/(H.length-1), YM = PK.band ? Math.ceil(Math.max(...PK.band.weekend.hi, ...PK.band.weekday.hi)/20)*20 : 100, y = v => T + (YM-v)*(Ht-T-B)/YM;
   const line = arr => arr.map((v,i)=>`${i?"L":"M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join("");
   const area = k => PK.band ? `<path d="${PK.band[k].hi.map((v,i)=>`${i?"L":"M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join("")}${PK.band[k].lo.map((v,i)=>[x(i),y(v)]).reverse().map(([a,b])=>`L${a.toFixed(1)},${b.toFixed(1)}`).join("")}Z" fill="${k==="weekday"?"#237A4B":"#7A4FA8"}" fill-opacity=".10"/>` : "";
-  const grid = [...new Set([0,40,70,100,YM])].map(v=>`<line x1="${L}" x2="${Wd-Rm}" y1="${y(v)}" y2="${y(v)}" stroke="#E3E9E7" stroke-width="1"/><text x="${L-8}" y="${y(v)+4}" font-size="11" fill="#6F7D79" text-anchor="end">${v}</text>`).join("");
-  const xt = H.map((h,i)=> h%3===0?`<text x="${x(i)}" y="${Ht-8}" font-size="11" fill="#6F7D79" text-anchor="middle">${h}시</text>`:"").join("");
+  const grid = [...new Set([0,40,70,100,YM])].map(v=>`<line x1="${L}" x2="${Wd-Rm}" y1="${y(v)}" y2="${y(v)}" stroke="#E3E9E7" stroke-width="1"/><text x="${L-8}" y="${y(v)+4}" font-size="13" fill="#6F7D79" text-anchor="end">${v}</text>`).join("");
+  const xt = H.map((h,i)=> h%3===0?`<text x="${x(i)}" y="${Ht-8}" font-size="13" fill="#6F7D79" text-anchor="middle">${h}시</text>`:"").join("");
   const lab = (arr,txt)=>{ const i = arr.indexOf(Math.max(...arr)); return `<text x="${x(i)}" y="${y(arr[i])-10}" font-size="12" font-weight="700" fill="#1B2623" text-anchor="middle">${txt} 최고 ${H[i]}시</text>`; };
   const svg = `<svg viewBox="0 0 ${Wd} ${Ht}" role="img" aria-label="올림픽공원 주차장 시각별 차량 지수, 평일과 주말">
     <rect x="${x(H.indexOf(19))}" y="${T}" width="${x(H.length-1)-x(H.indexOf(19))}" height="${Ht-T-B}" fill="#F2F6F4"/>
     ${grid}${xt}
-    <text x="${x(H.indexOf(19))+4}" y="${T+12}" font-size="11" fill="#4A5A56">퇴근 후 강좌 시간대</text>
+    <text x="${x(H.indexOf(19))+4}" y="${T+12}" font-size="13" fill="#4A5A56">퇴근 후 강좌 시간대</text>
     ${area("weekday")}${area("weekend")}
     <path d="${line(PK.weekday)}" fill="none" stroke="#237A4B" stroke-width="2" stroke-linejoin="round"/>
     <path d="${line(PK.weekend)}" fill="none" stroke="#7A4FA8" stroke-width="2" stroke-linejoin="round"/>
